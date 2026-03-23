@@ -1,0 +1,78 @@
+#pragma once
+
+#include "instanceConstructor.hpp"
+#include "jvm.hpp"
+#include "jvmObject.hpp"
+#include <concepts>
+#include <cstring>
+#include <memory>
+#include <type_traits>
+
+namespace hotspot::runtime
+{
+template <typename T>
+concept derived_from_base = std::derived_from<T, JvmObjectBase>;
+
+template <typename T>
+concept type_mapping_like = requires {
+    { T::type_name } -> std::convertible_to<std::string_view>;
+    typename T::type;
+};
+
+struct NullType : JvmObjectBase
+{
+    NullType() = delete;
+};
+
+template <size_t N> struct FixedString
+{
+    char data[N];
+
+    constexpr FixedString(const char (&str)[N]) noexcept
+    {
+        for (size_t i = 0; i < N; ++i)
+            data[i] = str[i];
+    }
+
+    constexpr operator std::string_view() const noexcept { return std::string_view(data, N - 1); }
+};
+
+template <size_t N> FixedString(const char (&)[N]) -> FixedString<N>;
+
+template <FixedString Name, derived_from_base T> struct TypeMapping
+{
+    static constexpr std::string_view type_name = Name;
+    using type = T;
+};
+
+template <derived_from_base unknown_t, type_mapping_like... Types>
+    requires(sizeof...(Types) > 0)
+class VirtualBaseConstructor : public InstanceConstructor
+{
+  public:
+    VirtualBaseConstructor(types::Type *base_type) noexcept : base_type(base_type) {}
+
+    std::pair<std::string_view, std::unique_ptr<JvmObjectBase>> instantiate_wrapper_for(uint64_t addr) override
+    {
+        if (!addr)
+            return {{}, nullptr};
+        types::Type *type = Jvm::find_dynamic_type_for_address(addr, base_type);
+        if (!type)
+            return {{}, nullptr};
+        
+        std::string_view sv = type->get_name();
+        for (const auto &mapping : arr)
+            if (mapping.first == sv)
+                return {sv, mapping.second(addr)};
+        if constexpr (!std::is_same_v<unknown_t, NullType>)
+            return {sv, std::make_unique<unknown_t>(addr)};
+        throw new_wrong_type_exception(addr);
+    }
+
+  private:
+    static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> std::unique_ptr<JvmObjectBase> {
+                                                  return std::make_unique<typename Types::type>(addr);
+                                              }}...};
+    types::Type *base_type;
+};
+} // namespace hotspot::runtime
