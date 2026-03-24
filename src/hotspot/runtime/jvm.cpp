@@ -68,6 +68,137 @@ types::Type *Jvm::lookup_type(std::string_view type_name, bool throw_if_not_foun
     return type;
 }
 
+types::Type *Jvm::basic_lookup_type(std::string_view type_name) noexcept
+{
+    if (type_name.empty())
+        return nullptr;
+    auto it = name_to_type.find(type_name);
+    return it != name_to_type.end() ? it->second.get() : nullptr;
+}
+
+std::optional<int32_t> Jvm::lookup_int_constant(std::string_view constant_name) noexcept
+{
+    if (constant_name.empty())
+        return std::nullopt;
+    auto it = name_to_int_constant.find(constant_name);
+    return it != name_to_int_constant.end() ? std::make_optional(it->second) : std::nullopt;
+}
+
+std::optional<int64_t> Jvm::lookup_long_constant(std::string_view constant_name) noexcept
+{
+    if (constant_name.empty())
+        return std::nullopt;
+    auto it = name_to_long_constant.find(constant_name);
+    return it != name_to_long_constant.end() ? std::make_optional(it->second) : std::nullopt;
+}
+
+std::optional<uint64_t> Jvm::get_vtbl_for_type(types::Type *type)
+{
+    if (!type)
+        return std::nullopt;
+    auto result = type_to_vtbl.find(type);
+    if (result != type_to_vtbl.cend())
+        return result->second;
+    std::string vtbl_symbol{vtbl_symbol_for_type(type)};
+    uint64_t addr;
+#ifdef _WIN32
+    HMODULE libjvm = get_jvm_handle();
+    if (!libjvm)
+        return std::nullopt;
+    addr = (uint64_t)GetProcAddress(libjvm, vtbl_symbol);
+#else
+    addr = lookup_by_name(vtbl_symbol.c_str());
+#endif
+    if (addr)
+    {
+        addr = vtbl_symbol.starts_with("_ZTV") ? addr + 2 * sizeof(void *) : addr;
+        vtbl_to_type.try_emplace(addr, type);
+        return type_to_vtbl.try_emplace(type, addr).first->second;
+    }
+    return type_to_vtbl.try_emplace(type, std::nullopt).first->second;
+}
+
+types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base_type)
+{
+    if (!addr || !get_vtbl_for_type(base_type))
+        return nullptr;
+
+    static constexpr size_t ptr_size = sizeof(void *);
+
+    uint64_t candidates[3] = {*(uint64_t *)addr, 0, 0};
+
+    int64_t offset2 = base_type->get_size() - (base_type->get_size() % ptr_size) - ptr_size;
+    if (offset2 > 0)
+    {
+        candidates[1] = *(uint64_t *)(addr + offset2);
+        if (offset2 - (int64_t)ptr_size > 0)
+            candidates[2] = *(uint64_t *)(addr + offset2 - ptr_size);
+    }
+
+    for (uint64_t loc : candidates)
+    {
+        if (!loc)
+            continue;
+        auto it = vtbl_to_type.find(loc);
+        if (it != vtbl_to_type.end())
+            for (const auto *super = it->second; super; super = super->get_super_class())
+                if (super == base_type)
+                    return it->second;
+    }
+
+    for (const auto &[name, type_ptr] : name_to_type)
+    {
+        auto *type = type_ptr.get();
+        const auto *super = type;
+        while (super && super != base_type)
+            super = super->get_super_class();
+        if (!super)
+            continue;
+        if (auto vtable_addr = get_vtbl_for_type(type))
+        {
+            uint64_t v = *vtable_addr;
+            if (v == candidates[0] || v == candidates[1] || v == candidates[2])
+                return type;
+        }
+    };
+    return nullptr;
+}
+
+uint64_t Jvm::deref_symbol(const char *symbol_name)
+{
+    if (!symbol_name || symbol_name[0] == '\0')
+        return 0;
+#ifdef _WIN32
+    HMODULE libjvm = get_jvm_handle();
+    if (!libjvm)
+        return 0;
+    uint64_t addr = (uint64_t)GetProcAddress(libjvm, symbol_name);
+    if (!addr)
+        return 0;
+    return *(uint64_t *)(addr);
+#else
+    uint64_t addr = lookup_by_name(symbol_name);
+    if (!addr)
+        return 0;
+    return *(uint64_t *)addr;
+#endif
+}
+
+std::string_view Jvm::get_string_view_ref(uint64_t addr)
+{
+    if (!addr)
+        return {};
+    return get_string_view(*(const uint64_t *)addr);
+}
+
+std::string_view Jvm::get_string_view(uint64_t addr) noexcept
+{
+    if (!addr)
+        return {};
+    const char *str = (const char *)addr;
+    return {str, std::strlen(str)};
+}
+
 void Jvm::read_vm_types()
 {
     uint64_t entry_addr = deref_symbol("gHotSpotVMTypes");
@@ -187,6 +318,15 @@ types::Type *Jvm::createBasicType(std::string_view type_name, size_t size, bool 
     return recursive_create_pointer_type(type_name);
 }
 
+std::string_view Jvm::trim(std::string_view sv) noexcept
+{
+    while (!sv.empty() && std::isspace((unsigned char)sv.front()))
+        sv.remove_prefix(1);
+    while (!sv.empty() && std::isspace((unsigned char)sv.back()))
+        sv.remove_suffix(1);
+    return sv;
+}
+
 types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
 {
     auto result_type = basic_lookup_type(type_name);
@@ -223,78 +363,6 @@ types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
     return result_type;
 }
 
-std::optional<uint64_t> Jvm::get_vtbl_for_type(types::Type *type)
-{
-    if (!type)
-        return std::nullopt;
-    auto result = type_to_vtbl.find(type);
-    if (result != type_to_vtbl.cend())
-        return result->second;
-    std::string vtbl_symbol{vtbl_symbol_for_type(type)};
-    uint64_t addr;
-#ifdef _WIN32
-    HMODULE libjvm = get_jvm_handle();
-    if (!libjvm)
-        return std::nullopt;
-    addr = (uint64_t)GetProcAddress(libjvm, vtbl_symbol);
-#else
-    addr = lookup_by_name(vtbl_symbol.c_str());
-#endif
-    if (addr)
-    {
-        addr = vtbl_symbol.starts_with("_ZTV") ? addr + 2 * sizeof(void *) : addr;
-        vtbl_to_type.try_emplace(addr, type);
-        return type_to_vtbl.try_emplace(type, addr).first->second;
-    }
-    return type_to_vtbl.try_emplace(type, std::nullopt).first->second;
-}
-
-types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base_type)
-{
-    if (!addr || !get_vtbl_for_type(base_type))
-        return nullptr;
-
-    static constexpr size_t ptr_size = sizeof(void *);
-
-    uint64_t candidates[3] = {*(uint64_t *)addr, 0, 0};
-
-    int64_t offset2 = base_type->get_size() - (base_type->get_size() % ptr_size) - ptr_size;
-    if (offset2 > 0)
-    {
-        candidates[1] = *(uint64_t *)(addr + offset2);
-        if (offset2 - (int64_t)ptr_size > 0)
-            candidates[2] = *(uint64_t *)(addr + offset2 - ptr_size);
-    }
-
-    for (uint64_t loc : candidates)
-    {
-        if (!loc)
-            continue;
-        auto it = vtbl_to_type.find(loc);
-        if (it != vtbl_to_type.end())
-            for (const auto *super = it->second; super; super = super->get_super_class())
-                if (super == base_type)
-                    return it->second;
-    }
-
-    for (const auto &[name, type_ptr] : name_to_type)
-    {
-        auto *type = type_ptr.get();
-        const auto *super = type;
-        while (super && super != base_type)
-            super = super->get_super_class();
-        if (!super)
-            continue;
-        if (auto vtable_addr = get_vtbl_for_type(type))
-        {
-            uint64_t v = *vtable_addr;
-            if (v == candidates[0] || v == candidates[1] || v == candidates[2])
-                return type;
-        }
-    };
-    return nullptr;
-}
-
 bool Jvm::is_pointer_type(std::string_view type_name) noexcept
 {
     auto it = type_name.rbegin();
@@ -310,26 +378,6 @@ HMODULE Jvm::get_jvm_handle() noexcept
     return h;
 }
 #endif
-
-uint64_t Jvm::deref_symbol(const char *symbol_name)
-{
-    if (!symbol_name || symbol_name[0] == '\0')
-        return 0;
-#ifdef _WIN32
-    HMODULE libjvm = get_jvm_handle();
-    if (!libjvm)
-        return 0;
-    uint64_t addr = (uint64_t)GetProcAddress(libjvm, symbol_name);
-    if (!addr)
-        return 0;
-    return *(uint64_t *)(addr);
-#else
-    uint64_t addr = lookup_by_name(symbol_name);
-    if (!addr)
-        return 0;
-    return *(uint64_t *)addr;
-#endif
-}
 
 std::string Jvm::vtbl_symbol_for_type(types::Type *type)
 {

@@ -10,6 +10,26 @@ Type::Type(std::string_view name, Type *super_class, size_t size, bool is_oop_ty
 {
 }
 
+const Field *Type::get_field(std::string_view field_name) const noexcept
+{
+    auto it = name_to_field.find(field_name);
+    return it != name_to_field.end() ? it->second.get() : nullptr;
+}
+
+const std::optional<uint64_t> Type::get_field_offset(std::string_view field_name) const noexcept
+{
+    auto field = get_field(field_name);
+    return field ? std::make_optional(field->get_offset()) : std::nullopt;
+}
+
+bool Type::add_field(std::unique_ptr<Field> field)
+{
+    if (!field)
+        return false;
+    auto [it, inserted] = name_to_field.try_emplace(field->get_field_name(), std::move(field));
+    return inserted;
+}
+
 inline std::ostream &operator<<(std::ostream &os, const Type &type)
 {
     os << "Type{name='" << type.name << "', super_class_name='" << type.super_class->get_name() << "', size=" << type.size

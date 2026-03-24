@@ -8,17 +8,17 @@ void CodeBlob::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("CodeBlob");
 
-    name_offset = type->get_field("_name")->get_offset();
-    size_offset = type->get_field("_size")->get_offset();
-    header_size_offset = type->get_field("_header_size")->get_offset();
-    frame_complete_offset_offset = type->get_field("_frame_complete_offset")->get_offset();
-    content_begin_offset = type->get_field("_content_begin")->get_offset();
-    code_begin_offset = type->get_field("_code_begin")->get_offset();
-    code_end_offset = type->get_field("_code_end")->get_offset();
-    data_end_offset = type->get_field("_data_end")->get_offset();
-    data_offset_offset = type->get_field("_data_offset")->get_offset();
-    frame_size_offset = type->get_field("_frame_size")->get_offset();
-    oop_maps_offset = type->get_field("_oop_maps")->get_offset();
+    name_offset = type->get_field_offset("_name").value_or(0);
+    size_offset = type->get_field_offset("_size").value_or(0);
+    header_size_offset = type->get_field_offset("_header_size").value_or(0);
+    frame_complete_offset_offset = type->get_field_offset("_frame_complete_offset").value_or(0);
+    content_begin_offset = type->get_field_offset("_content_begin").value_or(0);
+    code_begin_offset = type->get_field_offset("_code_begin").value_or(0);
+    code_end_offset = type->get_field_offset("_code_end").value_or(0);
+    data_end_offset = type->get_field_offset("_data_end").value_or(0);
+    data_offset_offset = type->get_field_offset("_data_offset").value_or(0);
+    frame_size_offset = type->get_field_offset("_frame_size").value_or(0);
+    oop_maps_offset = type->get_field_offset("_oop_maps").value_or(0);
 }
 
 std::ostream &operator<<(std::ostream &os, const CodeBlob &codeBlob)

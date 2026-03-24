@@ -3,6 +3,7 @@
 #include "field.hpp"
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 namespace hotspot::types
@@ -29,11 +30,9 @@ class Type
     bool get_is_unsigned() const noexcept { return is_unsigned; }
     bool get_is_pointer() const noexcept { return is_pointer; }
 
-    const Field *get_field(std::string_view field_name) const noexcept // 只提供临访问Field的函数
-    {
-        auto it = name_to_field.find(field_name);
-        return it != name_to_field.end() ? it->second.get() : nullptr;
-    }
+    const Field *get_field(std::string_view field_name) const noexcept; // 只提供临访问Field的函数
+
+    const std::optional<uint64_t> get_field_offset(std::string_view field_name) const noexcept;
 
     void set_super_class(Type *new_super_class) { super_class = new_super_class; }
     void set_size(size_t new_size) noexcept { size = new_size; }
@@ -46,13 +45,7 @@ class Type
         target_type = new_target_type;
     }
 
-    bool add_field(std::unique_ptr<Field> field) // unique_ptr明确所有权
-    {
-        if (!field)
-            return false;
-        auto [it, inserted] = name_to_field.try_emplace(field->get_field_name(), std::move(field));
-        return inserted;
-    }
+    bool add_field(std::unique_ptr<Field> field); // unique_ptr明确所有权
 
     bool remove_field(std::string_view field_name) { return name_to_field.erase(field_name) > 0; }
 

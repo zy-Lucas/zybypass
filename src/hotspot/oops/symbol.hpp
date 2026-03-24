@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../runtime/jvmObject.hpp"
-#include <cstring>
+#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -30,8 +30,8 @@ class Symbol : public runtime::JvmObject<Symbol>
   public:
     Symbol(uint64_t addr);
 
-    unsigned short get_length() const noexcept { return read_field<unsigned short>(length_offset); }
-    unsigned char get_byte_at(size_t index) const noexcept { return read_field<unsigned char>(base_offset + index); }
+    uint16_t get_length() const noexcept { return read_field<uint16_t>(length_offset); }
+    uint8_t get_byte_at(size_t index) const noexcept { return read_field<uint8_t>(base_offset + index); }
 
     std::string_view as_view() const noexcept { return {(const char *)address() + base_offset, get_length()}; }
     std::string as_string() const { return {(const char *)address() + base_offset, get_length()}; }

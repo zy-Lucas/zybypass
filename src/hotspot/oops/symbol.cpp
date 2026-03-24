@@ -8,8 +8,8 @@ void Symbol::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("Symbol");
 
-    length_offset = type->get_field("_length")->get_offset();
-    base_offset = type->get_field("_base")->get_offset();
-    id_hash_and_refcount_offset = type->get_field("_hash_and_refcount")->get_offset();
+    length_offset = type->get_field_offset("_length").value_or(0);
+    base_offset = type->get_field_offset("_base").value_or(0);
+    id_hash_and_refcount_offset = type->get_field_offset("_hash_and_refcount").value_or(0);
 }
 } // namespace hotspot::oops
