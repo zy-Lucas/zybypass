@@ -2,6 +2,7 @@
 
 #include "../types/field.hpp"
 #include "../types/type.hpp"
+#include <cstdint>
 
 namespace hotspot::runtime
 {
@@ -38,6 +39,8 @@ class Jvm
         static std::optional oop_size = lookup_int_constant("oopSize");
         return oop_size;
     }
+
+    static uint64_t build_long_from_intsPD(int32_t oneHalf, int32_t otherHalf) noexcept;
 
   private:
     static inline std::unordered_map<std::string_view, std::unique_ptr<types::Type>> name_to_type;
