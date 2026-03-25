@@ -32,7 +32,7 @@ class Type
 
     const Field *get_field(std::string_view field_name) const noexcept; // 只提供临访问Field的函数
 
-    const std::optional<uint64_t> get_field_offset(std::string_view field_name) const noexcept;
+    std::optional<uint64_t> get_field_offset(std::string_view field_name) const noexcept;
 
     void set_super_class(Type *new_super_class) { super_class = new_super_class; }
     void set_size(size_t new_size) noexcept { size = new_size; }

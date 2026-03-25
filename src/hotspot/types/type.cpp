@@ -16,7 +16,7 @@ const Field *Type::get_field(std::string_view field_name) const noexcept
     return it != name_to_field.end() ? it->second.get() : nullptr;
 }
 
-const std::optional<uint64_t> Type::get_field_offset(std::string_view field_name) const noexcept
+std::optional<uint64_t> Type::get_field_offset(std::string_view field_name) const noexcept
 {
     auto field = get_field(field_name);
     return field ? std::make_optional(field->get_offset()) : std::nullopt;
@@ -30,7 +30,7 @@ bool Type::add_field(std::unique_ptr<Field> field)
     return inserted;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Type &type)
+std::ostream &operator<<(std::ostream &os, const Type &type)
 {
     os << "Type{name='" << type.name << "', super_class_name='" << type.super_class->get_name() << "', size=" << type.size
        << ", is_oop_type=" << type.is_oop_type << ", is_int=" << type.is_int << ", is_unsigned=" << type.is_unsigned

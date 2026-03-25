@@ -8,7 +8,7 @@ Field::Field(std::string_view type_name, std::string_view field_name, Type *fiel
 {
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Field &field)
+std::ostream &operator<<(std::ostream &os, const Field &field)
 {
     os << "Field{type_name='" << field.type_name << "', field_name='" << field.field_name
        << "', is_static=" << field.is_static << ", offset=" << field.offset

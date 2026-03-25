@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../runtime/jvmObject.hpp"
-#include "../runtime/virtualBaseConstructor.hpp"
 
 namespace hotspot::oops
 {
@@ -19,8 +18,4 @@ class MetaData : public runtime::JvmObject<MetaData>
 
     static void initialize();
 };
-
-using MetadataConstructor =
-    runtime::VirtualBaseConstructor<runtime::NullType, runtime::TypeMapping<"Metadata", MetaData>,
-                                    runtime::TypeMapping<"Klass", MetaData>>;
 } // namespace hotspot::oops

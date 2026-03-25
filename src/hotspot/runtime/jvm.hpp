@@ -34,10 +34,10 @@ class Jvm
     static std::string_view get_string_view_ref(uint64_t addr);
     static std::string_view get_string_view(uint64_t addr) noexcept;
 
-    static std::optional<int32_t> get_oop_size()
+    static int32_t get_oop_size() noexcept
     {
         static std::optional oop_size = lookup_int_constant("oopSize");
-        return oop_size;
+        return *oop_size;
     }
 
     static uint64_t build_long_from_intsPD(int32_t oneHalf, int32_t otherHalf) noexcept;
@@ -55,7 +55,7 @@ class Jvm
     static void read_vm_long_constants();
 
     static types::Type *lookup_or_fail(std::string_view type_name) { return lookup_type(type_name, true); }
-    static types::Type *lookup_type_or_creat_type(std::string_view type_name, size_t size, bool is_oop_type,
+    static types::Type *lookup_type_or_create_type(std::string_view type_name, size_t size, bool is_oop_type,
                                                   bool is_integer_type, bool is_unsigned)
     {
         types::Type *type = lookup_type(type_name, false);

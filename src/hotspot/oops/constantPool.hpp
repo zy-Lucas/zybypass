@@ -2,8 +2,6 @@
 
 #include "../runtime/jvmObject.hpp"
 #include "symbol.hpp"
-#include <bit>
-#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -22,23 +20,32 @@ class ConstantPool : public runtime::JvmObject<ConstantPool>
     uint16_t get_major() const noexcept { return read_field<uint16_t>(major_version_offset); }
     uint16_t get_minor() const noexcept { return read_field<uint16_t>(minor_version_offset); }
 
-    Symbol get_source_file_name() { return get_symbol_at(read_field<uint16_t>(source_file_name_index_offset)); }
-    Symbol get_generic_signature() { return get_symbol_at(read_field<uint16_t>(generic_signature_index_offset)); }
+    Symbol get_source_file_name() const noexcept
+    {
+        return get_symbol_at(read_field<uint16_t>(source_file_name_index_offset));
+    }
+    Symbol get_generic_signature() const noexcept
+    {
+        return get_symbol_at(read_field<uint16_t>(generic_signature_index_offset));
+    }
 
-    uint64_t index_offset(uint32_t index) { return (index * element_size) + header_size; }
+    uint64_t index_offset(uint32_t index) const noexcept { return (index * element_size) + header_size; }
 
-    uint64_t get_address_at_raw(uint32_t index) { return read_field<uint64_t>(index_offset(index)); }
-    CPSlot get_slot_at(uint32_t index) { return {get_address_at_raw(index)}; }
-    Symbol get_symbol_at(uint32_t index) { return index ? Symbol{get_address_at_raw(index)} : Symbol{0}; }
+    uint64_t get_address_at_raw(uint32_t index) const noexcept { return read_field<uint64_t>(index_offset(index)); }
+    CPSlot get_slot_at(uint32_t index) const noexcept { return {get_address_at_raw(index)}; }
+    Symbol get_symbol_at(uint32_t index) const noexcept
+    {
+        return index ? Symbol{get_address_at_raw(index)} : Symbol{0};
+    }
 
-    int32_t get_int_at(uint32_t index) { return read_field<int32_t>(index_offset(index)); }
-    int64_t get_long_at(uint32_t index)
+    int32_t get_int_at(uint32_t index) const noexcept { return read_field<int32_t>(index_offset(index)); }
+    int64_t get_long_at(uint32_t index) const noexcept
     {
         return runtime::Jvm::build_long_from_intsPD(read_field<int32_t>(index_offset(index)),
                                                     read_field<int32_t>(index_offset(index + 1)));
     }
-    float get_float_at(uint32_t index) { return read_field<float>(index_offset(index)); }
-    double get_double_at(uint32_t index) { return std::bit_cast<double>(get_long_at(index)); }
+    float get_float_at(uint32_t index) const noexcept { return read_field<float>(index_offset(index)); }
+    double get_double_at(uint32_t index) const noexcept { return std::bit_cast<double>(get_long_at(index)); }
 
   private:
     friend class runtime::JvmObject<ConstantPool>;
@@ -59,9 +66,9 @@ class ConstantPool : public runtime::JvmObject<ConstantPool>
     static inline uint64_t header_size;
     static inline uint64_t element_size;
 
-    static inline uint64_t INDY_BSM_OFFSET;
-    static inline uint64_t INDY_ARGC_OFFSET;
-    static inline uint64_t INDY_ARGV_OFFSET;
+    static inline int32_t INDY_BSM_OFFSET;
+    static inline int32_t INDY_ARGC_OFFSET;
+    static inline int32_t INDY_ARGV_OFFSET;
 
     static void initialize();
 };

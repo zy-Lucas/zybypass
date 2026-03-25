@@ -12,7 +12,7 @@ uintptr_t search_symbol(DB *hash_table, uintptr_t base, const char *sym_name, in
     if (!hash_table)
         return 0;
 
-    key.data = (char *)(uintptr_t)sym_name;
+    key.data = (char *)sym_name;
     key.size = strlen(sym_name) + 1;
     ret = (*hash_table->get)(hash_table, &key, &value, 0);
     if (!ret)

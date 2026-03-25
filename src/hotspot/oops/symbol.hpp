@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../runtime/jvmObject.hpp"
-#include <cstdint>
 
 namespace hotspot::oops
 {

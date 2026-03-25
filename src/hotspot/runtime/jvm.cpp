@@ -200,7 +200,7 @@ std::string_view Jvm::get_string_view(uint64_t addr) noexcept
     return {str, std::strlen(str)};
 }
 
-uint64_t build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf)
+uint64_t Jvm::build_long_from_intsPD(int32_t oneHalf, int32_t otherHalf) noexcept
 {
     if constexpr (std::endian::native == std::endian::little)
         return ((uint64_t)oneHalf << 32) | otherHalf;
@@ -232,7 +232,7 @@ void Jvm::read_vm_types()
         uint64_t size = *(uint64_t *)(entry_addr + type_entry_size_Offset);
 
         auto type = std::make_unique<types::Type>(type_name,
-                                                  lookup_type_or_creat_type(superclass_name, -1, false, false, false),
+                                                  lookup_type_or_create_type(superclass_name, -1, false, false, false),
                                                   size, is_oop_type, is_integer_type, is_unsigned);
         std::string_view key = type->get_name();
         name_to_type.try_emplace(key, std::move(type));
