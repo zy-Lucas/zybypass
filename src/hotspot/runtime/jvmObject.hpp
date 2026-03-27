@@ -31,11 +31,16 @@ template <typename Derived> class JvmObject : public JvmObjectBase
     ~JvmObject() = default;
 
   protected:
-    template <typename T> T read_field(size_t offset) const noexcept { return *(T *)(address() + offset); }
-
-    template <typename T> void write_field(size_t offset, const T &value) noexcept
+    template <typename T> T read_field(uint64_t offset) const noexcept
     {
-        memcpy(address() + offset, &value, sizeof(value));
+        T value;
+        std::memcpy(&value, (const void *)(address() + offset), sizeof(T));
+        return value;
+    }
+
+    template <typename T> void write_field(uint64_t offset, const T &value) noexcept
+    {
+        std::memcpy((void *)(address() + offset), &value, sizeof(T));
     }
 
     std::string_view read_string_field(uint64_t offset) const { return Jvm::get_string_view_ref(address() + offset); }

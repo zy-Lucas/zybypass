@@ -10,10 +10,6 @@ class Klass : public MetaData
   public:
     Klass(uint64_t addr);
 
-    uint32_t get_class_status() { return 0; }
-
-    bool is_array_klass() { return false; }
-
     Klass get_super() const noexcept { return {read_field<uint64_t>(super_offset)}; }
     int32_t get_layout_helper() const noexcept { return read_field<int32_t>(layout_helper_offset); }
     Symbol get_name() const noexcept { return {read_field<uint64_t>(name_offset)}; }

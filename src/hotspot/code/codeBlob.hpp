@@ -29,19 +29,6 @@ class CodeBlob : public runtime::JvmObject<CodeBlob>
     uint32_t get_frame_size_word() const noexcept { return read_field<uint32_t>(frame_size_offset); }
     std::string_view get_name() const { return read_string_field(name_offset); }
 
-    bool is_bufferBlob() const noexcept { return false; }
-    bool is_compiled() const noexcept { return false; }
-    bool is_nMethod() const noexcept { return false; }
-    bool is_runtimeStub() const noexcept { return false; }
-    bool is_deoptimizationStub() const noexcept { return false; }
-    bool is_uncommonTrapStub() const noexcept { return false; }
-    bool is_exceptionStub() const noexcept { return false; }
-    bool is_safepointStub() const noexcept { return false; }
-    bool is_adapterBlob() const noexcept { return false; }
-    bool is_javaMethod() const noexcept { return false; }
-    bool is_nativeMethod() const noexcept { return false; }
-    bool is_osrMethod() const noexcept { return false; }
-
     size_t getContentSize() const noexcept { return content_end() - content_begin(); }
     size_t getCodeSize() const noexcept { return code_end() - code_begin(); }
     size_t getDataSize() const noexcept { return data_end() - data_begin(); }
