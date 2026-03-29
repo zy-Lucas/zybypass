@@ -8,7 +8,7 @@ namespace hotspot::oops
 struct CPSlot
 {
     uint64_t ptr;
-    Symbol get_symbol() { return {ptr & (~1)}; }
+    Symbol get_symbol() { return ptr & (~1); }
 };
 
 class ConstantPool : public runtime::JvmObject<ConstantPool>
@@ -33,10 +33,7 @@ class ConstantPool : public runtime::JvmObject<ConstantPool>
 
     uint64_t get_address_at_raw(uint32_t index) const noexcept { return read_field<uint64_t>(index_offset(index)); }
     CPSlot get_slot_at(uint32_t index) const noexcept { return {get_address_at_raw(index)}; }
-    Symbol get_symbol_at(uint32_t index) const noexcept
-    {
-        return index ? Symbol{get_address_at_raw(index)} : Symbol{0};
-    }
+    Symbol get_symbol_at(uint32_t index) const noexcept { return index ? get_address_at_raw(index) : 0; }
 
     int32_t get_int_at(uint32_t index) const noexcept { return read_field<int32_t>(index_offset(index)); }
     int64_t get_long_at(uint32_t index) const noexcept

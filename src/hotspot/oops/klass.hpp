@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../runtime/accessFlag.hpp"
 #include "metaData.hpp"
 #include "symbol.hpp"
 
@@ -10,16 +11,28 @@ class Klass : public MetaData
   public:
     Klass(uint64_t addr);
 
-    Klass get_super() const noexcept { return {read_field<uint64_t>(super_offset)}; }
+    Klass get_super() const noexcept { return read_field<uint64_t>(super_offset); }
     int32_t get_layout_helper() const noexcept { return read_field<int32_t>(layout_helper_offset); }
-    Symbol get_name() const noexcept { return {read_field<uint64_t>(name_offset)}; }
+    Symbol get_name() const noexcept { return read_field<uint64_t>(name_offset); }
     int32_t get_access_flags() const noexcept { return read_field<int32_t>(access_flags_offset); }
-    Klass get_subklass() const noexcept { return {read_field<uint64_t>(subklass_offset)}; }
-    Klass get_next_sibling() const noexcept { return {read_field<uint64_t>(next_sibling_offset)}; }
-    Klass get_next_link() const noexcept { return {read_field<uint64_t>(next_link_offset)}; }
+    runtime::AccessFlags get_access_flags_obj() const noexcept { return get_access_flags(); }
+    Klass get_subklass() const noexcept { return read_field<uint64_t>(subklass_offset); }
+    Klass get_next_sibling() const noexcept { return read_field<uint64_t>(next_sibling_offset); }
+    Klass get_next_link() const noexcept { return read_field<uint64_t>(next_link_offset); }
     uint64_t get_vtable_len() const noexcept { return read_field<uint64_t>(vtable_len_offset); }
 
     bool is_subclass_of(const Klass &k) const noexcept;
+
+    bool is_public() { return get_access_flags_obj().is_public(); }
+    bool is_final() { return get_access_flags_obj().is_final(); }
+    bool is_interface() { return get_access_flags_obj().is_interface(); }
+    bool is_abstract() { return get_access_flags_obj().is_abstract(); }
+    bool is_super() { return get_access_flags_obj().is_super(); }
+    bool is_synthetic() { return get_access_flags_obj().is_synthetic(); }
+    bool has_finalizer() { return get_access_flags_obj().has_finalizer(); }
+    bool is_cloneable() { return get_access_flags_obj().is_cloneable(); }
+    bool has_vanilla_constructor() { return get_access_flags_obj().has_vanilla_constructor(); }
+    bool has_miranda_methods() { return get_access_flags_obj().has_miranda_methods(); }
 
   private:
     static inline std::once_flag init_flag_;
