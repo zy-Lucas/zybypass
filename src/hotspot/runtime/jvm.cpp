@@ -1,10 +1,4 @@
 #include "jvm.hpp"
-#include <bit>
-#include <cstddef>
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <string_view>
 #ifndef _WIN32
 #include "../debugger/aarch64/symbol_lookup.h"
 #else
@@ -198,14 +192,6 @@ std::string_view Jvm::get_string_view(uint64_t addr) noexcept
         return {};
     const char *str = (const char *)addr;
     return {str, std::strlen(str)};
-}
-
-uint64_t Jvm::build_long_from_intsPD(int32_t oneHalf, int32_t otherHalf) noexcept
-{
-    if constexpr (std::endian::native == std::endian::little)
-        return ((uint64_t)oneHalf << 32) | otherHalf;
-    else
-        return ((uint64_t)otherHalf << 32) | oneHalf;
 }
 
 void Jvm::read_vm_types()

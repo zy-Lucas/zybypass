@@ -1,12 +1,14 @@
 #include "metaData.hpp"
 #include "../runtime/virtualBaseConstructor.hpp"
+#include "constMethod.hpp"
+#include "constantPool.hpp"
 #include "klass.hpp"
 
 namespace hotspot::oops
 {
-using MetaDataConstructor =
-    runtime::VirtualBaseConstructor<runtime::NullType, runtime::TypeMapping<"Metadata", MetaData>,
-                                    runtime::TypeMapping<"Klass", Klass>>;
+using MetaDataConstructor = runtime::VirtualBaseConstructor<
+    runtime::NullType, runtime::TypeMapping<"Metadata", MetaData>, runtime::TypeMapping<"Klass", Klass>,
+    runtime::TypeMapping<"ConstMethod", ConstMethod>, runtime::TypeMapping<"ConstantPool", ConstantPool>>;
 
 MetaData::MetaData(uint64_t addr) : runtime::JvmObject<MetaData>(addr) {}
 

@@ -2,7 +2,7 @@
 
 #include "../types/field.hpp"
 #include "../types/type.hpp"
-#include <cstdint>
+#include <bit>
 
 namespace hotspot::runtime
 {
@@ -34,13 +34,24 @@ class Jvm
     static std::string_view get_string_view_ref(uint64_t addr);
     static std::string_view get_string_view(uint64_t addr) noexcept;
 
-    static int32_t get_oop_size() noexcept
+    static std::optional<int32_t> get_bytes_per_word() noexcept
     {
-        static std::optional oop_size = lookup_int_constant("oopSize");
-        return *oop_size;
+        static std::optional bytes_per_word = lookup_int_constant("BytesPerWord");
+        return bytes_per_word;
     }
 
-    static uint64_t build_long_from_intsPD(int32_t oneHalf, int32_t otherHalf) noexcept;
+    static std::optional<int32_t> get_oop_size() noexcept
+    {
+        static std::optional oop_size = lookup_int_constant("oopSize");
+        return oop_size;
+    }
+
+    static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
+    static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
+
+    static constexpr uint64_t build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf) noexcept;
+
+    static constexpr bool is_big_endian() noexcept { return std::endian::native == std::endian::big; }
 
   private:
     static inline std::unordered_map<std::string_view, std::unique_ptr<types::Type>> name_to_type;
@@ -56,7 +67,7 @@ class Jvm
 
     static types::Type *lookup_or_fail(std::string_view type_name) { return lookup_type(type_name, true); }
     static types::Type *lookup_type_or_create_type(std::string_view type_name, size_t size, bool is_oop_type,
-                                                  bool is_integer_type, bool is_unsigned)
+                                                   bool is_integer_type, bool is_unsigned)
     {
         types::Type *type = lookup_type(type_name, false);
         return type ? type : createBasicType(type_name, size, is_oop_type, is_integer_type, is_unsigned);
@@ -76,4 +87,12 @@ class Jvm
 
     static std::string vtbl_symbol_for_type(types::Type *type);
 };
+
+constexpr uint64_t Jvm::build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf) noexcept
+{
+    if constexpr (is_big_endian())
+        return ((uint64_t)oneHalf << 32) | otherHalf;
+    else
+        return ((uint64_t)otherHalf << 32) | oneHalf;
+}
 } // namespace hotspot::runtime

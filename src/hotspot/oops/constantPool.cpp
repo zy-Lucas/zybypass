@@ -2,7 +2,7 @@
 
 namespace hotspot::oops
 {
-ConstantPool::ConstantPool(uint64_t addr) : runtime::JvmObject<ConstantPool>(addr) {};
+ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) { std::call_once(init_flag_, initialize); };
 
 void ConstantPool::initialize()
 {
@@ -20,7 +20,7 @@ void ConstantPool::initialize()
     generic_signature_index_offset = *type->get_field_offset("_generic_signature_index");
 
     header_size = type->get_size();
-    element_size = runtime::Jvm::get_oop_size();
+    element_size = *runtime::Jvm::get_oop_size();
 
     INDY_BSM_OFFSET = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_bsm_offset");
     INDY_ARGC_OFFSET = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_argc_offset");

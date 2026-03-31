@@ -1,8 +1,12 @@
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <jni.h>
 #include <dlfcn.h>
 #include <iostream>
+#include "hotspot/oops/constMethod.hpp"
+#include "hotspot/oops/constantPool.hpp"
 #include "hotspot/runtime/jvm.hpp"
 #include "hotspot/oops/symbol.hpp"
 #include "jni_md.h"
@@ -58,11 +62,18 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 
 JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) { g_javaVM = nullptr; }
 
-extern "C" DLLEXPORT jlong JNIEXPORT JNICALL Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass)
+extern "C" DLLEXPORT jlong JNIEXPORT JNICALL Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass, jlong cm_addr)
 {
-    size_t len = 1;
-    hotspot::oops::MySymbol *sym = new (len) hotspot::oops::MySymbol("a", len);
-    return (uint64_t)sym;
+    hotspot::oops::ConstMethod cm{(uint64_t)cm_addr};
+    hotspot::oops::ConstantPool cp{cm.get_constants()};
+    // void *cm = malloc(constm.get_constMethod_size() * 8);
+    // memcpy(cm, (void *)cm_addr, constm.get_constMethod_size() * 8);
+
+    size_t len = 2;
+    hotspot::oops::MySymbol *sym = new (len) hotspot::oops::MySymbol("sb", len);
+    void *cp_addr = malloc(cp.get_size() + 8);
+    memcpy(cp_addr, (void *)cp.address(), cp.get_size() - 8);
+    return (uint64_t)cp_addr;
 }
 
 __attribute__((constructor(0))) static void init(void)
