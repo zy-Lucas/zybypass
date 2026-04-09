@@ -34,17 +34,13 @@ class Jvm
     static std::string_view get_string_view_ref(uint64_t addr);
     static std::string_view get_string_view(uint64_t addr) noexcept;
 
-    static std::optional<int32_t> get_bytes_per_word() noexcept
-    {
-        static std::optional bytes_per_word = lookup_int_constant("BytesPerWord");
-        return bytes_per_word;
-    }
+    static bool is_client_compiler() noexcept { return using_client_compiler; }
+    static bool is_server_compiler() noexcept { return using_server_compiler; }
 
-    static std::optional<int32_t> get_oop_size() noexcept
-    {
-        static std::optional oop_size = lookup_int_constant("oopSize");
-        return oop_size;
-    }
+    static bool is_core() noexcept { return (!(using_client_compiler || using_server_compiler)); }
+
+    static std::optional<int32_t> get_bytes_per_word() noexcept { return bytes_per_word; }
+    static std::optional<int32_t> get_oop_size() noexcept { return oop_size; }
 
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
     static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
@@ -59,6 +55,12 @@ class Jvm
     static inline std::unordered_map<std::string_view, int64_t> name_to_long_constant;
     static inline std::unordered_map<types::Type *, std::optional<uint64_t>> type_to_vtbl;
     static inline std::unordered_map<uint64_t, types::Type *> vtbl_to_type;
+
+    static inline bool using_client_compiler;
+    static inline bool using_server_compiler;
+
+    static inline std::optional<int32_t> bytes_per_word;
+    static inline std::optional<int32_t> oop_size;
 
     static void read_vm_types();
     static void read_vm_structs();

@@ -51,7 +51,7 @@ class CodeBlob : public runtime::JvmObject<CodeBlob>
     friend class JvmObject<CodeBlob>;
     friend std::ostream &operator<<(std::ostream &os, const CodeBlob &codeBlob);
 
-    static inline std::once_flag init_flag_;
+    DECLARE_STATIC_INIT
 
     static inline uint64_t name_offset;
     static inline uint64_t size_offset;
@@ -64,7 +64,5 @@ class CodeBlob : public runtime::JvmObject<CodeBlob>
     static inline uint64_t data_offset_offset;
     static inline uint64_t frame_size_offset;
     static inline uint64_t oop_maps_offset;
-
-    static void initialize();
 };
 } // namespace hotspot::code

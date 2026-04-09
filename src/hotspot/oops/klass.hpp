@@ -21,21 +21,23 @@ class Klass : public MetaData
     Klass get_next_link() const noexcept { return read_field<uint64_t>(next_link_offset); }
     uint64_t get_vtable_len() const noexcept { return read_field<uint64_t>(vtable_len_offset); }
 
+    uint64_t trace_id() const noexcept { return trace_id_offset ? read_field<uint64_t>(*trace_id_offset) : 0; }
+
     bool is_subclass_of(const Klass &k) const noexcept;
 
-    bool is_public() { return get_access_flags_obj().is_public(); }
-    bool is_final() { return get_access_flags_obj().is_final(); }
-    bool is_interface() { return get_access_flags_obj().is_interface(); }
-    bool is_abstract() { return get_access_flags_obj().is_abstract(); }
-    bool is_super() { return get_access_flags_obj().is_super(); }
-    bool is_synthetic() { return get_access_flags_obj().is_synthetic(); }
-    bool has_finalizer() { return get_access_flags_obj().has_finalizer(); }
-    bool is_cloneable() { return get_access_flags_obj().is_cloneable(); }
-    bool has_vanilla_constructor() { return get_access_flags_obj().has_vanilla_constructor(); }
-    bool has_miranda_methods() { return get_access_flags_obj().has_miranda_methods(); }
+    bool is_public() const noexcept { return get_access_flags_obj().is_public(); }
+    bool is_final() const noexcept { return get_access_flags_obj().is_final(); }
+    bool is_interface() const noexcept { return get_access_flags_obj().is_interface(); }
+    bool is_abstract() const noexcept { return get_access_flags_obj().is_abstract(); }
+    bool is_super() const noexcept { return get_access_flags_obj().is_super(); }
+    bool is_synthetic() const noexcept { return get_access_flags_obj().is_synthetic(); }
+    bool has_finalizer() const noexcept { return get_access_flags_obj().has_finalizer(); }
+    bool is_cloneable() const noexcept { return get_access_flags_obj().is_cloneable(); }
+    bool has_vanilla_constructor() const noexcept { return get_access_flags_obj().has_vanilla_constructor(); }
+    bool has_miranda_methods() const noexcept { return get_access_flags_obj().has_miranda_methods(); }
 
   private:
-    static inline std::once_flag init_flag_;
+    DECLARE_STATIC_INIT
 
     static inline uint64_t java_mirror_offset;
     static inline uint64_t super_offset;
@@ -59,7 +61,5 @@ class Klass : public MetaData
     static inline int32_t LH_ARRAY_TAG_SHIFT;
     static inline int32_t LH_ARRAY_TAG_TYPE_VALUE;
     static inline int32_t LH_ARRAY_TAG_OBJ_VALUE;
-
-    static void initialize();
 };
 } // namespace hotspot::oops

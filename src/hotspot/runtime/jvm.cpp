@@ -14,6 +14,16 @@ void Jvm::init()
     read_vm_structs();
     read_vm_int_constants();
     read_vm_long_constants();
+
+    if (types::Type *type = lookup_type("Method"); type->get_field("_from_compiled_entry"))
+    {
+        if (lookup_type("Matcher"))
+            using_server_compiler = true;
+        else
+            using_client_compiler = true;
+    }
+    bytes_per_word = lookup_int_constant("BytesPerWord");
+    oop_size = lookup_int_constant("oopSize");
 }
 
 // string_view指向临时string就等炸吧

@@ -19,8 +19,6 @@ class MetaData : public runtime::JvmObject<MetaData>
   private:
     friend class runtime::JvmObject<MetaData>;
 
-    static inline std::once_flag init_flag_;
-
-    static void initialize();
+    DECLARE_STATIC_INIT
 };
 } // namespace hotspot::oops

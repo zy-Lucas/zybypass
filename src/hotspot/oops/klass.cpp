@@ -2,7 +2,7 @@
 
 namespace hotspot::oops
 {
-Klass::Klass(uint64_t addr) : MetaData(addr) { std::call_once(init_flag_, initialize); }
+Klass::Klass(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; }
 
 bool Klass::is_subclass_of(const Klass &k) const noexcept
 {

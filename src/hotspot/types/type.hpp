@@ -24,7 +24,7 @@ class Type
 
     std::string_view get_name() const noexcept { return name; }
     const Type *get_super_class() const noexcept { return super_class; }
-    size_t get_size() const noexcept { return size; }
+    uint32_t get_size() const noexcept { return size; }
     bool get_is_oop_type() const noexcept { return is_oop_type; }
     bool get_is_int() const noexcept { return is_int; }
     bool get_is_unsigned() const noexcept { return is_unsigned; }
@@ -35,7 +35,7 @@ class Type
     std::optional<uint64_t> get_field_offset(std::string_view field_name) const noexcept;
 
     void set_super_class(Type *new_super_class) { super_class = new_super_class; }
-    void set_size(size_t new_size) noexcept { size = new_size; }
+    void set_size(uint32_t new_size) noexcept { size = new_size; }
     void set_is_oop_type(bool new_is_oop_type) noexcept { is_oop_type = new_is_oop_type; }
     void set_is_int(bool new_is_int) noexcept { is_int = new_is_int; }
     void set_is_unsigned(bool new_is_unsigned) noexcept { is_unsigned = new_is_unsigned; }
@@ -57,7 +57,7 @@ class Type
 
     std::string_view name;
     Type *super_class;
-    size_t size;
+    uint32_t size;
     bool is_oop_type;
     bool is_int;
     bool is_unsigned;

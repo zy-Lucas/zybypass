@@ -14,7 +14,7 @@ class InstanceConstructor
     virtual std::pair<std::string_view, std::unique_ptr<JvmObjectBase>> instantiate_wrapper_for(uint64_t addr) = 0;
 
   protected:
-    types::WrongTypeException new_wrong_type_exception(uint64_t addr)
+    types::WrongTypeException wrong_type_exception(uint64_t addr)
     {
         return types::WrongTypeException("No suitable match for type of address " + std::to_string(addr));
     }

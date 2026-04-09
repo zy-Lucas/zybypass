@@ -1,8 +1,17 @@
 #include "constMethod.hpp"
+#include <cstdint>
 
 namespace hotspot::oops
 {
-ConstMethod::ConstMethod(uint64_t addr) : MetaData(addr) { std::call_once(init_flag_, initialize); }
+ConstMethod::ConstMethod(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; }
+
+uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
+{
+    uint64_t offset =
+        has_method_annotations() + has_parameter_annotations() + has_type_annotations() + has_default_annotations();
+    int32_t word_size = *runtime::Jvm::get_oop_size();
+    return (get_constMethod_size() * word_size) - (offset * word_size) - sizeof_short;
+}
 
 void ConstMethod::initialize()
 {

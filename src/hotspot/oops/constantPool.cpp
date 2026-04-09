@@ -2,7 +2,7 @@
 
 namespace hotspot::oops
 {
-ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) { std::call_once(init_flag_, initialize); };
+ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; };
 
 void ConstantPool::initialize()
 {

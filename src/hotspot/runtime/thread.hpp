@@ -27,7 +27,7 @@ class Thread : public JvmObject<Thread>
   private:
     friend class JvmObject<Thread>;
 
-    static inline std::once_flag init_flag_;
+    DECLARE_STATIC_INIT
 
     static inline uint64_t suspend_flags_offset;
     static inline uint32_t HAS_ASYNC_EXCEPTION;
@@ -37,7 +37,5 @@ class Thread : public JvmObject<Thread>
     static inline uint64_t current_pending_monitor_offset;
     static inline uint64_t current_waiting_monitor_offset;
     static inline uint64_t allocated_bytes_offset;
-
-    static void initialize();
 };
 } // namespace hotspot::runtime

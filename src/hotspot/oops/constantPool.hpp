@@ -2,8 +2,6 @@
 
 #include "metaData.hpp"
 #include "symbol.hpp"
-#include <cassert>
-#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -68,7 +66,7 @@ class ConstantPool : public MetaData
     static uint64_t get_element_size() noexcept { return element_size; }
 
   private:
-    static inline std::once_flag init_flag_;
+    DECLARE_STATIC_INIT
 
     static inline uint64_t tags_offset;
     static inline uint64_t operands_offset;
@@ -87,7 +85,5 @@ class ConstantPool : public MetaData
     static inline int32_t INDY_BSM_OFFSET;
     static inline int32_t INDY_ARGC_OFFSET;
     static inline int32_t INDY_ARGV_OFFSET;
-
-    static void initialize();
 };
 } // namespace hotspot::oops

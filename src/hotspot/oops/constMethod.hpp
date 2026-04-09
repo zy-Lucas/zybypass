@@ -2,6 +2,7 @@
 
 #include "constantPool.hpp"
 #include "metaData.hpp"
+#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -10,35 +11,48 @@ class ConstMethod : public MetaData
   public:
     ConstMethod(uint64_t addr);
 
-    ConstantPool get_constants() { return read_field<uint64_t>(constants_offset); }
-    int32_t get_constMethod_size() { return read_field<int32_t>(constMethod_size_offset); }
-    uint16_t get_flags() { return read_field<uint16_t>(flags_offset); }
-    uint16_t get_code_size() { return read_field<uint16_t>(code_size_offset); }
-    uint16_t get_name_index() { return read_field<uint16_t>(name_index_offset); }
-    uint16_t get_signature_index() { return read_field<uint16_t>(signature_index_offset); }
-    uint16_t get_idnum() { return read_field<uint16_t>(idnum_offset); }
-    uint16_t get_max_stack() { return read_field<uint16_t>(max_stack_offset); }
-    uint16_t get_max_locals() { return read_field<uint16_t>(max_locals_offset); }
-    uint16_t get_size_of_parameters() { return read_field<uint16_t>(size_of_parameters_offset); }
+    ConstantPool get_constants() const noexcept { return read_field<uint64_t>(constants_offset); }
+    int32_t get_constMethod_size() const noexcept { return read_field<int32_t>(constMethod_size_offset); }
+    uint16_t get_flags() const noexcept { return read_field<uint16_t>(flags_offset); }
+    uint16_t get_code_size() const noexcept { return read_field<uint16_t>(code_size_offset); }
+    uint16_t get_name_index() const noexcept { return read_field<uint16_t>(name_index_offset); }
+    uint16_t get_signature_index() const noexcept { return read_field<uint16_t>(signature_index_offset); }
+    uint16_t get_idnum() const noexcept { return read_field<uint16_t>(idnum_offset); }
+    uint16_t get_max_stack() const noexcept { return read_field<uint16_t>(max_stack_offset); }
+    uint16_t get_max_locals() const noexcept { return read_field<uint16_t>(max_locals_offset); }
+    uint16_t get_size_of_parameters() const noexcept { return read_field<uint16_t>(size_of_parameters_offset); }
 
-    uint8_t get_u1_at(uint32_t bci) { return read_field<uint8_t>(bytecode_offset + bci); }
-    uint8_t get_opcode_at(uint32_t bci) { return get_u1_at(bci); }
+    uint8_t get_u1_at(uint32_t bci) const noexcept { return read_field<uint8_t>(bytecode_offset + bci); }
+    uint8_t get_opcode_at(uint32_t bci) const noexcept { return get_u1_at(bci); }
 
-    uint16_t get_Java_u2_at(uint32_t bci) { return (get_u1_at(bci) << 8) | get_u1_at(bci + 1); }
-    uint16_t get_native_u2_at(uint32_t bci) { return read_field<uint16_t>(bytecode_offset + bci); }
+    uint16_t get_java_u2_at(uint32_t bci) const noexcept { return (get_u1_at(bci) << 8) | get_u1_at(bci + 1); }
+    uint16_t get_native_u2_at(uint32_t bci) const noexcept { return read_field<uint16_t>(bytecode_offset + bci); }
 
-    uint16_t get_Java_u4_at(uint32_t bci) { return (get_Java_u2_at(bci) << 16) | get_Java_u2_at(bci + 1); }
-    uint16_t get_native_u4_at(uint32_t bci) { return read_field<uint32_t>(bytecode_offset + bci); }
+    uint32_t get_java_u4_at(uint32_t bci) const noexcept { return get_java_u2_at(bci) << 16 | get_java_u2_at(bci + 1); }
+    uint32_t get_native_u4_at(uint32_t bci) const noexcept { return read_field<uint32_t>(bytecode_offset + bci); }
 
-    bool has_method_parameters() { return get_flags() & HAS_METHOD_PARAMETERS; }
-    bool has_generic_signature() { return get_flags() & HAS_GENERIC_SIGNATURE; }
-    bool has_method_annotations() { return get_flags() & HAS_METHOD_ANNOTATIONS; }
-    bool has_parameter_annotations() { return get_flags() & HAS_PARAMETER_ANNOTATIONS; }
-    bool has_default_annotations() { return get_flags() & HAS_DEFAULT_ANNOTATIONS; }
-    bool has_type_annotations() { return get_flags() & HAS_TYPE_ANNOTATIONS; }
+    bool has_line_number_table() const noexcept { return get_flags() & HAS_LINENUMBER_TABLE; }
+
+    bool has_local_variable_table() const noexcept { return get_flags() & HAS_LOCALVARIABLE_TABLE; }
+
+    bool has_exception_table() const noexcept { return get_flags() & HAS_EXCEPTION_TABLE; }
+
+    bool has_checked_exceptions() const noexcept { return get_flags() & HAS_CHECKED_EXCEPTIONS; }
 
   private:
-    static inline std::once_flag init_flag_;
+    bool has_method_parameters() const noexcept { return get_flags() & HAS_METHOD_PARAMETERS; }
+    bool has_generic_signature() const noexcept { return get_flags() & HAS_GENERIC_SIGNATURE; }
+    bool has_method_annotations() const noexcept { return get_flags() & HAS_METHOD_ANNOTATIONS; }
+    bool has_parameter_annotations() const noexcept { return get_flags() & HAS_PARAMETER_ANNOTATIONS; }
+    bool has_default_annotations() const noexcept { return get_flags() & HAS_DEFAULT_ANNOTATIONS; }
+    bool has_type_annotations() const noexcept { return get_flags() & HAS_TYPE_ANNOTATIONS; }
+
+    uint64_t offset_of_code_end() const noexcept { return bytecode_offset + get_code_size(); }
+
+    uint64_t offset_of_last_u2_element() const noexcept;
+
+  private:
+    DECLARE_STATIC_INIT
 
     static inline uint64_t constants_offset;
     static inline uint64_t constMethod_size_offset;
@@ -68,6 +82,6 @@ class ConstMethod : public MetaData
     static inline int32_t HAS_DEFAULT_ANNOTATIONS;
     static inline int32_t HAS_TYPE_ANNOTATIONS;
 
-    static void initialize();
+    static constexpr int32_t sizeof_short = 2;
 };
 } // namespace hotspot::oops

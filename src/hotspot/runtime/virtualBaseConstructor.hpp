@@ -3,10 +3,6 @@
 #include "instanceConstructor.hpp"
 #include "jvm.hpp"
 #include "jvmObject.hpp"
-#include <concepts>
-#include <cstring>
-#include <memory>
-#include <type_traits>
 
 namespace hotspot::runtime
 {
@@ -14,14 +10,12 @@ template <typename T>
 concept derived_from_base = std::derived_from<T, JvmObjectBase>;
 
 template <typename T>
+concept unknown_policy = std::same_as<T, std::nullopt_t> || derived_from_base<T>;
+
+template <typename T>
 concept type_mapping_like = requires {
     { T::type_name } -> std::convertible_to<std::string_view>;
     typename T::type;
-};
-
-struct NullType : JvmObjectBase
-{
-    NullType() = delete;
 };
 
 template <size_t N> struct FixedString
@@ -45,7 +39,7 @@ template <FixedString Name, derived_from_base T> struct TypeMapping
     using type = T;
 };
 
-template <derived_from_base unknown_t, type_mapping_like... Types>
+template <unknown_policy unknown_t, type_mapping_like... Types>
     requires(sizeof...(Types) > 0)
 class VirtualBaseConstructor : public InstanceConstructor
 {
@@ -59,14 +53,13 @@ class VirtualBaseConstructor : public InstanceConstructor
         types::Type *type = Jvm::find_dynamic_type_for_address(addr, base_type);
         if (!type)
             return {{}, nullptr};
-        
         std::string_view sv = type->get_name();
-        for (const auto &mapping : arr)
-            if (mapping.first == sv)
-                return {sv, mapping.second(addr)};
-        if constexpr (!std::is_same_v<unknown_t, NullType>)
+        for (const auto &[first, second] : arr)
+            if (first == sv)
+                return {sv, second(addr)};
+        if constexpr (!std::is_same_v<unknown_t, std::nullopt_t>)
             return {sv, std::make_unique<unknown_t>(addr)};
-        throw new_wrong_type_exception(addr);
+        throw wrong_type_exception(addr);
     }
 
   private:

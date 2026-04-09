@@ -2,6 +2,12 @@
 
 #include "jvm.hpp"
 
+#define DECLARE_STATIC_INIT                                                                                            \
+    static inline std::once_flag init_flag_;                                                                           \
+    static void initialize();
+
+#define STATIC_INIT_GUARD std::call_once(init_flag_, initialize)
+
 namespace hotspot::runtime
 {
 class JvmObjectBase
@@ -33,6 +39,8 @@ template <typename Derived> class JvmObject : public JvmObjectBase
   protected:
     template <typename T> T read_field(uint64_t offset) const noexcept
     {
+        if (!address())
+            return {};
         T value;
         std::memcpy(&value, (const void *)(address() + offset), sizeof(T));
         return value;
@@ -40,6 +48,8 @@ template <typename Derived> class JvmObject : public JvmObjectBase
 
     template <typename T> void write_field(uint64_t offset, const T &value) noexcept
     {
+        if (!address())
+            return;
         std::memcpy((void *)(address() + offset), &value, sizeof(T));
     }
 
