@@ -62,7 +62,7 @@ class Method : public MetaData
     bool is_strict() const noexcept { return get_access_flags_obj().is_strict(); }
     bool is_synthetic() const noexcept { return get_access_flags_obj().is_synthetic(); }
 
-    bool is_cnstructor() const noexcept { return (!is_static()) && get_name().equals(object_initializer_name()); }
+    bool is_cnstructor() const noexcept { return !is_static() && get_name().equals(object_initializer_name()); }
     bool is_static_initializer() const noexcept { return is_static() && get_name().equals(class_initializer_name()); }
 
     bool is_obsolete() const noexcept { return get_access_flags_obj().is_obsolete(); }

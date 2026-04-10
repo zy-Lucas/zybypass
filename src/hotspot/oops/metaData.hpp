@@ -9,7 +9,7 @@ class MetaData : public runtime::JvmObject<MetaData>
   public:
     MetaData(uint64_t addr);
 
-    static std::pair<std::string_view, std::unique_ptr<runtime::JvmObjectBase>> instantiate_wrapper_for(uint64_t addr);
+    static std::pair<std::string_view, runtime::JvmObjectBase> instantiate_wrapper_for(uint64_t addr);
 
     static constexpr uint64_t align_size(uint64_t size)
     {

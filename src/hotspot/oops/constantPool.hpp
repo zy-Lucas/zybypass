@@ -39,19 +39,11 @@ class ConstantPool : public MetaData
 
     uint64_t get_address_at_raw(uint32_t index) const noexcept { return read_field<uint64_t>(index_offset(index)); }
     CPSlot get_slot_at(uint32_t index) const noexcept { return {get_address_at_raw(index)}; }
-    CPKlassSlot get_klass_slot_at(uint32_t index) const noexcept
-    {
-        int value = get_int_at(index);
-        return {(uint16_t)(value >> 16), (uint16_t)value};
-    }
+    CPKlassSlot get_klass_slot_at(uint32_t index) const noexcept;
 
     Symbol get_symbol_at(uint32_t index) const noexcept { return get_address_at_raw(index); }
     int32_t get_int_at(uint32_t index) const noexcept { return read_field<int32_t>(index_offset(index)); }
-    int64_t get_long_at(uint32_t index) const noexcept
-    {
-        return runtime::Jvm::build_long_from_intsPD(read_field<int32_t>(index_offset(index)),
-                                                    read_field<int32_t>(index_offset(index + 1)));
-    }
+    int64_t get_long_at(uint32_t index) const noexcept;
     float get_float_at(uint32_t index) const noexcept { return read_field<float>(index_offset(index)); }
     double get_double_at(uint32_t index) const noexcept { return std::bit_cast<double>(get_long_at(index)); }
 

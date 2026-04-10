@@ -42,6 +42,8 @@ class Jvm
     static std::optional<int32_t> get_bytes_per_word() noexcept { return bytes_per_word; }
     static std::optional<int32_t> get_oop_size() noexcept { return oop_size; }
 
+    static std::optional<int32_t> get_invocation_entry_bic() noexcept { return invocation_entry_bic; }
+
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
     static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
 
@@ -61,6 +63,8 @@ class Jvm
 
     static inline std::optional<int32_t> bytes_per_word;
     static inline std::optional<int32_t> oop_size;
+
+    static inline std::optional<int32_t> invocation_entry_bic;
 
     static void read_vm_types();
     static void read_vm_structs();

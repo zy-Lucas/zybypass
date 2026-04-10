@@ -1,13 +1,9 @@
+#include "hotspot/code/debugInfoReadStream.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
-#include "hotspot/oops/metaData.hpp"
 #include "hotspot/oops/symbol.hpp"
 #include "hotspot/runtime/jvm.hpp"
 #include "jni_md.h"
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
 #include <dlfcn.h>
 #include <iostream>
 #include <jni.h>
@@ -137,9 +133,11 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     return (uint64_t)cp_addr;
 }
 
-extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_is(JNIEnv *env, jclass, jlong addr)
+extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr, jint off)
 {
-    std::cout << hotspot::oops::MetaData::instantiate_wrapper_for(addr).first << std::endl;
+    hotspot::code::DebugInfoReadStream st{(uint64_t)addr, (uint32_t)off};
+    st.read_int();
+    std::cout << "method name: " << st.read_method().get_name().as_view() << std::endl;
 }
 
 __attribute__((constructor(0))) static void init(void) { OnLoad(); }

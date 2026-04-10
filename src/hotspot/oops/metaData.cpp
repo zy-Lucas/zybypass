@@ -18,7 +18,7 @@ MetaData::MetaData(uint64_t addr) : runtime::JvmObject<MetaData>(addr) {}
 
 void MetaData::initialize() {}
 
-std::pair<std::string_view, std::unique_ptr<runtime::JvmObjectBase>> MetaData::instantiate_wrapper_for(uint64_t addr)
+std::pair<std::string_view, runtime::JvmObjectBase> MetaData::instantiate_wrapper_for(uint64_t addr)
 {
     static std::unique_ptr<runtime::InstanceConstructor> ctor =
         std::make_unique<MetaDataConstructor>(runtime::Jvm::lookup_type("Metadata"));

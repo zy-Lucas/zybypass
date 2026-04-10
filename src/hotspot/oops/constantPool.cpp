@@ -4,6 +4,18 @@ namespace hotspot::oops
 {
 ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; };
 
+CPKlassSlot ConstantPool::get_klass_slot_at(uint32_t index) const noexcept
+{
+    int value = get_int_at(index);
+    return {(uint16_t)(value >> 16), (uint16_t)value};
+}
+
+int64_t ConstantPool::get_long_at(uint32_t index) const noexcept
+{
+    return runtime::Jvm::build_long_from_intsPD(read_field<int32_t>(index_offset(index)),
+                                                read_field<int32_t>(index_offset(index + 1)));
+}
+
 void ConstantPool::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("ConstantPool");

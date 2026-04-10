@@ -2,7 +2,6 @@
 
 #include "../types/wrongTypeException.h"
 #include "jvmObject.hpp"
-#include <memory>
 
 namespace hotspot::runtime
 {
@@ -11,7 +10,7 @@ class InstanceConstructor
   public:
     virtual ~InstanceConstructor() = default;
 
-    virtual std::pair<std::string_view, std::unique_ptr<JvmObjectBase>> instantiate_wrapper_for(uint64_t addr) = 0;
+    virtual std::pair<std::string_view, JvmObjectBase> instantiate_wrapper_for(uint64_t addr) = 0;
 
   protected:
     types::WrongTypeException wrong_type_exception(uint64_t addr)

@@ -37,12 +37,13 @@ template <typename Derived> class JvmObject : public JvmObjectBase
     ~JvmObject() = default;
 
   protected:
-    template <typename T> T read_field(uint64_t offset) const noexcept
+    template <typename T> T read_field(uint64_t offset, uint64_t base = 0) const noexcept
     {
-        if (!address())
+        uint64_t addr = base ? base : address();
+        if (!addr)
             return {};
         T value;
-        std::memcpy(&value, (const void *)(address() + offset), sizeof(T));
+        std::memcpy(&value, (const void *)(addr + offset), sizeof(T));
         return value;
     }
 

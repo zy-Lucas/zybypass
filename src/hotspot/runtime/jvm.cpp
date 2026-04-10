@@ -24,6 +24,8 @@ void Jvm::init()
     }
     bytes_per_word = lookup_int_constant("BytesPerWord");
     oop_size = lookup_int_constant("oopSize");
+
+    invocation_entry_bic = lookup_int_constant("InvocationEntryBci");
 }
 
 // string_view指向临时string就等炸吧

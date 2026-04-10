@@ -46,26 +46,25 @@ class VirtualBaseConstructor : public InstanceConstructor
   public:
     VirtualBaseConstructor(types::Type *base_type) noexcept : base_type(base_type) {}
 
-    std::pair<std::string_view, std::unique_ptr<JvmObjectBase>> instantiate_wrapper_for(uint64_t addr) override
+    std::pair<std::string_view, JvmObjectBase> instantiate_wrapper_for(uint64_t addr) override
     {
         if (!addr)
-            return {{}, nullptr};
+            return {{}, 0};
         types::Type *type = Jvm::find_dynamic_type_for_address(addr, base_type);
         if (!type)
-            return {{}, nullptr};
+            return {{}, 0};
         std::string_view sv = type->get_name();
         for (const auto &[first, second] : arr)
             if (first == sv)
                 return {sv, second(addr)};
         if constexpr (!std::is_same_v<unknown_t, std::nullopt_t>)
-            return {sv, std::make_unique<unknown_t>(addr)};
+            return {sv, unknown_t(addr)};
         throw wrong_type_exception(addr);
     }
 
   private:
-    static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> std::unique_ptr<JvmObjectBase> {
-                                                  return std::make_unique<typename Types::type>(addr);
-                                              }}...};
+    static constexpr std::array arr{
+        std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectBase { return typename Types::type(addr); }}...};
     types::Type *base_type;
 };
 } // namespace hotspot::runtime
