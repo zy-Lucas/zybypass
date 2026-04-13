@@ -1,4 +1,6 @@
 #include "nmethod.hpp"
+#include "pcDesc.hpp"
+#include "scopeDesc.hpp"
 
 namespace hotspot::code
 {
@@ -23,6 +25,31 @@ oops::Method nmethod::get_method(uint32_t index) const
     if (name != "Method")
         throw std::bad_cast();
     return std::bit_cast<oops::Method>(base);
+}
+
+bool nmethod::is_method_handle_return(uint64_t return_pc) const noexcept
+{
+    if (PcDesc pd{get_pc_desc_at(return_pc)}; pd)
+        return pd.is_method_handle_invoke();
+    return false;
+}
+
+PcDesc nmethod::get_pc_desc_at(uint64_t pc) const noexcept
+{
+    if (pc < code_begin())
+        return 0;
+    for (uint64_t p = scopes_pcs_begin(); p < scopes_pcs_end(); p += PcDesc::pc_desc_size)
+        if (PcDesc pcDesc{p}; pcDesc.get_real_pc(*this) == pc)
+            return pcDesc;
+    return 0;
+}
+
+std::optional<ScopeDesc> nmethod::get_scope_desc_at(uint64_t pc) const noexcept
+{
+    if (PcDesc pd = get_pc_desc_at(pc); pd)
+        return std::make_optional<ScopeDesc>(*this, pd.get_scope_decode_offset(), pd.get_obj_decode_offset(),
+                                             pd.get_reexecute());
+    return std::nullopt;
 }
 
 void nmethod::initialize()

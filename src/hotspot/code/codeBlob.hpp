@@ -49,7 +49,7 @@ class CodeBlob : public runtime::JvmObject<CodeBlob>
 
   private:
     friend class JvmObject<CodeBlob>;
-    friend std::ostream &operator<<(std::ostream &os, const CodeBlob &codeBlob);
+    friend std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob);
 
     DECLARE_STATIC_INIT
 

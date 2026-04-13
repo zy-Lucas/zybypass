@@ -1,8 +1,6 @@
 #pragma once
 
 #include "instanceConstructor.hpp"
-#include "jvm.hpp"
-#include "jvmObject.hpp"
 
 namespace hotspot::runtime
 {

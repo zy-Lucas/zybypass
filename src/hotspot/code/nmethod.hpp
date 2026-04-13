@@ -1,10 +1,12 @@
 #pragma once
 
 #include "compiledMethod.hpp"
-#include <cstdint>
 
 namespace hotspot::code
 {
+class PcDesc;
+class ScopeDesc;
+
 class nmethod : public CompiledMethod
 {
   public:
@@ -65,7 +67,14 @@ class nmethod : public CompiledMethod
 
     nmethod get_osr_link() const noexcept { return read_field<uint64_t>(osr_link_offset); }
 
+    bool is_method_handle_return(uint64_t return_pc) const noexcept;
     bool is_locked_by_vm() const noexcept { return read_field<int32_t>(lock_count_offset) > 0; }
+    bool is_deopt_pc(uint64_t pc) const noexcept { return is_deopt_entry(pc) || is_deopt_mh_entry(pc); }
+    bool is_deopt_entry(uint64_t pc) const noexcept { return pc == deopt_handler_begin(); }
+    bool is_deopt_mh_entry(uint64_t pc) const noexcept { return pc == deopt_mh_handler_begin(); }
+
+    PcDesc get_pc_desc_at(uint64_t pc) const noexcept;
+    std::optional<ScopeDesc> get_scope_desc_at(uint64_t pc) const noexcept;
 
   private:
     int32_t get_entry_bci() const noexcept { return read_field<int32_t>(entry_bci_offset); }

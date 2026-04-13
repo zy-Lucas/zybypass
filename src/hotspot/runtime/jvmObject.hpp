@@ -19,8 +19,11 @@ class JvmObjectBase
 
     uint64_t address() const noexcept { return addr; }
 
-    bool operator==(const JvmObjectBase &other) const { return addr == other.addr; }
-    bool operator!=(const JvmObjectBase &other) const { return !operator==(other); }
+    bool operator==(const JvmObjectBase &other) const noexcept { return addr == other.addr; }
+    bool operator!=(const JvmObjectBase &other) const noexcept { return !operator==(other); }
+
+    explicit operator bool() const noexcept { return addr; }
+    explicit operator uint64_t() const noexcept { return addr; }
 
   private:
     uint64_t addr;

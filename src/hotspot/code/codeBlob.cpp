@@ -4,14 +4,14 @@ namespace hotspot::code
 {
 CodeBlob::CodeBlob(uint64_t addr) : runtime::JvmObject<CodeBlob>(addr) {}
 
-std::ostream &operator<<(std::ostream &os, const CodeBlob &codeBlob)
+std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob)
 {
-    os << codeBlob.get_name() << std::endl
+    os << code_blob.get_name() << std::endl
        << "{"
-       << "content=[" << std::hex << codeBlob.content_begin() << ", " << codeBlob.content_end() << "), "
-       << "code=[" << std::hex << codeBlob.code_begin() << ", " << codeBlob.code_end() << "), "
-       << "data=[" << std::hex << codeBlob.data_begin() << ", " << codeBlob.data_end() << "), "
-       << "frame size=" << std::dec << codeBlob.get_frame_size() << ", "
+       << "content=[" << std::hex << code_blob.content_begin() << ", " << code_blob.content_end() << "), "
+       << "code=[" << std::hex << code_blob.code_begin() << ", " << code_blob.code_end() << "), "
+       << "data=[" << std::hex << code_blob.data_begin() << ", " << code_blob.data_end() << "), "
+       << "frame size=" << std::dec << code_blob.get_frame_size() << ", "
        << "}";
     return os;
 }
