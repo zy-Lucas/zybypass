@@ -37,7 +37,7 @@ std::ostream &operator<<(std::ostream &os, const Type &type)
        << ", is_pointer=" << type.is_pointer << ", fields=[";
 
     bool first = true;
-    for (const auto &pair : type.name_to_field) // 乱序但是无伤大雅
+    for (const auto &pair : type.name_to_field)
     {
         if (!first)
             os << ", ";

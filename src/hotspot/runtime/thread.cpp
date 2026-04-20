@@ -2,7 +2,7 @@
 
 namespace hotspot::runtime
 {
-Thread::Thread(uint64_t addr) : JvmObject<Thread>(addr) {}
+Thread::Thread(uint64_t addr) : JvmObject(addr) {}
 
 void Thread::initialize()
 {

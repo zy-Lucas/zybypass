@@ -4,7 +4,7 @@
 
 namespace hotspot::code
 {
-class CodeBlob : public runtime::JvmObject<CodeBlob>
+class CodeBlob : public runtime::JvmObject
 {
   public:
     CodeBlob(uint64_t addr);
@@ -48,7 +48,6 @@ class CodeBlob : public runtime::JvmObject<CodeBlob>
     uint32_t get_frame_size() const noexcept { return sizeof(void *) * get_frame_size_word(); }
 
   private:
-    friend class JvmObject<CodeBlob>;
     friend std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob);
 
     DECLARE_STATIC_INIT
@@ -64,5 +63,27 @@ class CodeBlob : public runtime::JvmObject<CodeBlob>
     static inline uint64_t data_offset_offset;
     static inline uint64_t frame_size_offset;
     static inline uint64_t oop_maps_offset;
+};
+
+class RuntimeBlob : public CodeBlob
+{
+  public:
+    RuntimeBlob(uint64_t addr);
+
+  private:
+    DECLARE_STATIC_INIT
+};
+
+class RuntimeStub : public RuntimeBlob
+{
+  public:
+    RuntimeStub(uint64_t addr);
+
+    bool caller_must_gc_arguments() const noexcept { return read_field<bool>(caller_must_gc_arguments_offset); }
+
+  private:
+    DECLARE_STATIC_INIT
+
+    static inline uint64_t caller_must_gc_arguments_offset;
 };
 } // namespace hotspot::code

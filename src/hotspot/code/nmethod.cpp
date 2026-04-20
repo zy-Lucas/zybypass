@@ -4,7 +4,7 @@
 
 namespace hotspot::code
 {
-nmethod::nmethod(uint64_t addr) : CompiledMethod(addr) { STATIC_INIT_GUARD; }
+nmethod::nmethod(uint64_t addr) : CompiledMethod(addr) {}
 
 uint32_t nmethod::total_size() const noexcept
 {
@@ -16,7 +16,7 @@ uint64_t nmethod::get_metadata_at(uint32_t index) const noexcept
 {
     if (!index)
         return 0;
-    return read_field<uint64_t>((index - 1) * (*runtime::Jvm::get_oop_size()), metadata_begin());
+    return read<uint64_t>((index - 1) * (*runtime::Jvm::get_oop_size()) + metadata_begin());
 }
 
 oops::Method nmethod::get_method(uint32_t index) const
@@ -52,6 +52,15 @@ std::optional<ScopeDesc> nmethod::get_scope_desc_at(uint64_t pc) const noexcept
     return std::nullopt;
 }
 
+__attribute__((naked)) bool nmethod::make_not_entrant()
+{
+    __asm__ volatile("ldr x0, [x0]       \n\t"
+                     "br  %[func]        \n\t"
+                     :
+                     : [func] "r"(*(void **)(nmethod_vptr + 0xf8))
+                     : "x0", "memory");
+}
+
 void nmethod::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("nmethod");
@@ -75,5 +84,7 @@ void nmethod::initialize()
     lock_count_offset = *type->get_field_offset("_lock_count");
     stack_traversal_mark_offset = *type->get_field_offset("_stack_traversal_mark");
     comp_level_offset = *type->get_field_offset("_comp_level");
+
+    nmethod_vptr = (uint8_t *)*runtime::Jvm::get_vtbl_for_type(type);
 }
 } // namespace hotspot::code

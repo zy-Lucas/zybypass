@@ -21,7 +21,7 @@ struct MySymbol
     }
 };
 
-class Symbol : public runtime::JvmObject<Symbol>
+class Symbol : public runtime::JvmObject
 {
   public:
     Symbol(uint64_t addr);
@@ -51,8 +51,6 @@ class Symbol : public runtime::JvmObject<Symbol>
     }
 
   private:
-    friend class runtime::JvmObject<Symbol>;
-
     DECLARE_STATIC_INIT
 
     static inline uint64_t length_offset;

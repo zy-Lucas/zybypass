@@ -4,7 +4,7 @@
 
 namespace hotspot::code
 {
-class PcDesc : public runtime::JvmObject<PcDesc>
+class PcDesc : public runtime::JvmObject
 {
   public:
     PcDesc(uint64_t addr);
@@ -21,8 +21,6 @@ class PcDesc : public runtime::JvmObject<PcDesc>
     bool is_method_handle_invoke() const noexcept { return get_flags() & is_method_handle_invoke_mask; }
 
   private:
-    friend class JvmObject<PcDesc>;
-
     DECLARE_STATIC_INIT
 
     static inline uint64_t pc_offset_offset;

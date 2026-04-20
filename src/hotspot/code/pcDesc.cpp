@@ -2,7 +2,7 @@
 
 namespace hotspot::code
 {
-PcDesc::PcDesc(uint64_t addr) : hotspot::runtime::JvmObject<PcDesc>(addr) {}
+PcDesc::PcDesc(uint64_t addr) : runtime::JvmObject(addr) {}
 
 void PcDesc::initialize()
 {

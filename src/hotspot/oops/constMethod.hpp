@@ -2,7 +2,6 @@
 
 #include "constantPool.hpp"
 #include "metaData.hpp"
-#include <cstdint>
 
 namespace hotspot::oops
 {

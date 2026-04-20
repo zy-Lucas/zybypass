@@ -2,11 +2,11 @@
 
 namespace hotspot::oops
 {
-MethodCounter::MethodCounter(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; }
+MethodCounter::MethodCounter(uint64_t addr) : MetaData(addr) {}
 
 void MethodCounter::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("MethodCounter");
+    types::Type *type = runtime::Jvm::lookup_type("MethodCounters");
 
     if (runtime::Jvm::is_server_compiler())
         interpreter_throwout_count_offset = type->get_field_offset("_interpreter_throwout_count");

@@ -3,7 +3,7 @@
 
 namespace hotspot::oops
 {
-Method::Method(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; }
+Method::Method(uint64_t addr) : MetaData(addr) {}
 
 Symbol Method::get_generic_signature() const noexcept
 {

@@ -4,7 +4,7 @@
 
 namespace hotspot::runtime
 {
-class Thread : public JvmObject<Thread>
+class Thread : public JvmObject
 {
   public:
     Thread(uint64_t addr);
@@ -25,8 +25,6 @@ class Thread : public JvmObject<Thread>
     bool is_monitor_deflation_thread() const noexcept { return false; }
 
   private:
-    friend class JvmObject<Thread>;
-
     DECLARE_STATIC_INIT
 
     static inline uint64_t suspend_flags_offset;

@@ -2,7 +2,7 @@
 
 namespace hotspot::code
 {
-CodeBlob::CodeBlob(uint64_t addr) : runtime::JvmObject<CodeBlob>(addr) {}
+CodeBlob::CodeBlob(uint64_t addr) : runtime::JvmObject(addr) {}
 
 std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob)
 {
@@ -31,5 +31,21 @@ void CodeBlob::initialize()
     data_offset_offset = *type->get_field_offset("_data_offset");
     frame_size_offset = *type->get_field_offset("_frame_size");
     oop_maps_offset = *type->get_field_offset("_oop_maps");
+}
+
+RuntimeBlob::RuntimeBlob(uint64_t addr) : CodeBlob(addr) {}
+
+void RuntimeBlob::initialize()
+{
+    // types::Type *type = runtime::Jvm::lookup_type("RuntimeBlob");
+}
+
+RuntimeStub::RuntimeStub(uint64_t addr) : RuntimeBlob(addr) {}
+
+void RuntimeStub::initialize()
+{
+    types::Type *type = runtime::Jvm::lookup_type("RuntimeStub");
+
+    caller_must_gc_arguments_offset = *type->get_field_offset("_caller_must_gc_arguments");
 }
 } // namespace hotspot::code

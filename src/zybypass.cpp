@@ -1,4 +1,4 @@
-#include "hotspot/code/debugInfoReadStream.hpp"
+#include "hotspot/code/nmethod.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
 #include "hotspot/oops/symbol.hpp"
@@ -7,6 +7,7 @@
 #include <dlfcn.h>
 #include <iostream>
 #include <jni.h>
+#include <pthread.h>
 
 #define DLLEXPORT
 
@@ -133,11 +134,11 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     return (uint64_t)cp_addr;
 }
 
-extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr, jint off)
+extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr)
 {
-    hotspot::code::DebugInfoReadStream st{(uint64_t)addr, (uint32_t)off};
-    st.read_int();
-    std::cout << "method name: " << st.read_method().get_name().as_view() << std::endl;
+    pthread_jit_write_protect_np(0);
+    std::cout << "success: " << ((hotspot::code::nmethod)addr).make_not_entrant() << std::endl;
+    pthread_jit_write_protect_np(1);
 }
 
 __attribute__((constructor(0))) static void init(void) { OnLoad(); }

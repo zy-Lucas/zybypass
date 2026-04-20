@@ -14,11 +14,11 @@ using MetaDataConstructor =
                                     runtime::TypeMapping<"ConstMethod", ConstMethod>,
                                     runtime::TypeMapping<"ConstantPool", ConstantPool>>;
 
-MetaData::MetaData(uint64_t addr) : runtime::JvmObject<MetaData>(addr) {}
+MetaData::MetaData(uint64_t addr) : runtime::JvmObject(addr) {}
 
 void MetaData::initialize() {}
 
-std::pair<std::string_view, runtime::JvmObjectBase> MetaData::instantiate_wrapper_for(uint64_t addr)
+std::pair<std::string_view, runtime::JvmObject> MetaData::instantiate_wrapper_for(uint64_t addr)
 {
     static std::unique_ptr<runtime::InstanceConstructor> ctor =
         std::make_unique<MetaDataConstructor>(runtime::Jvm::lookup_type("Metadata"));

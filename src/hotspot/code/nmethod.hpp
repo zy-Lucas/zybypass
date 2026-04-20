@@ -7,6 +7,16 @@ namespace hotspot::code
 class PcDesc;
 class ScopeDesc;
 
+enum
+{
+    not_installed = -1,
+    in_use = 0,
+    not_used = 1,
+    not_entrant = 2,
+    unloaded = 3,
+    zombie = 4
+};
+
 class nmethod : public CompiledMethod
 {
   public:
@@ -56,6 +66,13 @@ class nmethod : public CompiledMethod
 
     uint32_t total_size() const noexcept;
 
+    bool is_not_installed() const noexcept { return get_state() == not_installed; }
+    bool is_in_use() const noexcept { return get_state() <= in_use; }
+    bool is_alive() const noexcept { return get_state() < unloaded; }
+    bool is_not_entrant() const noexcept { return get_state() == not_entrant; }
+    bool is_zombie() const noexcept { return get_state() == zombie; }
+    bool is_unloaded() const noexcept { return get_state() == unloaded; }
+
     uint32_t get_oops_length() const noexcept { return oops_size() / *runtime::Jvm::get_oop_size(); }
     uint32_t get_metadata_length() const noexcept { return metadata_size() / *runtime::Jvm::get_oop_size(); }
 
@@ -73,8 +90,12 @@ class nmethod : public CompiledMethod
     bool is_deopt_entry(uint64_t pc) const noexcept { return pc == deopt_handler_begin(); }
     bool is_deopt_mh_entry(uint64_t pc) const noexcept { return pc == deopt_mh_handler_begin(); }
 
+    int8_t get_state() const noexcept { return read_field<int8_t>(state_offset); }
+
     PcDesc get_pc_desc_at(uint64_t pc) const noexcept;
     std::optional<ScopeDesc> get_scope_desc_at(uint64_t pc) const noexcept;
+
+    bool make_not_entrant();
 
   private:
     int32_t get_entry_bci() const noexcept { return read_field<int32_t>(entry_bci_offset); }
@@ -90,6 +111,8 @@ class nmethod : public CompiledMethod
     int32_t get_comp_level() const noexcept { return read_field<int32_t>(comp_level_offset); }
 
     DECLARE_STATIC_INIT
+
+    static inline types::Type *type;
 
     static inline uint64_t entry_bci_offset;
     static inline uint64_t osr_link_offset;
@@ -110,5 +133,7 @@ class nmethod : public CompiledMethod
     static inline uint64_t lock_count_offset;
     static inline uint64_t stack_traversal_mark_offset;
     static inline uint64_t comp_level_offset;
+
+    static inline uint8_t *nmethod_vptr;
 };
 } // namespace hotspot::code

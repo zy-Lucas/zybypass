@@ -3,6 +3,7 @@
 #include "../types/field.hpp"
 #include "../types/type.hpp"
 #include <bit>
+#include <vector>
 
 namespace hotspot::runtime
 {
@@ -18,6 +19,7 @@ class Jvm
     Jvm &operator=(Jvm &&) = delete;
 
     static void init();
+    static void register_post_init(void (*func)()) { get_post_init_callbacks().emplace_back(func); }
 
     static types::Type *lookup_type(std::string_view type_name, bool throw_if_not_found = false);
     static types::Type *basic_lookup_type(std::string_view type_name) noexcept;
@@ -52,19 +54,7 @@ class Jvm
     static constexpr bool is_big_endian() noexcept { return std::endian::native == std::endian::big; }
 
   private:
-    static inline std::unordered_map<std::string_view, std::unique_ptr<types::Type>> name_to_type;
-    static inline std::unordered_map<std::string_view, int32_t> name_to_int_constant;
-    static inline std::unordered_map<std::string_view, int64_t> name_to_long_constant;
-    static inline std::unordered_map<types::Type *, std::optional<uint64_t>> type_to_vtbl;
-    static inline std::unordered_map<uint64_t, types::Type *> vtbl_to_type;
-
-    static inline bool using_client_compiler;
-    static inline bool using_server_compiler;
-
-    static inline std::optional<int32_t> bytes_per_word;
-    static inline std::optional<int32_t> oop_size;
-
-    static inline std::optional<int32_t> invocation_entry_bic;
+    static std::vector<void (*)()> &get_post_init_callbacks();
 
     static void read_vm_types();
     static void read_vm_structs();
@@ -92,6 +82,20 @@ class Jvm
 #endif
 
     static std::string vtbl_symbol_for_type(types::Type *type);
+
+    static inline std::unordered_map<std::string_view, std::unique_ptr<types::Type>> name_to_type;
+    static inline std::unordered_map<std::string_view, int32_t> name_to_int_constant;
+    static inline std::unordered_map<std::string_view, int64_t> name_to_long_constant;
+    static inline std::unordered_map<types::Type *, std::optional<uint64_t>> type_to_vtbl;
+    static inline std::unordered_map<uint64_t, types::Type *> vtbl_to_type;
+
+    static inline bool using_client_compiler;
+    static inline bool using_server_compiler;
+
+    static inline std::optional<int32_t> bytes_per_word;
+    static inline std::optional<int32_t> oop_size;
+
+    static inline std::optional<int32_t> invocation_entry_bic;
 };
 
 constexpr uint64_t Jvm::build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf) noexcept

@@ -5,7 +5,7 @@
 namespace hotspot::runtime
 {
 template <typename T>
-concept derived_from_base = std::derived_from<T, JvmObjectBase>;
+concept derived_from_base = std::derived_from<T, JvmObject>;
 
 template <typename T>
 concept unknown_policy = std::same_as<T, std::nullopt_t> || derived_from_base<T>;
@@ -44,7 +44,7 @@ class VirtualBaseConstructor : public InstanceConstructor
   public:
     VirtualBaseConstructor(types::Type *base_type) noexcept : base_type(base_type) {}
 
-    std::pair<std::string_view, JvmObjectBase> instantiate_wrapper_for(uint64_t addr) override
+    std::pair<std::string_view, JvmObject> instantiate_wrapper_for(uint64_t addr) override
     {
         if (!addr)
             return {{}, 0};
@@ -62,7 +62,7 @@ class VirtualBaseConstructor : public InstanceConstructor
 
   private:
     static constexpr std::array arr{
-        std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectBase { return typename Types::type(addr); }}...};
+        std::pair{Types::type_name, +[](uint64_t addr) -> JvmObject { return typename Types::type(addr); }}...};
     types::Type *base_type;
 };
 } // namespace hotspot::runtime

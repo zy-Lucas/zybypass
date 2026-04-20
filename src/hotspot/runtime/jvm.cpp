@@ -26,6 +26,10 @@ void Jvm::init()
     oop_size = lookup_int_constant("oopSize");
 
     invocation_entry_bic = lookup_int_constant("InvocationEntryBci");
+
+    for (auto func : get_post_init_callbacks())
+        func();
+    get_post_init_callbacks().clear();
 }
 
 // string_view指向临时string就等炸吧
@@ -204,6 +208,12 @@ std::string_view Jvm::get_string_view(uint64_t addr) noexcept
         return {};
     const char *str = (const char *)addr;
     return {str, std::strlen(str)};
+}
+
+std::vector<void (*)()> &Jvm::get_post_init_callbacks()
+{
+    static std::vector<void (*)()> callbacks;
+    return callbacks;
 }
 
 void Jvm::read_vm_types()

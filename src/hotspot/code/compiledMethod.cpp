@@ -2,7 +2,7 @@
 
 namespace hotspot::code
 {
-CompiledMethod::CompiledMethod(uint64_t addr) : CodeBlob(addr) { STATIC_INIT_GUARD; }
+CompiledMethod::CompiledMethod(uint64_t addr) : CodeBlob(addr) {}
 
 void CompiledMethod::initialize()
 {

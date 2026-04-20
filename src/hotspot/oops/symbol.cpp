@@ -2,7 +2,7 @@
 
 namespace hotspot::oops
 {
-Symbol::Symbol(uint64_t addr) : runtime::JvmObject<Symbol>(addr) {}
+Symbol::Symbol(uint64_t addr) : runtime::JvmObject(addr) {}
 
 void Symbol::initialize()
 {

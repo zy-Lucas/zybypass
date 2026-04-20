@@ -2,7 +2,7 @@
 
 namespace hotspot::oops
 {
-ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) { STATIC_INIT_GUARD; };
+ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) {};
 
 CPKlassSlot ConstantPool::get_klass_slot_at(uint32_t index) const noexcept
 {
