@@ -1,9 +1,14 @@
 #include "hotspot/code/nmethod.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
+#include "hotspot/oops/method.hpp"
 #include "hotspot/oops/symbol.hpp"
 #include "hotspot/runtime/jvm.hpp"
+#include "hotspot/utilities/genericArray.hpp"
 #include "jni_md.h"
+#include "render/overlay.h"
+#include <cstdlib>
+#include <cstring>
 #include <dlfcn.h>
 #include <iostream>
 #include <jni.h>
@@ -136,9 +141,23 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr)
 {
-    pthread_jit_write_protect_np(0);
-    std::cout << "success: " << ((hotspot::code::nmethod)addr).make_not_entrant() << std::endl;
-    pthread_jit_write_protect_np(1);
+    // pthread_jit_write_protect_np(0);
+    // std::cout << "success: " << ((hotspot::code::nmethod)addr).make_not_entrant() << std::endl;
+    // pthread_jit_write_protect_np(1);
+    hotspot::oops::ConstantPool cp{uint64_t(addr)};
+    void *map = malloc(cp.get_tags().length());
+    memcpy(map, (const void *)cp.get_tags().address(), cp.get_tags().length());
+    cp.set_tags((uint64_t)map);
 }
 
-__attribute__((constructor(0))) static void init(void) { OnLoad(); }
+extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_startDeathRender(JNIEnv *env, jclass)
+{
+    StartOverlay();
+}
+
+extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_stopDeathRender(JNIEnv *env, jclass)
+{
+    StopOverlay();
+}
+
+__attribute__((constructor(0))) static void init() { OnLoad(); }

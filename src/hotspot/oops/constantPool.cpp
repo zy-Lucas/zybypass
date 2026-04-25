@@ -4,6 +4,21 @@ namespace hotspot::oops
 {
 ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) {};
 
+Symbol ConstantPool::get_generic_signature() const noexcept
+{
+    return get_symbol_at(read_field<uint16_t>(generic_signature_index_offset));
+}
+
+Symbol ConstantPool::get_source_file_name() const noexcept
+{
+    return get_symbol_at(read_field<uint16_t>(source_file_name_index_offset));
+}
+
+utilities::KlassArray ConstantPool::get_resolved_klasses() const noexcept
+{
+    return read_field<uint64_t>(resolved_klasses_offset);
+}
+
 CPKlassSlot ConstantPool::get_klass_slot_at(uint32_t index) const noexcept
 {
     int value = get_int_at(index);
@@ -21,15 +36,15 @@ void ConstantPool::initialize()
     types::Type *type = runtime::Jvm::lookup_type("ConstantPool");
 
     tags_offset = *type->get_field_offset("_tags");
-    operands_offset = *type->get_field_offset("_operands");
     cache_offset = *type->get_field_offset("_cache");
+    operands_offset = *type->get_field_offset("_operands");
     pool_holder_offset = *type->get_field_offset("_pool_holder");
-    length_offset = *type->get_field_offset("_length");
     resolved_klasses_offset = *type->get_field_offset("_resolved_klasses");
     major_version_offset = *type->get_field_offset("_major_version");
     minor_version_offset = *type->get_field_offset("_minor_version");
-    source_file_name_index_offset = *type->get_field_offset("_source_file_name_index");
     generic_signature_index_offset = *type->get_field_offset("_generic_signature_index");
+    source_file_name_index_offset = *type->get_field_offset("_source_file_name_index");
+    length_offset = *type->get_field_offset("_length");
 
     header_size = type->get_size();
     element_size = *runtime::Jvm::get_oop_size();

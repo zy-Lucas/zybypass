@@ -6,6 +6,11 @@
 #include "methodCounter.hpp"
 #include "symbol.hpp"
 
+namespace hotspot::code
+{
+class nmethod;
+}
+
 namespace hotspot::oops
 {
 class Method : public MetaData
@@ -30,7 +35,7 @@ class Method : public MetaData
     uint32_t get_invocation_counter() const noexcept { return get_method_counters().get_invocation_counter(); }
     uint32_t get_backedge_counter() const noexcept { return get_method_counters().get_backedge_counter(); }
 
-    uint64_t get_native_method() const noexcept { return read_field<uint64_t>(code_offset); }
+    code::nmethod get_native_method() const noexcept;
 
     runtime::AccessFlags get_access_flags_obj() const noexcept { return get_access_flags(); }
 

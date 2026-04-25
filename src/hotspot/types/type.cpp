@@ -3,7 +3,7 @@
 
 namespace hotspot::types
 {
-Type::Type(std::string_view name, Type *super_class, size_t size, bool is_oop_type, bool is_int, bool is_unsigned,
+Type::Type(std::string_view name, Type *super_class, uint64_t size, bool is_oop_type, bool is_int, bool is_unsigned,
            bool is_pointer, Type *target_type)
     : name(name), super_class(super_class), size(size), is_oop_type(is_oop_type), is_int(is_int),
       is_unsigned(is_unsigned), is_pointer(is_pointer), target_type(target_type)

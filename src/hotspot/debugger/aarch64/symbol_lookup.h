@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+namespace hotspot::debugger::aarch64
+{
 #ifdef __cplusplus
 extern "C"
 {
@@ -12,3 +14,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+} // namespace hotspot::debugger::aarch64

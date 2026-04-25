@@ -37,13 +37,30 @@ class JvmObject
         write<T>(offset + address(), value);
     }
 
-    template <typename T> static T read(uint64_t addr) noexcept
+    template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept
     {
         if (!addr)
             return {};
-        T value;
-        std::memcpy(&value, (const void *)addr, sizeof(T));
-        return value;
+        if (size == sizeof(T))
+        {
+            T value{};
+            std::memcpy(&value, (const void *)addr, size);
+            return value;
+        }
+        if constexpr (!std::is_integral_v<T> || std::is_same_v<T, bool>)
+            return {};
+        else
+        {
+            using UT = std::make_unsigned_t<T>;
+            UT u{};
+            std::memcpy(&u, (const void *)addr, size);
+            if constexpr (std::endian::native == std::endian::big)
+                u >>= (sizeof(T) - size) * 8;
+            if constexpr (std::is_signed_v<T>)
+                if (u >> (size * 8 - 1))
+                    u |= ~UT{} << (size * 8);
+            return (T)u;
+        }
     }
 
     template <typename T> static void write(uint64_t addr, const T &value) noexcept

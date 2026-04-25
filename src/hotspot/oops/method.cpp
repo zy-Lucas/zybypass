@@ -1,9 +1,11 @@
 #include "method.hpp"
-#include <cstdint>
+#include "../code/nmethod.hpp"
 
 namespace hotspot::oops
 {
 Method::Method(uint64_t addr) : MetaData(addr) {}
+
+code::nmethod Method::get_native_method() const noexcept { return read_field<uint64_t>(code_offset); }
 
 Symbol Method::get_generic_signature() const noexcept
 {

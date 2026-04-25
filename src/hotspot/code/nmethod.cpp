@@ -52,14 +52,18 @@ std::optional<ScopeDesc> nmethod::get_scope_desc_at(uint64_t pc) const noexcept
     return std::nullopt;
 }
 
+#ifdef _WIN32
+bool nmethod::make_not_entrant() {}
+#else
 __attribute__((naked)) bool nmethod::make_not_entrant()
 {
-    __asm__ volatile("ldr x0, [x0]       \n\t"
-                     "br  %[func]        \n\t"
-                     :
-                     : [func] "r"(*(void **)(nmethod_vptr + 0xf8))
-                     : "x0", "memory");
+    asm volatile("ldr x0, [x0]       \n\t"
+                 "br  %[func]        \n\t"
+                 :
+                 : [func] "r"(*(void **)(nmethod_vptr + 0xf8))
+                 : "x0", "memory");
 }
+#endif
 
 void nmethod::initialize()
 {

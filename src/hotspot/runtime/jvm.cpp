@@ -64,11 +64,9 @@ types::Type *Jvm::lookup_type(std::string_view type_name, bool throw_if_not_foun
             target_type->set_size(specific->get_size());
 
             for (const auto &[field_name, field] : *generic)
-            {
                 target_type->add_field(std::make_unique<types::Field>(field->get_type_name(), field_name,
                                                                       (types::Type *)field->get_field_type(),
                                                                       field->get_is_static(), field->get_offset()));
-            }
             type = target_type;
         }
     }
@@ -107,8 +105,7 @@ std::optional<uint64_t> Jvm::get_vtbl_for_type(types::Type *type)
 {
     if (!type)
         return std::nullopt;
-    auto result = type_to_vtbl.find(type);
-    if (result != type_to_vtbl.cend())
+    if (auto result = type_to_vtbl.find(type); result != type_to_vtbl.cend())
         return result->second;
     std::string vtbl_symbol{vtbl_symbol_for_type(type)};
     uint64_t addr;
@@ -118,7 +115,7 @@ std::optional<uint64_t> Jvm::get_vtbl_for_type(types::Type *type)
         return std::nullopt;
     addr = (uint64_t)GetProcAddress(libjvm, vtbl_symbol);
 #else
-    addr = lookup_by_name(vtbl_symbol.c_str());
+    addr = debugger::aarch64::lookup_by_name(vtbl_symbol.c_str());
 #endif
     if (addr)
     {
@@ -133,30 +130,25 @@ types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base
 {
     if (!addr || !get_vtbl_for_type(base_type))
         return nullptr;
-
     static constexpr size_t ptr_size = sizeof(void *);
-
     uint64_t candidates[3] = {*(uint64_t *)addr, 0, 0};
-
     int64_t offset2 = base_type->get_size() - (base_type->get_size() % ptr_size) - ptr_size;
+
     if (offset2 > 0)
     {
         candidates[1] = *(uint64_t *)(addr + offset2);
         if (offset2 - (int64_t)ptr_size > 0)
             candidates[2] = *(uint64_t *)(addr + offset2 - ptr_size);
     }
-
     for (uint64_t loc : candidates)
     {
         if (!loc)
             continue;
-        auto it = vtbl_to_type.find(loc);
-        if (it != vtbl_to_type.end())
+        if (auto it = vtbl_to_type.find(loc); it != vtbl_to_type.end())
             for (const auto *super = it->second; super; super = super->get_super_class())
                 if (super == base_type)
                     return it->second;
     }
-
     for (const auto &[name, type_ptr] : name_to_type)
     {
         auto *type = type_ptr.get();
@@ -183,15 +175,13 @@ uint64_t Jvm::deref_symbol(const char *symbol_name)
     HMODULE libjvm = get_jvm_handle();
     if (!libjvm)
         return 0;
-    uint64_t addr = (uint64_t)GetProcAddress(libjvm, symbol_name);
-    if (!addr)
-        return 0;
-    return *(uint64_t *)(addr);
+    if (auto addr = (uint64_t)GetProcAddress(libjvm, symbol_name); addr)
+        return *(uint64_t *)addr;
+    return 0;
 #else
-    uint64_t addr = lookup_by_name(symbol_name);
-    if (!addr)
-        return 0;
-    return *(uint64_t *)addr;
+    if (uint64_t addr = debugger::aarch64::lookup_by_name(symbol_name); addr)
+        return *(uint64_t *)addr;
+    return 0;
 #endif
 }
 
@@ -232,7 +222,6 @@ void Jvm::read_vm_types()
         std::string_view type_name = get_string_view_ref(entry_addr + type_entry_type_name_offset);
         if (type_name.empty())
             break;
-
         std::string_view superclass_name = get_string_view_ref(entry_addr + type_entry_superclass_name_offset);
         bool is_oop_type = *(int *)(entry_addr + type_entry_is_oop_type_offset);
         bool is_integer_type = *(int *)(entry_addr + type_entry_is_integer_type_offset);
@@ -266,7 +255,6 @@ void Jvm::read_vm_structs()
         std::string_view type_name = get_string_view_ref(entry_addr + struct_entry_type_name_offset);
         if (field_name.empty())
             break;
-
         std::string_view type_string = get_string_view_ref(entry_addr + struct_entry_type_string_offset);
         if (type_string.empty())
             type_string = "<opaque>";
@@ -294,9 +282,7 @@ void Jvm::read_vm_int_constants()
         if (name.empty())
             break;
         int32_t value = *(int32_t *)(entry_addr + int_constant_entry_value_offset);
-
-        auto old_value = lookup_int_constant(name);
-        if (!old_value)
+        if (!lookup_int_constant(name))
             name_to_int_constant.try_emplace(std::move(name), value);
     }
 }
@@ -314,9 +300,7 @@ void Jvm::read_vm_long_constants()
         if (name.empty())
             break;
         int64_t value = *(int64_t *)(entry_addr + long_constant_entry_value_offset);
-
-        auto old_value = lookup_long_constant(name);
-        if (!old_value)
+        if (!lookup_long_constant(name))
             name_to_long_constant.try_emplace(std::move(name), value);
     }
 }
@@ -354,16 +338,15 @@ types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
         return nullptr;
     auto target_type_name = trim(type_name.substr(0, star_pos));
     types::Type *target_type;
+    
     if (is_pointer_type(target_type_name))
     {
-        target_type = lookup_type(target_type_name);
-        if (!target_type)
+        if (!(target_type = lookup_type(target_type_name)))
             target_type = recursive_create_pointer_type(target_type_name);
     }
     else
     {
-        target_type = lookup_type(target_type_name);
-        if (!target_type)
+        if (!(target_type = lookup_type(target_type_name)))
         {
             if (target_type_name == "char" || target_type_name == "const char")
                 target_type = createBasicType(target_type_name, sizeof(char), false, true, false);
@@ -391,7 +374,7 @@ bool Jvm::is_pointer_type(std::string_view type_name) noexcept
 #ifdef _WIN32
 HMODULE Jvm::get_jvm_handle() noexcept
 {
-    static HMODULE h = []() { return GetModuleHandleA("jvm.dll"); }();
+    static HMODULE h = GetModuleHandleA("jvm.dll");
     return h;
 }
 #endif
@@ -402,8 +385,7 @@ std::string Jvm::vtbl_symbol_for_type(types::Type *type)
     return std::format("??_7{}@@6B@", type->get_name());
 #else
     std::string_view vt{"_ZTV"};
-    static bool use_legacy_vt = [] { return lookup_by_name("_vt_10JavaThread"); }();
-    if (use_legacy_vt)
+    if (static bool use_legacy_vt = debugger::aarch64::lookup_by_name("_vt_10JavaThread"); use_legacy_vt)
         vt = "_vt_";
     return std::format("{}{}{}", vt, type->get_name().size(), type->get_name());
 #endif

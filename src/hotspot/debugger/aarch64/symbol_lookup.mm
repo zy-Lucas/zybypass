@@ -20,10 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
-namespace
+namespace hotspot::debugger::aarch64
 {
-using namespace hotspot::debugger::aarch64;
-
 struct symbol_info
 {
     uint64_t addr;
@@ -207,7 +205,7 @@ uint64_t lookup_by_name_jrs_cached(const char *symbolName)
         if (!jrs)
             return 0;
 
-        id symbolicator = ((id(*)(id, SEL, pid_t))objc_msgSend)(jrs, @selector(symbolicatorForPid:), getpid());
+        id symbolicator = ((id (*)(id, SEL, pid_t))objc_msgSend)(jrs, @selector(symbolicatorForPid:), getpid());
         if (!symbolicator)
             return 0;
 
@@ -219,7 +217,6 @@ uint64_t lookup_by_name_jrs_cached(const char *symbolName)
     g_jrs_cache.emplace(symbolName, address);
     return address;
 }
-} // namespace
 
 uint64_t lookup_by_name(const char *symbolName)
 {
@@ -236,3 +233,4 @@ uint64_t lookup_by_name(const char *symbolName)
 
     return lookup_by_name_jrs_cached(symbolName);
 }
+} // namespace hotspot::debugger::aarch64
