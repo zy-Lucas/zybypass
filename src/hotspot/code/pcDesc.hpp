@@ -7,7 +7,7 @@ namespace hotspot::code
 class PcDesc : public runtime::JvmObject
 {
   public:
-    PcDesc(uint64_t addr);
+    PcDesc(uint64_t addr) : runtime::JvmObject(addr) {}
 
     int32_t get_pc_offset() const noexcept { return read_field<int32_t>(pc_offset_offset); }
     int32_t get_scope_decode_offset() const noexcept { return read_field<int32_t>(scope_decode_offset_offset); }
@@ -28,11 +28,12 @@ class PcDesc : public runtime::JvmObject
     static inline uint64_t obj_decode_offset_offset;
     static inline uint64_t flags_offset;
 
+  public:
+    static inline uint32_t pc_desc_size;
+
+  private:
     static inline int32_t reexecute_mask;
     static inline int32_t is_method_handle_invoke_mask;
     static inline int32_t return_oop_mask;
-
-  public:
-    static inline uint32_t pc_desc_size;
 };
 } // namespace hotspot::code

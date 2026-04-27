@@ -13,8 +13,6 @@ using MetaDataConstructor = runtime::VirtualBaseConstructor<
     runtime::TypeMapping<"Method", Method>, runtime::TypeMapping<"ConstMethod", ConstMethod>,
     runtime::TypeMapping<"ConstantPool", ConstantPool>, runtime::TypeMapping<"ConstantPoolCache", ConstantPoolCache>>;
 
-MetaData::MetaData(uint64_t addr) : runtime::JvmObject(addr) {}
-
 void MetaData::initialize() {}
 
 std::pair<std::string_view, runtime::JvmObject> MetaData::instantiate_wrapper_for(uint64_t addr)

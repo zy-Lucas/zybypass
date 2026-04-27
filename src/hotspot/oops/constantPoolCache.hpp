@@ -1,7 +1,6 @@
 #pragma once
 
 #include "metaData.hpp"
-#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -10,7 +9,7 @@ class ConstantPool;
 class ConstantPoolCache : public MetaData
 {
   public:
-    ConstantPoolCache(uint64_t addr);
+    ConstantPoolCache(uint64_t addr) : MetaData(addr) {}
 
     ConstantPool get_constants() const noexcept;
 

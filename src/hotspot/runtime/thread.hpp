@@ -7,7 +7,7 @@ namespace hotspot::runtime
 class Thread : public JvmObject
 {
   public:
-    Thread(uint64_t addr);
+    Thread(uint64_t addr) : JvmObject(addr) {}
 
     uint32_t suspend_flags() const noexcept { return read_field<uint32_t>(suspend_flags_offset); }
     bool has_async_exception() const noexcept { return (suspend_flags() & HAS_ASYNC_EXCEPTION) != 0; }
@@ -27,13 +27,14 @@ class Thread : public JvmObject
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t suspend_flags_offset;
-    static inline uint32_t HAS_ASYNC_EXCEPTION;
-
     static inline uint64_t tlab_field_offset;
     static inline uint64_t active_handles_offset;
+    static inline uint64_t allocated_bytes_offset;
+
+    static inline uint32_t HAS_ASYNC_EXCEPTION;
+
+    static inline uint64_t suspend_flags_offset;
     static inline uint64_t current_pending_monitor_offset;
     static inline uint64_t current_waiting_monitor_offset;
-    static inline uint64_t allocated_bytes_offset;
 };
 } // namespace hotspot::runtime

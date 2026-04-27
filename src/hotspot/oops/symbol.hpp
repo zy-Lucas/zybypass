@@ -24,7 +24,7 @@ struct MySymbol
 class Symbol : public runtime::JvmObject
 {
   public:
-    Symbol(uint64_t addr);
+    Symbol(uint64_t addr) : runtime::JvmObject(addr) {}
 
     uint16_t get_length() const noexcept { return read_field<uint16_t>(length_offset); }
     uint8_t get_byte_at(size_t index) const noexcept { return read_field<uint8_t>(base_offset + index); }

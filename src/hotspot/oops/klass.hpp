@@ -9,7 +9,7 @@ namespace hotspot::oops
 class Klass : public MetaData
 {
   public:
-    Klass(uint64_t addr);
+    Klass(uint64_t addr) : MetaData(addr) {}
 
     Klass get_super() const noexcept { return read_field<uint64_t>(super_offset); }
     int32_t get_layout_helper() const noexcept { return read_field<int32_t>(layout_helper_offset); }

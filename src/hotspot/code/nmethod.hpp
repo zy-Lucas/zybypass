@@ -20,7 +20,7 @@ enum
 class nmethod : public CompiledMethod
 {
   public:
-    nmethod(uint64_t addr);
+    nmethod(uint64_t addr) : CompiledMethod(addr) {}
 
     bool is_osr_method() const noexcept { return get_entry_bci() != runtime::Jvm::get_invocation_entry_bic(); }
 
@@ -80,7 +80,7 @@ class nmethod : public CompiledMethod
     uint64_t get_verified_entry_point() const noexcept { return read_field<uint64_t>(verified_entry_point_offset); }
 
     uint64_t get_metadata_at(uint32_t index) const noexcept;
-    oops::Method get_method(uint32_t index) const;
+    oops::Method get_method(uint32_t index) const noexcept;
 
     nmethod get_osr_link() const noexcept { return read_field<uint64_t>(osr_link_offset); }
 
@@ -94,6 +94,8 @@ class nmethod : public CompiledMethod
 
     PcDesc get_pc_desc_at(uint64_t pc) const noexcept;
     std::optional<ScopeDesc> get_scope_desc_at(uint64_t pc) const noexcept;
+
+    bool contains_method(uint64_t method_addr) const;
 
     bool make_not_entrant();
 

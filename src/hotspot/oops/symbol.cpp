@@ -2,8 +2,6 @@
 
 namespace hotspot::oops
 {
-Symbol::Symbol(uint64_t addr) : runtime::JvmObject(addr) {}
-
 void Symbol::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("Symbol");

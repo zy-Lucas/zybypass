@@ -2,8 +2,6 @@
 
 namespace hotspot::oops
 {
-MethodCounter::MethodCounter(uint64_t addr) : MetaData(addr) {}
-
 void MethodCounter::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("MethodCounters");

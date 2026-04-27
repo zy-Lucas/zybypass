@@ -2,8 +2,6 @@
 
 namespace hotspot::code
 {
-CodeBlob::CodeBlob(uint64_t addr) : runtime::JvmObject(addr) {}
-
 std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob)
 {
     os << code_blob.get_name() << std::endl
@@ -33,14 +31,10 @@ void CodeBlob::initialize()
     oop_maps_offset = *type->get_field_offset("_oop_maps");
 }
 
-RuntimeBlob::RuntimeBlob(uint64_t addr) : CodeBlob(addr) {}
-
 void RuntimeBlob::initialize()
 {
     // types::Type *type = runtime::Jvm::lookup_type("RuntimeBlob");
 }
-
-RuntimeStub::RuntimeStub(uint64_t addr) : RuntimeBlob(addr) {}
 
 void RuntimeStub::initialize()
 {

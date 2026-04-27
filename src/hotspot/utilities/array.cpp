@@ -1,11 +1,9 @@
-#include "genericArray.hpp"
+#include "array.hpp"
 #include "../oops/klass.hpp"
 #include "../oops/method.hpp"
 
 namespace hotspot::utilities
 {
-GenericArray::GenericArray(uint64_t addr, uint64_t data_offset) : runtime::JvmObject(addr), data_offset(data_offset) {}
-
 uint64_t GenericArray::get_size() const noexcept
 {
     static int32_t bpw = *runtime::Jvm::get_bytes_per_word();
@@ -40,8 +38,6 @@ void GenericArray::initialize()
     length_offset = *type->get_field_offset("_length");
 }
 
-MethodArray::MethodArray(uint64_t addr) : GenericArray(addr, data_offset) {}
-
 oops::Method MethodArray::at(uint32_t i) const noexcept { return get_address_at(i); }
 
 void MethodArray::initialize()
@@ -52,8 +48,6 @@ void MethodArray::initialize()
     data_offset = *type->get_field_offset("_data");
 }
 
-KlassArray::KlassArray(uint64_t addr) : GenericArray(addr, data_offset) {}
-
 oops::Klass KlassArray::at(uint32_t i) const noexcept { return get_address_at(i); }
 
 void KlassArray::initialize()
@@ -63,8 +57,6 @@ void KlassArray::initialize()
 
     data_offset = *type->get_field_offset("_data");
 }
-
-template <typename T> IntegerArray<T>::IntegerArray(uint64_t addr) : GenericArray(addr, data_offset) {}
 
 template <typename T> void IntegerArray<T>::initialize()
 {

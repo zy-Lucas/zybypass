@@ -2,8 +2,6 @@
 
 namespace hotspot::code
 {
-PcDesc::PcDesc(uint64_t addr) : runtime::JvmObject(addr) {}
-
 void PcDesc::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("PcDesc");
@@ -13,10 +11,10 @@ void PcDesc::initialize()
     obj_decode_offset_offset = *type->get_field_offset("_obj_decode_offset");
     flags_offset = *type->get_field_offset("_flags");
 
+    pc_desc_size = type->get_size();
+
     reexecute_mask = *runtime::Jvm::lookup_int_constant("PcDesc::PCDESC_reexecute");
     is_method_handle_invoke_mask = *runtime::Jvm::lookup_int_constant("PcDesc::PCDESC_is_method_handle_invoke");
     return_oop_mask = *runtime::Jvm::lookup_int_constant("PcDesc::PCDESC_return_oop");
-
-    pc_desc_size = type->get_size();
 }
 } // namespace hotspot::code

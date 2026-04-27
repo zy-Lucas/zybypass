@@ -16,7 +16,7 @@ namespace hotspot::oops
 class Method : public MetaData
 {
   public:
-    Method(uint64_t addr);
+    Method(uint64_t addr) : MetaData(addr) {}
 
     ConstMethod get_constMethod() const noexcept { return read_field<uint64_t>(constMethod_offset); }
     ConstantPool get_constants() const noexcept { return get_constMethod().get_constants(); }

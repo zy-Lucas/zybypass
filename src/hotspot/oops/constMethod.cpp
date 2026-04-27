@@ -3,8 +3,6 @@
 
 namespace hotspot::oops
 {
-ConstMethod::ConstMethod(uint64_t addr) : MetaData(addr) {}
-
 uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
 {
     uint64_t offset =

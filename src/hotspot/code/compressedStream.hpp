@@ -40,7 +40,7 @@ class CompressedReadStream : public CompressedStream
 
     bool read_bool() noexcept { return read(); }
     uint8_t read_byte() noexcept { return read(); }
-    uint16_t read_char() noexcept { return read(); }
+    uint16_t read_char() noexcept { return read_int(); }
     int16_t read_short() noexcept { return read_signed_int(); }
     int32_t read_signed_int() noexcept { return decode_sign(read_int()); }
     uint32_t read_int() noexcept;

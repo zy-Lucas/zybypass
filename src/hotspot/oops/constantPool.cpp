@@ -2,8 +2,6 @@
 
 namespace hotspot::oops
 {
-ConstantPool::ConstantPool(uint64_t addr) : MetaData(addr) {};
-
 Symbol ConstantPool::get_generic_signature() const noexcept
 {
     return get_symbol_at(read_field<uint16_t>(generic_signature_index_offset));

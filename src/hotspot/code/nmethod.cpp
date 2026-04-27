@@ -4,8 +4,6 @@
 
 namespace hotspot::code
 {
-nmethod::nmethod(uint64_t addr) : CompiledMethod(addr) {}
-
 uint32_t nmethod::total_size() const noexcept
 {
     return constants_size() + insts_size() + stub_size() + scopes_data_size() + scopes_pcs_size() +
@@ -19,12 +17,12 @@ uint64_t nmethod::get_metadata_at(uint32_t index) const noexcept
     return read<uint64_t>((index - 1) * (*runtime::Jvm::get_oop_size()) + metadata_begin());
 }
 
-oops::Method nmethod::get_method(uint32_t index) const
+oops::Method nmethod::get_method(uint32_t index) const noexcept
 {
-    auto [name, base] = oops::MetaData::instantiate_wrapper_for(get_metadata_at(index));
-    if (name != "Method")
-        throw std::bad_cast();
-    return std::bit_cast<oops::Method>(base);
+    // auto [name, base] = oops::MetaData::instantiate_wrapper_for(get_metadata_at(index));
+    // if (name != "Method")
+    //     throw std::bad_cast();
+    return get_metadata_at(index);
 }
 
 bool nmethod::is_method_handle_return(uint64_t return_pc) const noexcept
@@ -50,6 +48,25 @@ std::optional<ScopeDesc> nmethod::get_scope_desc_at(uint64_t pc) const noexcept
         return std::make_optional<ScopeDesc>(*this, pd.get_scope_decode_offset(), pd.get_obj_decode_offset(),
                                              pd.get_reexecute());
     return std::nullopt;
+}
+
+bool nmethod::contains_method(uint64_t method_addr) const
+{
+    for (uint64_t p = scopes_pcs_begin(); p < scopes_pcs_end(); p += PcDesc::pc_desc_size)
+    {
+        PcDesc pc_desc{p};
+        if (pc_desc.get_scope_decode_offset() == DebugInformationRecorder::SERIALIZED_NULL)
+            continue;
+        std::optional<ScopeDesc> scope = std::make_optional<ScopeDesc>(
+            *this, pc_desc.get_scope_decode_offset(), pc_desc.get_obj_decode_offset(), pc_desc.get_reexecute());
+        while (scope)
+        {
+            if (scope->get_method() == method_addr)
+                return true;
+            scope = scope->sender();
+        }
+    }
+    return false;
 }
 
 #ifdef _WIN32

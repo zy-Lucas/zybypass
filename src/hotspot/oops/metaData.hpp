@@ -7,7 +7,7 @@ namespace hotspot::oops
 class MetaData : public runtime::JvmObject
 {
   public:
-    MetaData(uint64_t addr);
+    MetaData(uint64_t addr) : runtime::JvmObject(addr) {}
 
     static std::pair<std::string_view, runtime::JvmObject> instantiate_wrapper_for(uint64_t addr);
 

@@ -2,8 +2,6 @@
 
 namespace hotspot::oops
 {
-Klass::Klass(uint64_t addr) : MetaData(addr) {}
-
 bool Klass::is_subclass_of(const Klass &k) const noexcept
 {
     for (Klass t = *this; t.address(); t = t.get_super())

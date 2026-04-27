@@ -9,7 +9,7 @@ ScopeDesc::ScopeDesc(nmethod code, uint32_t decode_offset, uint32_t object_decod
 {
     DebugInfoReadStream stream{code, decode_offset};
 
-    sender_decode_offset = stream.read_char();
+    sender_decode_offset = stream.read_int();
     method = stream.read_method();
     bci = stream.read_bic();
 
@@ -20,6 +20,6 @@ ScopeDesc::ScopeDesc(nmethod code, uint32_t decode_offset, uint32_t object_decod
 
 std::optional<ScopeDesc> ScopeDesc::sender() const noexcept
 {
-    return is_top() ? std::nullopt : std::make_optional<ScopeDesc>(code, decode_offset, 0, false);
+    return is_top() ? std::nullopt : std::make_optional<ScopeDesc>(code, sender_decode_offset, 0, false);
 }
 } // namespace hotspot::code

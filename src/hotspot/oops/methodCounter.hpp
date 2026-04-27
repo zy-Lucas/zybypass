@@ -7,7 +7,7 @@ namespace hotspot::oops
 class MethodCounter : public MetaData
 {
   public:
-    MethodCounter(uint64_t addr);
+    MethodCounter(uint64_t addr) : MetaData(addr) {}
 
     uint16_t get_interpreter_throwout_count() const noexcept
     {

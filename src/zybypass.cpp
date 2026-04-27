@@ -1,10 +1,12 @@
+#include "hotspot/code/codeBlob.hpp"
 #include "hotspot/code/nmethod.hpp"
+#include "hotspot/memory/codeHeap.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
 #include "hotspot/oops/method.hpp"
 #include "hotspot/oops/symbol.hpp"
 #include "hotspot/runtime/jvm.hpp"
-#include "hotspot/utilities/genericArray.hpp"
+#include "hotspot/utilities/growableArray.hpp"
 #include "jni_md.h"
 #include "render/overlay.h"
 #include <cstdlib>
@@ -13,6 +15,8 @@
 #include <iostream>
 #include <jni.h>
 #include <pthread.h>
+#include <thread>
+#include <vector>
 
 #define DLLEXPORT
 
@@ -139,15 +143,29 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     return (uint64_t)cp_addr;
 }
 
-extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr)
+extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr, jlong method)
 {
-    // pthread_jit_write_protect_np(0);
-    // std::cout << "success: " << ((hotspot::code::nmethod)addr).make_not_entrant() << std::endl;
-    // pthread_jit_write_protect_np(1);
-    hotspot::oops::ConstantPool cp{uint64_t(addr)};
-    void *map = malloc(cp.get_tags().length());
-    memcpy(map, (const void *)cp.get_tags().address(), cp.get_tags().length());
-    cp.set_tags((uint64_t)map);
+    pthread_jit_write_protect_np(0);
+    if (hotspot::code::nmethod nm(hotspot::oops::Method(method).get_native_method()); nm)
+        nm.make_not_entrant();
+
+    hotspot::utilities::GrowableArray<hotspot::memory::CodeHeap> heap{(uint64_t)addr};
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < heap.length(); ++i)
+        threads.emplace_back([&, i]() {
+            pthread_jit_write_protect_np(0);
+            heap.at(i).iterate([method](hotspot::code::CodeBlob cb) {
+                if (cb.get_name() == "nmethod" && hotspot::code::nmethod(cb.address()).is_alive() &&
+                    hotspot::code::nmethod(cb.address()).contains_method(method))
+                    hotspot::code::nmethod(cb.address()).make_not_entrant();
+            });
+            pthread_jit_write_protect_np(1);
+        });
+
+    for (auto &t : threads)
+        t.join();
+    pthread_jit_write_protect_np(1);
 }
 
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_startDeathRender(JNIEnv *env, jclass)

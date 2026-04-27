@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utilities/genericArray.hpp"
+#include "../utilities/array.hpp"
 #include "constantPoolCache.hpp"
 #include "metaData.hpp"
 #include "symbol.hpp"
@@ -23,7 +23,7 @@ struct CPKlassSlot
 class ConstantPool : public MetaData
 {
   public:
-    ConstantPool(uint64_t addr);
+    ConstantPool(uint64_t addr) : MetaData(addr) {};
 
     utilities::U1Array get_tags() const noexcept { return read_field<uint64_t>(tags_offset); }
     ConstantPoolCache get_cache() const noexcept { return read_field<uint64_t>(cache_offset); }

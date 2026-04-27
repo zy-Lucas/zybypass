@@ -8,7 +8,7 @@ namespace hotspot::code
 class CompiledMethod : public CodeBlob
 {
   public:
-    CompiledMethod(uint64_t addr);
+    CompiledMethod(uint64_t addr) : CodeBlob(addr) {}
 
     oops::Method get_method() const noexcept { return read_field<uint64_t>(method_offset); }
 

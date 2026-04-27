@@ -3,14 +3,11 @@
 
 namespace hotspot::oops
 {
-ConstantPoolCache::ConstantPoolCache(uint64_t addr) : MetaData(addr) {}
-
 ConstantPool ConstantPoolCache::get_constants() const noexcept { return read_field<uint64_t>(constants_offset); }
 
 void ConstantPoolCache::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("ConstantPoolCache");
-    types::Type *el_type = runtime::Jvm::lookup_type("ConstantPoolCacheEntry");
 
     length_offset = *type->get_field_offset("_length");
     constants_offset = *type->get_field_offset("_constant_pool");
@@ -19,7 +16,7 @@ void ConstantPoolCache::initialize()
 
     base_offset = type->get_size();
 
-    element_size = el_type->get_size();
+    element_size = runtime::Jvm::lookup_type("ConstantPoolCacheEntry")->get_size();
     int_size = sizeof(int);
 }
 } // namespace hotspot::oops

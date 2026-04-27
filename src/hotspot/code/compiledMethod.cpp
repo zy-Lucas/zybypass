@@ -2,8 +2,6 @@
 
 namespace hotspot::code
 {
-CompiledMethod::CompiledMethod(uint64_t addr) : CodeBlob(addr) {}
-
 void CompiledMethod::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("CompiledMethod");

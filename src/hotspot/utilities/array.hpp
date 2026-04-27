@@ -28,7 +28,7 @@ DEFINE_ARRAY_TRAITS(int32_t, "Array<int>", "int");
 class GenericArray : public runtime::JvmObject
 {
   public:
-    GenericArray(uint64_t addr, uint64_t data_offset);
+    GenericArray(uint64_t addr, uint64_t data_offset) : runtime::JvmObject(addr), data_offset(data_offset) {}
 
     int32_t length() const noexcept { return read_field<int32_t>(length_offset); }
 
@@ -53,7 +53,7 @@ class GenericArray : public runtime::JvmObject
 class MethodArray : public GenericArray
 {
   public:
-    MethodArray(uint64_t addr);
+    MethodArray(uint64_t addr) : GenericArray(addr, data_offset) {}
 
     oops::Method at(uint32_t i) const noexcept;
 
@@ -69,7 +69,7 @@ class MethodArray : public GenericArray
 class KlassArray : public GenericArray
 {
   public:
-    KlassArray(uint64_t addr);
+    KlassArray(uint64_t addr) : GenericArray(addr, data_offset) {}
 
     oops::Klass at(uint32_t i) const noexcept;
 
@@ -85,7 +85,7 @@ class KlassArray : public GenericArray
 template <typename T> class IntegerArray : public GenericArray
 {
   public:
-    IntegerArray(uint64_t addr);
+    IntegerArray(uint64_t addr) : GenericArray(addr, data_offset) {}
 
     T at(uint32_t i) const noexcept { return get_integer_at(i); }
 

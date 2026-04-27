@@ -7,7 +7,7 @@ namespace hotspot::code
 class CodeBlob : public runtime::JvmObject
 {
   public:
-    CodeBlob(uint64_t addr);
+    CodeBlob(uint64_t addr) : runtime::JvmObject(addr) {}
 
     uint64_t header_begin() const noexcept { return address(); }
     uint64_t header_end() const noexcept { return address() + get_header_size(); }
@@ -42,9 +42,6 @@ class CodeBlob : public runtime::JvmObject
         return code_contains(addr) && addr - code_begin() >= get_frame_complete_offset();
     }
 
-    bool is_zombie() const noexcept { return false; }
-    bool is_locked_by_vm() const noexcept { return false; }
-
     uint32_t get_frame_size() const noexcept { return sizeof(void *) * get_frame_size_word(); }
 
   private:
@@ -68,7 +65,7 @@ class CodeBlob : public runtime::JvmObject
 class RuntimeBlob : public CodeBlob
 {
   public:
-    RuntimeBlob(uint64_t addr);
+    RuntimeBlob(uint64_t addr) : CodeBlob(addr) {}
 
   private:
     DECLARE_STATIC_INIT
@@ -77,7 +74,7 @@ class RuntimeBlob : public CodeBlob
 class RuntimeStub : public RuntimeBlob
 {
   public:
-    RuntimeStub(uint64_t addr);
+    RuntimeStub(uint64_t addr) : RuntimeBlob(addr) {}
 
     bool caller_must_gc_arguments() const noexcept { return read_field<bool>(caller_must_gc_arguments_offset); }
 
