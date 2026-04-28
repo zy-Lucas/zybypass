@@ -33,7 +33,7 @@ class Jvm
 
     static uint64_t deref_symbol(const char *symbol_name);
 
-    static std::string_view get_string_view_ref(uint64_t addr);
+    static std::string_view get_string_view_ref(uint64_t addr) noexcept;
     static std::string_view get_string_view(uint64_t addr) noexcept;
 
     static bool is_client_compiler() noexcept { return using_client_compiler; }

@@ -70,7 +70,10 @@ class JvmObject
         std::memcpy((void *)addr, &value, sizeof(T));
     }
 
-    std::string_view read_string_field(uint64_t offset) const { return Jvm::get_string_view_ref(address() + offset); }
+    std::string_view read_string_field(uint64_t offset) const noexcept
+    {
+        return Jvm::get_string_view_ref(address() + offset);
+    }
 
   private:
     uint64_t addr;

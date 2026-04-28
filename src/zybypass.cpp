@@ -146,25 +146,40 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr, jlong method)
 {
     pthread_jit_write_protect_np(0);
+
     if (hotspot::code::nmethod nm(hotspot::oops::Method(method).get_native_method()); nm)
         nm.make_not_entrant();
 
+    auto f = [method](hotspot::code::CodeBlob cb) {
+        if (cb.get_name() == "nmethod" && hotspot::code::nmethod(cb.address()).is_alive() &&
+            hotspot::code::nmethod(cb.address()).contains_method(method))
+            hotspot::code::nmethod(cb.address()).make_not_entrant();
+    };
     hotspot::utilities::GrowableArray<hotspot::memory::CodeHeap> heap{(uint64_t)addr};
-    std::vector<std::thread> threads;
+    const int32_t heap_lenght = heap.length();
 
-    for (int i = 0; i < heap.length(); ++i)
-        threads.emplace_back([&, i]() {
-            pthread_jit_write_protect_np(0);
-            heap.at(i).iterate([method](hotspot::code::CodeBlob cb) {
-                if (cb.get_name() == "nmethod" && hotspot::code::nmethod(cb.address()).is_alive() &&
-                    hotspot::code::nmethod(cb.address()).contains_method(method))
-                    hotspot::code::nmethod(cb.address()).make_not_entrant();
-            });
-            pthread_jit_write_protect_np(1);
-        });
+    if (std::thread::hardware_concurrency() <= heap_lenght)
+    {
+        for (int i = 0; i < heap_lenght; ++i)
+            if (auto h = heap.at(i); h.get_code_blob_type() < 2)
+                h.iterate(f);
+    }
+    else
+    {
+        std::vector<std::thread> threads;
+        threads.reserve(heap_lenght);
 
-    for (auto &t : threads)
-        t.join();
+        for (int i = 0; i < heap_lenght; ++i)
+            if (auto h = heap.at(i); h.get_code_blob_type() < 2)
+                threads.emplace_back([&, i, h]() mutable {
+                    pthread_jit_write_protect_np(0);
+                    h.iterate(f);
+                    pthread_jit_write_protect_np(1);
+                });
+        for (auto &t : threads)
+            t.join();
+    }
+
     pthread_jit_write_protect_np(1);
 }
 

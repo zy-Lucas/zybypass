@@ -15,6 +15,11 @@ class CodeHeap : public runtime::JvmObject
     uint64_t begin() const noexcept { return memory.low(); }
     uint64_t end() const noexcept { return memory.high(); }
 
+    std::string_view get_name_view() const noexcept { return read_string_field(log2_segment_size_offset + 56); }
+    std::string get_name() const noexcept { return std::string{get_name_view()}; }
+
+    int32_t get_code_blob_type() const noexcept { return read_field<int32_t>(log2_segment_size_offset + 64); }
+
     bool contains(uint64_t p) const noexcept { return begin() <= p && end() > p; }
 
     uint64_t find_start(uint64_t p) const noexcept;

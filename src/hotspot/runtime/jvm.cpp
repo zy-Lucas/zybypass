@@ -185,7 +185,7 @@ uint64_t Jvm::deref_symbol(const char *symbol_name)
 #endif
 }
 
-std::string_view Jvm::get_string_view_ref(uint64_t addr)
+std::string_view Jvm::get_string_view_ref(uint64_t addr) noexcept
 {
     if (!addr)
         return {};
@@ -196,8 +196,7 @@ std::string_view Jvm::get_string_view(uint64_t addr) noexcept
 {
     if (!addr)
         return {};
-    const char *str = (const char *)addr;
-    return {str, std::strlen(str)};
+    return {(const char *)addr};
 }
 
 std::vector<void (*)()> &Jvm::get_post_init_callbacks()
