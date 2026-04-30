@@ -27,6 +27,7 @@ void Klass::initialize()
 
     trace_id_offset = type->get_field_offset("_trace_id");
 
+    LH_NEUTRAL_VALUE = *runtime::Jvm::lookup_int_constant("Klass::_lh_neutral_value");
     LH_INSTANCE_SLOW_PATH_BIT = *runtime::Jvm::lookup_int_constant("Klass::_lh_instance_slow_path_bit");
     LH_LOG2_ELEMENT_SIZE_SHIFT = *runtime::Jvm::lookup_int_constant("Klass::_lh_log2_element_size_shift");
     LH_LOG2_ELEMENT_SIZE_MASK = *runtime::Jvm::lookup_int_constant("Klass::_lh_log2_element_size_mask");

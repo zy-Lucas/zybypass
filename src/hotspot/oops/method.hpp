@@ -13,12 +13,14 @@ class nmethod;
 
 namespace hotspot::oops
 {
+class ConstMethod;
+
 class Method : public MetaData
 {
   public:
     Method(uint64_t addr) : MetaData(addr) {}
 
-    ConstMethod get_constMethod() const noexcept { return read_field<uint64_t>(constMethod_offset); }
+    ConstMethod get_constMethod() const noexcept;
     ConstantPool get_constants() const noexcept { return get_constMethod().get_constants(); }
     uint64_t get_method_data() const noexcept { return read_field<uint64_t>(method_data_offset); }
     MethodCounter get_method_counters() const noexcept { return read_field<uint64_t>(method_counters_offset); }

@@ -4,7 +4,6 @@
 #include "constantPoolCache.hpp"
 #include "metaData.hpp"
 #include "symbol.hpp"
-#include <netdb.h>
 
 namespace hotspot::oops
 {
@@ -20,6 +19,8 @@ struct CPKlassSlot
     uint16_t resolved_klass_index;
 };
 
+class InstanceKlass;
+
 class ConstantPool : public MetaData
 {
   public:
@@ -27,6 +28,7 @@ class ConstantPool : public MetaData
 
     utilities::U1Array get_tags() const noexcept { return read_field<uint64_t>(tags_offset); }
     ConstantPoolCache get_cache() const noexcept { return read_field<uint64_t>(cache_offset); }
+    InstanceKlass get_pool_holder() const noexcept;
     utilities::U2Array get_operands() const noexcept { return read_field<uint64_t>(operands_offset); }
     utilities::KlassArray get_resolved_klasses() const noexcept;
 

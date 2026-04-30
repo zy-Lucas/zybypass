@@ -14,7 +14,7 @@ uint64_t nmethod::get_metadata_at(uint32_t index) const noexcept
 {
     if (!index)
         return 0;
-    return read<uint64_t>((index - 1) * (*runtime::Jvm::get_oop_size()) + metadata_begin());
+    return runtime::Jvm::read<uint64_t>((index - 1) * (*runtime::Jvm::get_oop_size()) + metadata_begin());
 }
 
 oops::Method nmethod::get_method(uint32_t index) const noexcept
@@ -50,7 +50,7 @@ std::optional<ScopeDesc> nmethod::get_scope_desc_at(uint64_t pc) const noexcept
     return std::nullopt;
 }
 
-bool nmethod::contains_method(uint64_t method_addr) const
+bool nmethod::contains_method(oops::Method method_addr) const
 {
     for (uint64_t p = scopes_pcs_begin(); p < scopes_pcs_end(); p += PcDesc::pc_desc_size)
     {

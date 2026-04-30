@@ -36,6 +36,9 @@ class Jvm
     static std::string_view get_string_view_ref(uint64_t addr) noexcept;
     static std::string_view get_string_view(uint64_t addr) noexcept;
 
+    template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept;
+    template <typename T> static void write(uint64_t addr, const T &value) noexcept;
+
     static bool is_client_compiler() noexcept { return using_client_compiler; }
     static bool is_server_compiler() noexcept { return using_server_compiler; }
 
@@ -97,6 +100,39 @@ class Jvm
 
     static inline std::optional<int32_t> invocation_entry_bic;
 };
+
+template <typename T> T Jvm::read(uint64_t addr, size_t size) noexcept
+{
+    if (!addr)
+        return {};
+    if (size == sizeof(T))
+    {
+        T value{};
+        std::memcpy(&value, (const void *)addr, size);
+        return value;
+    }
+    if constexpr (!std::is_integral_v<T> || std::is_same_v<T, bool>)
+        return {};
+    else
+    {
+        using UT = std::make_unsigned_t<T>;
+        UT u{};
+        std::memcpy(&u, (const void *)addr, size);
+        if constexpr (std::endian::native == std::endian::big)
+            u >>= (sizeof(T) - size) * 8;
+        if constexpr (std::is_signed_v<T>)
+            if (u >> (size * 8 - 1))
+                u |= ~UT{} << (size * 8);
+        return (T)u;
+    }
+}
+
+template <typename T> void Jvm::write(uint64_t addr, const T &value) noexcept
+{
+    if (!addr)
+        return;
+    std::memcpy((void *)addr, &value, sizeof(T));
+}
 
 constexpr uint64_t Jvm::build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf) noexcept
 {

@@ -95,7 +95,7 @@ class nmethod : public CompiledMethod
     PcDesc get_pc_desc_at(uint64_t pc) const noexcept;
     std::optional<ScopeDesc> get_scope_desc_at(uint64_t pc) const noexcept;
 
-    bool contains_method(uint64_t method_addr) const;
+    bool contains_method(oops::Method method_addr) const;
 
     bool make_not_entrant();
 

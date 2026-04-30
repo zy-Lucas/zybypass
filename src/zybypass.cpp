@@ -1,12 +1,14 @@
+#include "hotspot/classfile/classLoaderDataGraph.hpp"
 #include "hotspot/code/codeBlob.hpp"
+#include "hotspot/code/codeCache.hpp"
 #include "hotspot/code/nmethod.hpp"
-#include "hotspot/memory/codeHeap.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
+#include "hotspot/oops/instanceKlass.hpp"
+#include "hotspot/oops/klass.hpp"
 #include "hotspot/oops/method.hpp"
 #include "hotspot/oops/symbol.hpp"
 #include "hotspot/runtime/jvm.hpp"
-#include "hotspot/utilities/growableArray.hpp"
 #include "jni_md.h"
 #include "render/overlay.h"
 #include <cstdlib>
@@ -15,8 +17,6 @@
 #include <iostream>
 #include <jni.h>
 #include <pthread.h>
-#include <thread>
-#include <vector>
 
 #define DLLEXPORT
 
@@ -143,44 +143,29 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     return (uint64_t)cp_addr;
 }
 
-extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jlong addr, jlong method)
+extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
+                                                                         jstring method_name, jstring method_sign)
 {
-    pthread_jit_write_protect_np(0);
+    const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
+    const char *name = env->GetStringUTFChars(method_name, nullptr);
+    const char *sig = env->GetStringUTFChars(method_sign, nullptr);
 
-    if (hotspot::code::nmethod nm(hotspot::oops::Method(method).get_native_method()); nm)
+    hotspot::oops::Method method = hotspot::oops::InstanceKlass(hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()).find_method(name, sig);
+    env->ReleaseStringUTFChars(klass_name, kl_name);
+    env->ReleaseStringUTFChars(method_name, name);
+    env->ReleaseStringUTFChars(method_sign, sig);
+    pthread_jit_write_protect_np(0);
+    if (hotspot::code::nmethod nm(method.get_native_method()); nm)
         nm.make_not_entrant();
+    pthread_jit_write_protect_np(1);
 
     auto f = [method](hotspot::code::CodeBlob cb) {
-        if (cb.get_name() == "nmethod" && hotspot::code::nmethod(cb.address()).is_alive() &&
-            hotspot::code::nmethod(cb.address()).contains_method(method))
-            hotspot::code::nmethod(cb.address()).make_not_entrant();
+        hotspot::code::nmethod nm{cb.address()};
+        if (nm.is_alive() && nm.contains_method(method))
+            nm.make_not_entrant();
     };
-    hotspot::utilities::GrowableArray<hotspot::memory::CodeHeap> heap{(uint64_t)addr};
-    const int32_t heap_lenght = heap.length();
 
-    if (std::thread::hardware_concurrency() <= heap_lenght)
-    {
-        for (int i = 0; i < heap_lenght; ++i)
-            if (auto h = heap.at(i); h.get_code_blob_type() < 2)
-                h.iterate(f);
-    }
-    else
-    {
-        std::vector<std::thread> threads;
-        threads.reserve(heap_lenght);
-
-        for (int i = 0; i < heap_lenght; ++i)
-            if (auto h = heap.at(i); h.get_code_blob_type() < 2)
-                threads.emplace_back([&, i, h]() mutable {
-                    pthread_jit_write_protect_np(0);
-                    h.iterate(f);
-                    pthread_jit_write_protect_np(1);
-                });
-        for (auto &t : threads)
-            t.join();
-    }
-
-    pthread_jit_write_protect_np(1);
+    hotspot::code::CodeCache::iterator_nmethods(f);
 }
 
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_startDeathRender(JNIEnv *env, jclass)

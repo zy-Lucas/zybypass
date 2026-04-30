@@ -31,7 +31,7 @@ template <typename T> class GrowableArray : public GenericGrowableArray
     {
         if (i >= length())
             return {0};
-        return {read<uint64_t>(get_data() + i * sizeof(void *))};
+        return T{runtime::Jvm::read<uint64_t>(get_data() + i * sizeof(void *))};
     }
 
     uint64_t get_data() const noexcept { return read_field<uint64_t>(data_offset); }

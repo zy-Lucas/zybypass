@@ -22,16 +22,16 @@ uint64_t CodeHeap::block_base(uint64_t p) const noexcept
 {
     uint64_t i = segment_for(p);
     uint64_t b = segment_map.low();
-    if (read<uint8_t>(b + i) == 0xFF)
+    if (runtime::Jvm::read<uint8_t>(b + i) == 0xFF)
         return 0;
-    while (read<uint8_t>(b + i))
-        i -= read<uint8_t>(b + i);
+    while (runtime::Jvm::read<uint8_t>(b + i))
+        i -= runtime::Jvm::read<uint8_t>(b + i);
     return begin() + (i << log2_segment_size);
 }
 
 uint64_t CodeHeap::next_block(uint64_t p) const noexcept
 {
-    if (uint64_t base = block_base(p); base)
+    if (uint64_t base = block_base(p))
         return base + HeapBlock(base).get_length() * (1ull << log2_segment_size);
     return 0;
 }

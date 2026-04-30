@@ -30,44 +30,11 @@ class JvmObject
     explicit operator uint64_t() const noexcept { return addr; }
 
   protected:
-    template <typename T> T read_field(uint64_t offset) const noexcept { return read<T>(offset + address()); }
+    template <typename T> T read_field(uint64_t offset) const noexcept { return Jvm::read<T>(address() + offset); }
 
     template <typename T> void write_field(uint64_t offset, const T &value) noexcept
     {
-        write<T>(offset + address(), value);
-    }
-
-    template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept
-    {
-        if (!addr)
-            return {};
-        if (size == sizeof(T))
-        {
-            T value{};
-            std::memcpy(&value, (const void *)addr, size);
-            return value;
-        }
-        if constexpr (!std::is_integral_v<T> || std::is_same_v<T, bool>)
-            return {};
-        else
-        {
-            using UT = std::make_unsigned_t<T>;
-            UT u{};
-            std::memcpy(&u, (const void *)addr, size);
-            if constexpr (std::endian::native == std::endian::big)
-                u >>= (sizeof(T) - size) * 8;
-            if constexpr (std::is_signed_v<T>)
-                if (u >> (size * 8 - 1))
-                    u |= ~UT{} << (size * 8);
-            return (T)u;
-        }
-    }
-
-    template <typename T> static void write(uint64_t addr, const T &value) noexcept
-    {
-        if (!addr)
-            return;
-        std::memcpy((void *)addr, &value, sizeof(T));
+        Jvm::write<T>(address() + offset, value);
     }
 
     std::string_view read_string_field(uint64_t offset) const noexcept

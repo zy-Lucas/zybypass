@@ -10,6 +10,7 @@ class ConstMethod : public MetaData
   public:
     ConstMethod(uint64_t addr) : MetaData(addr) {}
 
+    Method get_method() const noexcept;
     ConstantPool get_constants() const noexcept { return read_field<uint64_t>(constants_offset); }
     int32_t get_constMethod_size() const noexcept { return read_field<int32_t>(constMethod_size_offset); }
     uint16_t get_flags() const noexcept { return read_field<uint16_t>(flags_offset); }

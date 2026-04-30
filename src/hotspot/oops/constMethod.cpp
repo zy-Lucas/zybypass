@@ -1,8 +1,14 @@
 #include "constMethod.hpp"
-#include <cstdint>
+#include "instanceKlass.hpp"
+#include "method.hpp"
 
 namespace hotspot::oops
 {
+Method ConstMethod::get_method() const noexcept
+{
+    return get_constants().get_pool_holder().get_methods().at(get_idnum());
+}
+
 uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
 {
     uint64_t offset =

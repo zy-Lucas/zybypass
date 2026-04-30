@@ -18,7 +18,7 @@ int64_t GenericArray::get_integer_at(uint32_t index) const noexcept
     if (!elem_type->get_is_int())
         return 0;
     uint64_t elem_size = elem_type->get_size();
-    return read<int64_t>(address() + data_offset + index * elem_size, elem_size);
+    return runtime::Jvm::read<int64_t>(address() + data_offset + index * elem_size, elem_size);
 }
 
 uint64_t GenericArray::get_address_at(uint32_t index) const noexcept
@@ -28,7 +28,7 @@ uint64_t GenericArray::get_address_at(uint32_t index) const noexcept
     types::Type *elem_type = get_elem_type();
     if (elem_type->get_is_int())
         return 0;
-    return read<uint64_t>(address() + data_offset + index * elem_type->get_size());
+    return read_field<uint64_t>(data_offset + index * elem_type->get_size());
 }
 
 void GenericArray::initialize()

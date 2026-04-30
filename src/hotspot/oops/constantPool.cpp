@@ -1,7 +1,10 @@
 #include "constantPool.hpp"
+#include "instanceKlass.hpp"
 
 namespace hotspot::oops
 {
+InstanceKlass ConstantPool::get_pool_holder() const noexcept { return read_field<uint64_t>(pool_holder_offset); }
+
 Symbol ConstantPool::get_generic_signature() const noexcept
 {
     return get_symbol_at(read_field<uint16_t>(generic_signature_index_offset));

@@ -3,6 +3,8 @@
 
 namespace hotspot::oops
 {
+ConstMethod Method::get_constMethod() const noexcept { return read_field<uint64_t>(constMethod_offset); }
+
 code::nmethod Method::get_native_method() const noexcept { return read_field<uint64_t>(code_offset); }
 
 Symbol Method::get_generic_signature() const noexcept

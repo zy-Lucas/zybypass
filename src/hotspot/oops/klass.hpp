@@ -25,6 +25,9 @@ class Klass : public MetaData
 
     bool is_subclass_of(const Klass &k) const noexcept;
 
+    bool is_instance_klass() const noexcept { return is_instance(get_layout_helper()); }
+    bool is_array_klass() const noexcept { return is_array(get_layout_helper()); }
+
     bool is_public() const noexcept { return get_access_flags_obj().is_public(); }
     bool is_final() const noexcept { return get_access_flags_obj().is_final(); }
     bool is_interface() const noexcept { return get_access_flags_obj().is_interface(); }
@@ -35,6 +38,11 @@ class Klass : public MetaData
     bool is_cloneable() const noexcept { return get_access_flags_obj().is_cloneable(); }
     bool has_vanilla_constructor() const noexcept { return get_access_flags_obj().has_vanilla_constructor(); }
     bool has_miranda_methods() const noexcept { return get_access_flags_obj().has_miranda_methods(); }
+
+    static bool is_instance(int32_t lh) noexcept { return lh > LH_NEUTRAL_VALUE; }
+    static bool is_array(int32_t lh) noexcept { return lh < LH_NEUTRAL_VALUE; }
+    static bool is_typeArray(int32_t lh) noexcept { return lh >= (LH_ARRAY_TAG_TYPE_VALUE << LH_ARRAY_TAG_SHIFT); }
+    static bool is_objArray(int32_t lh) noexcept { return lh < (LH_ARRAY_TAG_TYPE_VALUE << LH_ARRAY_TAG_SHIFT); }
 
   private:
     DECLARE_STATIC_INIT
@@ -52,6 +60,7 @@ class Klass : public MetaData
 
     static inline std::optional<uint64_t> trace_id_offset;
 
+    static inline int32_t LH_NEUTRAL_VALUE;
     static inline int32_t LH_INSTANCE_SLOW_PATH_BIT;
     static inline int32_t LH_LOG2_ELEMENT_SIZE_SHIFT;
     static inline int32_t LH_LOG2_ELEMENT_SIZE_MASK;
