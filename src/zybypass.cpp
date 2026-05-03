@@ -2,6 +2,8 @@
 #include "hotspot/code/codeBlob.hpp"
 #include "hotspot/code/codeCache.hpp"
 #include "hotspot/code/nmethod.hpp"
+#include "hotspot/gc/shared/collectedHeapName.hpp"
+#include "hotspot/memory/universe.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
 #include "hotspot/oops/instanceKlass.hpp"
@@ -146,6 +148,7 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
+    std::cout << "type: " << hotspot::gc::shared::to_string(hotspot::memory::Universe::heap()->kind()) << std::endl;
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
     const char *name = env->GetStringUTFChars(method_name, nullptr);
     const char *sig = env->GetStringUTFChars(method_sign, nullptr);

@@ -1,0 +1,20 @@
+#pragma once
+
+#include "../shared/collectedHeap.hpp"
+
+namespace hotspot::gc::parallel
+{
+class ParallelScavengeHeap : public shared::CollectedHeap
+{
+  public:
+    ParallelScavengeHeap(uint64_t addr) : shared::CollectedHeap(addr) {}
+
+    shared::CollectedHeapName kind() const noexcept override { return shared::CollectedHeapName::G1; }
+
+  private:
+    DECLARE_STATIC_INIT
+
+    static inline uint64_t young_gen_offset;
+    static inline uint64_t old_gen_offset;
+};
+} // namespace hotspot::gc::parallel

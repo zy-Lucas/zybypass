@@ -1,15 +1,11 @@
 #pragma once
 
 #include "instanceConstructor.hpp"
-#include <memory>
 
 namespace hotspot::runtime
 {
 template <typename T>
 concept derived_from_base = std::derived_from<T, JvmObject>;
-
-template <typename T>
-concept unknown_policy = std::same_as<T, std::nullopt_t> || derived_from_base<T>;
 
 template <typename T>
 concept type_mapping_like = requires {
@@ -38,26 +34,20 @@ template <FixedString Name, derived_from_base T> struct TypeMapping
     using type = T;
 };
 
-template <unknown_policy unknown_t, type_mapping_like... Types>
+template <type_mapping_like... Types>
     requires(sizeof...(Types) > 0)
-class VirtualBaseConstructor : public InstanceConstructor
+class VirtualConstructor : public InstanceConstructor
 {
   public:
-    VirtualBaseConstructor(types::Type *base_type) noexcept : base_type(base_type) {}
+    VirtualConstructor() = default;
 
     std::pair<std::string_view, std::unique_ptr<JvmObject>> instantiate_wrapper_for(uint64_t addr) override
     {
         if (!addr)
             return {{}, nullptr};
-        types::Type *type = Jvm::find_dynamic_type_for_address(addr, base_type);
-        if (!type)
-            return {{}, nullptr};
-        std::string_view sv = type->get_name();
-        for (const auto &[first, second] : arr)
-            if (first == sv)
-                return {sv, second(addr)};
-        if constexpr (!std::is_same_v<unknown_t, std::nullopt_t>)
-            return {sv, std::make_unique<unknown_t>(addr)};
+        for (const auto &[name, factory] : arr)
+            if (Jvm::address_type_is_equal_to_type(addr, Jvm::lookup_type(name)))
+                return {name, factory(addr)};
         throw wrong_type_exception(addr);
     }
 
@@ -65,6 +55,5 @@ class VirtualBaseConstructor : public InstanceConstructor
     static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> std::unique_ptr<JvmObject> {
                                                   return std::make_unique<typename Types::type>(addr);
                                               }}...};
-    types::Type *base_type;
 };
 } // namespace hotspot::runtime

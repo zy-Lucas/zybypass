@@ -15,10 +15,9 @@ using MetaDataConstructor = runtime::VirtualBaseConstructor<
 
 void MetaData::initialize() {}
 
-std::pair<std::string_view, runtime::JvmObject> MetaData::instantiate_wrapper_for(uint64_t addr)
+std::pair<std::string_view, std::unique_ptr<runtime::JvmObject>> MetaData::instantiate_wrapper_for(uint64_t addr)
 {
-    static std::unique_ptr<runtime::InstanceConstructor> ctor =
-        std::make_unique<MetaDataConstructor>(runtime::Jvm::lookup_type("Metadata"));
-    return ctor->instantiate_wrapper_for(addr);
+    static MetaDataConstructor ctor{runtime::Jvm::lookup_type("Metadata")};
+    return ctor.instantiate_wrapper_for(addr);
 }
 } // namespace hotspot::oops

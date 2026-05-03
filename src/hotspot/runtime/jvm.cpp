@@ -1,4 +1,5 @@
 #include "jvm.hpp"
+#include "../oops/compressedKlassPointers.hpp"
 #ifndef _WIN32
 #include "../debugger/aarch64/symbol_lookup.h"
 #else
@@ -126,6 +127,15 @@ std::optional<uint64_t> Jvm::get_vtbl_for_type(types::Type *type)
     return type_to_vtbl.try_emplace(type, std::nullopt).first->second;
 }
 
+bool Jvm::address_type_is_equal_to_type(uint64_t addr, types::Type *type)
+{
+    if (!addr)
+        return false;
+    if (auto vtable_addr = get_vtbl_for_type(type); vtable_addr && *vtable_addr == *(uint64_t *)addr)
+        return true;
+    return false;
+}
+
 types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base_type)
 {
     if (!addr || !get_vtbl_for_type(base_type))
@@ -158,11 +168,8 @@ types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base
         if (!super)
             continue;
         if (auto vtable_addr = get_vtbl_for_type(type))
-        {
-            uint64_t v = *vtable_addr;
-            if (v == candidates[0] || v == candidates[1] || v == candidates[2])
+            if (uint64_t v = *vtable_addr; v == candidates[0] || v == candidates[1] || v == candidates[2])
                 return type;
-        }
     };
     return nullptr;
 }
@@ -197,6 +204,13 @@ std::string_view Jvm::get_string_view(uint64_t addr) noexcept
     if (!addr)
         return {};
     return {(const char *)addr};
+}
+
+uint64_t Jvm::read_comp_klass_address_value(uint64_t addr) noexcept
+{
+    if (uint64_t value = read<uint32_t>(addr); value)
+        return oops::CompressedKlassPointers::get_base() + (value << oops::CompressedKlassPointers::get_shift());
+    return 0;
 }
 
 std::vector<void (*)()> &Jvm::get_post_init_callbacks()
@@ -337,7 +351,7 @@ types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
         return nullptr;
     auto target_type_name = trim(type_name.substr(0, star_pos));
     types::Type *target_type;
-    
+
     if (is_pointer_type(target_type_name))
     {
         if (!(target_type = lookup_type(target_type_name)))

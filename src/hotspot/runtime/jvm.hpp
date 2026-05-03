@@ -29,6 +29,7 @@ class Jvm
 
     static std::optional<uint64_t> get_vtbl_for_type(types::Type *type);
 
+    static bool address_type_is_equal_to_type(uint64_t addr, types::Type *type);
     static types::Type *find_dynamic_type_for_address(uint64_t addr, types::Type *base_type);
 
     static uint64_t deref_symbol(const char *symbol_name);
@@ -38,6 +39,8 @@ class Jvm
 
     template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept;
     template <typename T> static void write(uint64_t addr, const T &value) noexcept;
+
+    static uint64_t read_comp_klass_address_value(uint64_t addr) noexcept;
 
     static bool is_client_compiler() noexcept { return using_client_compiler; }
     static bool is_server_compiler() noexcept { return using_server_compiler; }
