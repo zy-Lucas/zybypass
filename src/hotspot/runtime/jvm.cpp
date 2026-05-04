@@ -340,20 +340,22 @@ void Jvm::read_vm_long_constants()
 
 void Jvm::read_command_line_flags()
 {
-    types::Type *type = lookup_type("JVMFlag");
+    types::Type *field_type = lookup_type("JVMFlag");
 
-    uint64_t flag_addr = read<uint64_t>(*type->get_field_offset("flags"));
-    uint64_t num_flags = read<uint64_t>(*type->get_field_offset("numFlags"));
+    uint64_t flag_addr = read<uint64_t>(*field_type->get_field_offset("flags"));
+    uint64_t num_flags = read<uint64_t>(*field_type->get_field_offset("numFlags"));
 
-    uint64_t type_offset = *type->get_field_offset("_type");
-    uint64_t name_offset = *type->get_field_offset("_name");
-    uint64_t addr_offset = *type->get_field_offset("_addr");
-    uint64_t flags_offset = *type->get_field_offset("_flags");
+    uint64_t type_offset = *field_type->get_field_offset("_type");
+    uint64_t name_offset = *field_type->get_field_offset("_name");
+    uint64_t addr_offset = *field_type->get_field_offset("_addr");
+    uint64_t flags_offset = *field_type->get_field_offset("_flags");
 
-    uint64_t flag_size = type->get_size();
+    uint64_t flag_size = field_type->get_size();
 
+    if (!num_flags)
+        return;
     num_flags -= 1;
-    flags_map.reserve(num_flags * 2);
+    flags_map.reserve(num_flags);
 
     for (int f = 0; f < num_flags; ++f)
     {

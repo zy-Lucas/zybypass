@@ -5,7 +5,7 @@
 
 namespace hotspot::classfile
 {
-class ClassLoaderDataGraph : runtime::JvmObject
+class ClassLoaderDataGraph
 {
   public:
     static ClassLoaderData get_head() noexcept { return runtime::Jvm::read<uint64_t>(head_offset); }

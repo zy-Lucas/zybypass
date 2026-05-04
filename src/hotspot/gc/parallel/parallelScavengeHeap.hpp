@@ -9,7 +9,7 @@ class ParallelScavengeHeap : public shared::CollectedHeap
   public:
     ParallelScavengeHeap(uint64_t addr) : shared::CollectedHeap(addr) {}
 
-    shared::CollectedHeapName kind() const noexcept override { return shared::CollectedHeapName::G1; }
+    shared::CollectedHeapName kind() const noexcept override { return shared::CollectedHeapName::Parallel; }
 
   private:
     DECLARE_STATIC_INIT

@@ -52,8 +52,11 @@ class VirtualConstructor : public InstanceConstructor
     }
 
   private:
-    static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> std::unique_ptr<JvmObject> {
-                                                  return std::make_unique<typename Types::type>(addr);
+    static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectPtr {
+                                                  using ConcreteType = typename Types::type;
+                                                  return JvmObjectPtr{new ConcreteType(addr), +[](JvmObject *p) {
+                                                                          delete static_cast<ConcreteType *>(p);
+                                                                      }};
                                               }}...};
 };
 } // namespace hotspot::runtime

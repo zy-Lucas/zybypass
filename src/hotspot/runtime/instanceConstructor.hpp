@@ -10,6 +10,8 @@ class InstanceConstructor
   public:
     virtual ~InstanceConstructor() = default;
 
+    using JvmObjectPtr = std::unique_ptr<JvmObject, void (*)(JvmObject *)>;
+
     virtual std::pair<std::string_view, std::unique_ptr<JvmObject>> instantiate_wrapper_for(uint64_t addr) = 0;
 
   protected:
