@@ -5,14 +5,14 @@
 
 namespace hotspot::runtime
 {
+using JvmObjectPtr = std::unique_ptr<JvmObject, void (*)(JvmObject *)>;
+
 class InstanceConstructor
 {
   public:
     virtual ~InstanceConstructor() = default;
 
-    using JvmObjectPtr = std::unique_ptr<JvmObject, void (*)(JvmObject *)>;
-
-    virtual std::pair<std::string_view, std::unique_ptr<JvmObject>> instantiate_wrapper_for(uint64_t addr) = 0;
+    virtual std::pair<std::string_view, JvmObjectPtr> instantiate_wrapper_for(uint64_t addr) = 0;
 
   protected:
     types::WrongTypeException wrong_type_exception(uint64_t addr)

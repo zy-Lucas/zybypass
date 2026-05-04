@@ -12,6 +12,8 @@ class CollectedHeap : public runtime::JvmObject
   public:
     CollectedHeap(uint64_t addr) : runtime::JvmObject(addr) {}
 
+    virtual ~CollectedHeap() = default;
+
     uint64_t start() const noexcept { return reserved_region().start(); }
 
     virtual uint64_t capacity() const noexcept { return 0; }

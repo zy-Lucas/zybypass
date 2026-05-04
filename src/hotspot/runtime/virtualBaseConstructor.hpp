@@ -45,13 +45,13 @@ class VirtualBaseConstructor : public InstanceConstructor
   public:
     VirtualBaseConstructor(types::Type *base_type) noexcept : base_type(base_type) {}
 
-    std::pair<std::string_view, std::unique_ptr<JvmObject>> instantiate_wrapper_for(uint64_t addr) override
+    std::pair<std::string_view, JvmObjectPtr> instantiate_wrapper_for(uint64_t addr) override
     {
         if (!addr)
-            return {{}, nullptr};
+            return {{}, {nullptr, nullptr}};
         types::Type *type = Jvm::find_dynamic_type_for_address(addr, base_type);
         if (!type)
-            return {{}, nullptr};
+            return {{}, {nullptr, nullptr}};
         std::string_view sv = type->get_name();
         for (const auto &[first, second] : arr)
             if (first == sv)

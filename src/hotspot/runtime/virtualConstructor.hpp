@@ -41,10 +41,10 @@ class VirtualConstructor : public InstanceConstructor
   public:
     VirtualConstructor() = default;
 
-    std::pair<std::string_view, std::unique_ptr<JvmObject>> instantiate_wrapper_for(uint64_t addr) override
+    std::pair<std::string_view, JvmObjectPtr> instantiate_wrapper_for(uint64_t addr) override
     {
         if (!addr)
-            return {{}, nullptr};
+            return {{}, {nullptr, nullptr}};
         for (const auto &[name, factory] : arr)
             if (Jvm::address_type_is_equal_to_type(addr, Jvm::lookup_type(name)))
                 return {name, factory(addr)};

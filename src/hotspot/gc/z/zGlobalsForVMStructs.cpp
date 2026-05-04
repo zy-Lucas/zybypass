@@ -44,12 +44,12 @@ uint64_t ZGlobalsForVMStructs::z_address_weak_bad_mask() const noexcept
 
 int32_t ZGlobalsForVMStructs::z_object_alignment_small_shift() const noexcept
 {
-    return runtime::Jvm::read<uint64_t>(read_field<uint64_t>(z_object_alignment_small_shift_offset));
+    return runtime::Jvm::read<int32_t>(read_field<uint64_t>(z_object_alignment_small_shift_offset));
 }
 
 int32_t ZGlobalsForVMStructs::z_object_alignment_small() const noexcept
 {
-    return runtime::Jvm::read<uint64_t>(read_field<uint64_t>(z_object_alignment_small_offset));
+    return runtime::Jvm::read<int32_t>(read_field<uint64_t>(z_object_alignment_small_offset));
 }
 
 void ZGlobalsForVMStructs::initialize()
