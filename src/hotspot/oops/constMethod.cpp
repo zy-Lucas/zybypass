@@ -13,7 +13,7 @@ uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
 {
     uint64_t offset =
         has_method_annotations() + has_parameter_annotations() + has_type_annotations() + has_default_annotations();
-    int32_t word_size = *runtime::Jvm::get_oop_size();
+    int32_t word_size = runtime::Jvm::get_oop_size();
     return (get_constMethod_size() * word_size) - (offset * word_size) - sizeof_short;
 }
 

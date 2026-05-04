@@ -32,9 +32,9 @@ bool Type::add_field(std::unique_ptr<Field> field)
 
 std::ostream &operator<<(std::ostream &os, const Type &type)
 {
-    os << "Type{name='" << type.name << "', super_class_name='" << type.super_class->get_name() << "', size=" << type.size
-       << ", is_oop_type=" << type.is_oop_type << ", is_int=" << type.is_int << ", is_unsigned=" << type.is_unsigned
-       << ", is_pointer=" << type.is_pointer << ", fields=[";
+    os << "Type{name='" << type.name << "', super_class_name='" << type.super_class->get_name()
+       << "', size=" << type.size << ", is_oop_type=" << type.is_oop_type << ", is_int=" << type.is_int
+       << ", is_unsigned=" << type.is_unsigned << ", is_pointer=" << type.is_pointer << ", fields=[";
 
     bool first = true;
     for (const auto &pair : type.name_to_field)

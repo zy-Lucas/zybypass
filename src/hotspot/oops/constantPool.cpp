@@ -48,7 +48,7 @@ void ConstantPool::initialize()
     length_offset = *type->get_field_offset("_length");
 
     header_size = type->get_size();
-    element_size = *runtime::Jvm::get_oop_size();
+    element_size = runtime::Jvm::get_oop_size();
 
     INDY_BSM_OFFSET = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_bsm_offset");
     INDY_ARGC_OFFSET = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_argc_offset");

@@ -14,7 +14,7 @@ uint64_t nmethod::get_metadata_at(uint32_t index) const noexcept
 {
     if (!index)
         return 0;
-    return runtime::Jvm::read<uint64_t>((index - 1) * (*runtime::Jvm::get_oop_size()) + metadata_begin());
+    return runtime::Jvm::read<uint64_t>((index - 1) * runtime::Jvm::get_oop_size() + metadata_begin());
 }
 
 oops::Method nmethod::get_method(uint32_t index) const noexcept

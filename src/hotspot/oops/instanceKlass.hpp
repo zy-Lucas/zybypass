@@ -2,6 +2,7 @@
 
 #include "constantPool.hpp"
 #include "klass.hpp"
+#include <string>
 
 namespace hotspot::oops
 {
@@ -68,6 +69,7 @@ class InstanceKlass : public Klass
     Symbol get_generic_signature() const noexcept { return get_constants().get_generic_signature(); }
 
     std::string_view get_source_debug_extension_view() const noexcept;
+    std::string get_source_debug_extension() const { return std::string{get_source_debug_extension_view()}; }
     int32_t get_nonstatic_field_size() const noexcept { return read_field<int32_t>(nonstatic_field_size_offset); }
     int32_t get_nonstatic_oop_map_size() const noexcept { return read_field<int32_t>(nonstatic_oop_map_size_offset); }
     int32_t get_itable_len() const noexcept { return read_field<int32_t>(itable_len_offset); }

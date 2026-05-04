@@ -25,7 +25,7 @@ constexpr std::string_view ClassState::to_string() const noexcept
 
 uint64_t InstanceKlass::get_size() const noexcept
 {
-    int32_t word_length = *runtime::Jvm::get_bytes_per_word();
+    int32_t word_length = runtime::Jvm::get_bytes_per_word();
     uint64_t size =
         get_header_size() + (get_vtable_len() + get_vtable_len() + get_nonstatic_oop_map_size()) * word_length;
     if (is_interface())

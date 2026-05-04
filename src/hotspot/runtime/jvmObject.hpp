@@ -37,6 +37,8 @@ class JvmObject
         Jvm::write<T>(address() + offset, value);
     }
 
+    uint64_t read_comp_klass_address_at(uint64_t addr) noexcept { return Jvm::read_comp_klass_address_value(addr); }
+
     std::string_view read_string_field(uint64_t offset) const noexcept
     {
         return Jvm::get_string_view_ref(address() + offset);

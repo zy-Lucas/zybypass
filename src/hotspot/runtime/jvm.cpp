@@ -16,6 +16,8 @@ void Jvm::init()
     read_vm_int_constants();
     read_vm_long_constants();
 
+    read_command_line_flags();
+
     if (types::Type *type = lookup_type("Method"); type->get_field("_from_compiled_entry"))
     {
         if (lookup_type("Matcher"))
@@ -23,10 +25,22 @@ void Jvm::init()
         else
             using_client_compiler = true;
     }
-    bytes_per_word = lookup_int_constant("BytesPerWord");
-    oop_size = lookup_int_constant("oopSize");
+    bytes_per_word = *lookup_int_constant("BytesPerWord");
+    oop_size = *lookup_int_constant("oopSize");
 
-    invocation_entry_bic = lookup_int_constant("InvocationEntryBci");
+    Flags_DEFAULT = *lookup_int_constant("JVMFlagOrigin::DEFAULT");
+    Flags_COMMAND_LINE = *lookup_int_constant("JVMFlagOrigin::COMMAND_LINE");
+    Flags_ENVIRON_VAR = *lookup_int_constant("JVMFlagOrigin::ENVIRON_VAR");
+    Flags_CONFIG_FILE = *lookup_int_constant("JVMFlagOrigin::CONFIG_FILE");
+    Flags_MANAGEMENT = *lookup_int_constant("JVMFlagOrigin::MANAGEMENT");
+    Flags_ERGONOMIC = *lookup_int_constant("JVMFlagOrigin::ERGONOMIC");
+    Flags_ATTACH_ON_DEMAND = *lookup_int_constant("JVMFlagOrigin::ATTACH_ON_DEMAND");
+    Flags_INTERNAL = *lookup_int_constant("JVMFlagOrigin::INTERNAL");
+    Flags_JIMAGE_RESOURCE = *lookup_int_constant("JVMFlagOrigin::JIMAGE_RESOURCE");
+    Flags_VALUE_ORIGIN_MASK = *lookup_int_constant("JVMFlag::VALUE_ORIGIN_MASK");
+    Flags_WAS_SET_ON_COMMAND_LINE = *lookup_int_constant("JVMFlag::WAS_SET_ON_COMMAND_LINE");
+
+    invocation_entry_bic = *lookup_int_constant("InvocationEntryBci");
 
     for (auto func : get_post_init_callbacks())
         func();
@@ -213,6 +227,14 @@ uint64_t Jvm::read_comp_klass_address_value(uint64_t addr) noexcept
     return 0;
 }
 
+bool Jvm::is_compressed_klass_pointers_enabled()
+{
+    static bool compressed_klass_pointers_enabled = get_command_line_flag("UseCompressedClassPointers")
+                                                        .transform([](const Flag &f) { return f.get_bool(); })
+                                                        .value_or(false);
+    return compressed_klass_pointers_enabled;
+}
+
 std::vector<void (*)()> &Jvm::get_post_init_callbacks()
 {
     static std::vector<void (*)()> callbacks;
@@ -244,8 +266,7 @@ void Jvm::read_vm_types()
         auto type = std::make_unique<types::Type>(type_name,
                                                   lookup_type_or_create_type(superclass_name, -1, false, false, false),
                                                   size, is_oop_type, is_integer_type, is_unsigned);
-        std::string_view key = type->get_name();
-        name_to_type.try_emplace(key, std::move(type));
+        name_to_type.try_emplace(type_name, std::move(type));
     }
 }
 
@@ -275,10 +296,9 @@ void Jvm::read_vm_structs()
         uint64_t offset =
             *(uint64_t *)(entry_addr + (is_static ? struct_entry_address_offset : struct_entry_offset_offset));
 
-        auto type = lookup_type(type_name);
-        auto field_type = lookup_type(type_string);
-        if (type)
-            type->add_field(std::make_unique<types::Field>(type_name, field_name, field_type, is_static, offset));
+        if (auto type = lookup_type(type_name); type)
+            type->add_field(
+                std::make_unique<types::Field>(type_name, field_name, lookup_type(type_string), is_static, offset));
     }
 }
 
@@ -296,7 +316,7 @@ void Jvm::read_vm_int_constants()
             break;
         int32_t value = *(int32_t *)(entry_addr + int_constant_entry_value_offset);
         if (!lookup_int_constant(name))
-            name_to_int_constant.try_emplace(std::move(name), value);
+            name_to_int_constant.try_emplace(name, value);
     }
 }
 
@@ -314,9 +334,44 @@ void Jvm::read_vm_long_constants()
             break;
         int64_t value = *(int64_t *)(entry_addr + long_constant_entry_value_offset);
         if (!lookup_long_constant(name))
-            name_to_long_constant.try_emplace(std::move(name), value);
+            name_to_long_constant.try_emplace(name, value);
     }
 }
+
+void Jvm::read_command_line_flags()
+{
+    types::Type *type = lookup_type("JVMFlag");
+
+    uint64_t flag_addr = read<uint64_t>(*type->get_field_offset("flags"));
+    uint64_t num_flags = read<uint64_t>(*type->get_field_offset("numFlags"));
+
+    uint64_t type_offset = *type->get_field_offset("_type");
+    uint64_t name_offset = *type->get_field_offset("_name");
+    uint64_t addr_offset = *type->get_field_offset("_addr");
+    uint64_t flags_offset = *type->get_field_offset("_flags");
+
+    uint64_t flag_size = type->get_size();
+
+    num_flags -= 1;
+    flags_map.reserve(num_flags * 2);
+
+    for (int f = 0; f < num_flags; ++f)
+    {
+        uint64_t addr = read<uint64_t>(flag_addr + addr_offset);
+        std::string_view name = get_string_view_ref(flag_addr + name_offset);
+        int32_t type = read<int32_t>(flag_addr + type_offset);
+        int32_t flags = read<int32_t>(flag_addr + flags_offset);
+        flags_map.try_emplace(name, Flag{addr, name, (CmdFlagTypes)type, flags});
+        flag_addr += flag_size;
+    }
+}
+
+types::Type *Jvm::lookup_type_or_create_type(std::string_view type_name, size_t size, bool is_oop_type,
+                                             bool is_integer_type, bool is_unsigned)
+{
+    types::Type *type = lookup_type(type_name, false);
+    return type ? type : createBasicType(type_name, size, is_oop_type, is_integer_type, is_unsigned);
+};
 
 types::Type *Jvm::createBasicType(std::string_view type_name, size_t size, bool is_oop_type, bool is_integer_type,
                                   bool is_unsigned)
@@ -330,6 +385,14 @@ types::Type *Jvm::createBasicType(std::string_view type_name, size_t size, bool 
         return name_to_type.try_emplace(type->get_name(), std::move(new_type)).first->second.get();
     }
     return recursive_create_pointer_type(type_name);
+}
+
+std::optional<Jvm::Flag> Jvm::get_command_line_flag(std::string_view name)
+{
+    if (name.empty())
+        return std::nullopt;
+    auto it = flags_map.find(name);
+    return it != flags_map.end() ? std::make_optional(it->second) : std::nullopt;
 }
 
 std::string_view Jvm::trim(std::string_view sv) noexcept

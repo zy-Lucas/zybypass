@@ -47,10 +47,12 @@ class Jvm
 
     static bool is_core() noexcept { return (!(using_client_compiler || using_server_compiler)); }
 
-    static std::optional<int32_t> get_bytes_per_word() noexcept { return bytes_per_word; }
-    static std::optional<int32_t> get_oop_size() noexcept { return oop_size; }
+    static int32_t get_bytes_per_word() noexcept { return bytes_per_word; }
+    static int32_t get_oop_size() noexcept { return oop_size; }
 
-    static std::optional<int32_t> get_invocation_entry_bic() noexcept { return invocation_entry_bic; }
+    static int32_t get_invocation_entry_bic() noexcept { return invocation_entry_bic; }
+
+    static bool is_compressed_klass_pointers_enabled();
 
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
     static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
@@ -58,6 +60,62 @@ class Jvm
     static constexpr uint64_t build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf) noexcept;
 
     static constexpr bool is_big_endian() noexcept { return std::endian::native == std::endian::big; }
+
+    enum CmdFlagTypes : uint32_t
+    {
+        BOOL,
+        INT,
+        UINT,
+        INTX,
+        UINTX,
+        UINT64_T,
+        SIZE_T,
+        DOUBLE,
+        CCSTR,
+        CCSTRLIST
+    };
+
+    struct Flag
+    {
+        uint64_t addr;
+        std::string_view name;
+        CmdFlagTypes type;
+        int32_t flags;
+
+        int32_t get_origin() const noexcept { return flags & Flags_VALUE_ORIGIN_MASK; }
+
+        bool is_bool() const noexcept { return type == BOOL; }
+        bool get_bool() const noexcept { return read<bool>(addr); }
+
+        bool is_int() const noexcept { return type == INT; }
+        int32_t get_int() const noexcept { return read<int32_t>(addr); }
+
+        bool is_uint() const noexcept { return type == UINT; }
+        uint32_t get_uint() const noexcept { return read<uint32_t>(addr); }
+
+        bool is_intx() const noexcept { return type == INTX; }
+        int64_t get_intx() const noexcept { return read<int64_t>(addr); }
+
+        bool is_uintx() const noexcept { return type == UINTX; }
+        uint64_t get_uintx() const noexcept { return read<uint64_t>(addr); }
+
+        bool is_uint64t() const noexcept { return type == UINT64_T; }
+        uint64_t get_uint64t() const noexcept { return read<uint64_t>(addr); }
+
+        bool is_sizet() const noexcept { return type == SIZE_T; }
+        uint64_t get_sizet() const noexcept { return read<uint64_t>(addr); }
+
+        bool is_double() const noexcept { return type == DOUBLE; }
+        double get_double() const noexcept { return read<double>(addr); }
+
+        bool is_ccstr() const noexcept { return type == CCSTR; }
+        std::string_view get_ccstr_view() const noexcept { return get_string_view_ref(addr); }
+        std::string get_ccstr() const { return std::string{get_string_view(addr)}; }
+
+        bool is_ccstrlist() const noexcept { return type == CCSTRLIST; }
+        std::string_view get_ccstrlist_view() const noexcept { return get_string_view_ref(addr); }
+        std::string get_ccstrlist() const { return std::string{get_string_view(addr)}; }
+    };
 
   private:
     static std::vector<void (*)()> &get_post_init_callbacks();
@@ -67,16 +125,16 @@ class Jvm
     static void read_vm_int_constants();
     static void read_vm_long_constants();
 
+    static void read_command_line_flags();
+
     static types::Type *lookup_or_fail(std::string_view type_name) { return lookup_type(type_name, true); }
     static types::Type *lookup_type_or_create_type(std::string_view type_name, size_t size, bool is_oop_type,
-                                                   bool is_integer_type, bool is_unsigned)
-    {
-        types::Type *type = lookup_type(type_name, false);
-        return type ? type : createBasicType(type_name, size, is_oop_type, is_integer_type, is_unsigned);
-    };
+                                                   bool is_integer_type, bool is_unsigned);
 
     static types::Type *createBasicType(std::string_view type_name, size_t size, bool is_oop_type, bool is_integer_type,
                                         bool is_unsigned);
+
+    static std::optional<Jvm::Flag> get_command_line_flag(std::string_view name);
 
     static std::string_view trim(std::string_view sv) noexcept;
 
@@ -92,16 +150,31 @@ class Jvm
     static inline std::unordered_map<std::string_view, std::unique_ptr<types::Type>> name_to_type;
     static inline std::unordered_map<std::string_view, int32_t> name_to_int_constant;
     static inline std::unordered_map<std::string_view, int64_t> name_to_long_constant;
+
     static inline std::unordered_map<types::Type *, std::optional<uint64_t>> type_to_vtbl;
     static inline std::unordered_map<uint64_t, types::Type *> vtbl_to_type;
+
+    static inline std::unordered_map<std::string_view, Flag> flags_map;
 
     static inline bool using_client_compiler;
     static inline bool using_server_compiler;
 
-    static inline std::optional<int32_t> bytes_per_word;
-    static inline std::optional<int32_t> oop_size;
+    static inline int32_t bytes_per_word;
+    static inline int32_t oop_size;
 
-    static inline std::optional<int32_t> invocation_entry_bic;
+    static inline int32_t Flags_DEFAULT;
+    static inline int32_t Flags_COMMAND_LINE;
+    static inline int32_t Flags_ENVIRON_VAR;
+    static inline int32_t Flags_CONFIG_FILE;
+    static inline int32_t Flags_MANAGEMENT;
+    static inline int32_t Flags_ERGONOMIC;
+    static inline int32_t Flags_ATTACH_ON_DEMAND;
+    static inline int32_t Flags_INTERNAL;
+    static inline int32_t Flags_JIMAGE_RESOURCE;
+    static inline int32_t Flags_VALUE_ORIGIN_MASK;
+    static inline int32_t Flags_WAS_SET_ON_COMMAND_LINE;
+
+    static inline int32_t invocation_entry_bic;
 };
 
 template <typename T> T Jvm::read(uint64_t addr, size_t size) noexcept

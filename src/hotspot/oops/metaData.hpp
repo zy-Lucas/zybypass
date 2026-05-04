@@ -13,7 +13,7 @@ class MetaData : public runtime::JvmObject
 
     static constexpr uint64_t align_size(uint64_t size)
     {
-        return runtime::Jvm::align_up(size, *runtime::Jvm::get_bytes_per_word());
+        return runtime::Jvm::align_up(size, runtime::Jvm::get_bytes_per_word());
     }
 
   private:

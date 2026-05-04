@@ -73,8 +73,8 @@ class nmethod : public CompiledMethod
     bool is_zombie() const noexcept { return get_state() == zombie; }
     bool is_unloaded() const noexcept { return get_state() == unloaded; }
 
-    uint32_t get_oops_length() const noexcept { return oops_size() / *runtime::Jvm::get_oop_size(); }
-    uint32_t get_metadata_length() const noexcept { return metadata_size() / *runtime::Jvm::get_oop_size(); }
+    uint32_t get_oops_length() const noexcept { return oops_size() / runtime::Jvm::get_oop_size(); }
+    uint32_t get_metadata_length() const noexcept { return metadata_size() / runtime::Jvm::get_oop_size(); }
 
     uint64_t get_entry_point() const noexcept { return read_field<uint64_t>(entry_point_offset); }
     uint64_t get_verified_entry_point() const noexcept { return read_field<uint64_t>(verified_entry_point_offset); }

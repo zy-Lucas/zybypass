@@ -12,7 +12,7 @@ class DebugInfoReadStream : public CompressedReadStream
 
     oops::Method read_method() { return code.get_method(read_int()); }
 
-    uint32_t read_bic() { return read_int() + *runtime::Jvm::get_invocation_entry_bic(); }
+    uint32_t read_bic() { return read_int() + runtime::Jvm::get_invocation_entry_bic(); }
 
   private:
     nmethod code;

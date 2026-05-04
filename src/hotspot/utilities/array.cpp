@@ -6,7 +6,7 @@ namespace hotspot::utilities
 {
 uint64_t GenericArray::get_size() const noexcept
 {
-    static int32_t bpw = *runtime::Jvm::get_bytes_per_word();
+    static int32_t bpw = runtime::Jvm::get_bytes_per_word();
     return runtime::Jvm::align_up(byte_sizeof(length()), bpw) / bpw;
 }
 

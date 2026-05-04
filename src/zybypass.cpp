@@ -148,7 +148,7 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
-    std::cout << "type: " << hotspot::gc::shared::to_string(hotspot::memory::Universe::heap()->kind()) << std::endl;
+    std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_klass_pointers_enabled() << std::endl;
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
     const char *name = env->GetStringUTFChars(method_name, nullptr);
     const char *sig = env->GetStringUTFChars(method_sign, nullptr);

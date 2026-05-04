@@ -27,7 +27,7 @@ class CodeBlob : public runtime::JvmObject
     uint32_t get_size() const noexcept { return read_field<uint32_t>(size_offset); }
     uint32_t get_header_size() const noexcept { return read_field<uint32_t>(header_size_offset); }
     uint32_t get_frame_size_word() const noexcept { return read_field<uint32_t>(frame_size_offset); }
-    std::string_view get_name_view() const { return read_string_field(name_offset); }
+    std::string_view get_name_view() const noexcept { return read_string_field(name_offset); }
     std::string get_name() const { return std::string{get_name_view()}; }
 
     size_t getContentSize() const noexcept { return content_end() - content_begin(); }
