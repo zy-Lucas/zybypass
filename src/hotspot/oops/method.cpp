@@ -7,12 +7,6 @@ ConstMethod Method::get_constMethod() const noexcept { return read_field<uint64_
 
 code::nmethod Method::get_native_method() const noexcept { return read_field<uint64_t>(code_offset); }
 
-Symbol Method::get_generic_signature() const noexcept
-{
-    uint64_t index = get_generic_signature_index();
-    return index ? get_constants().get_symbol_at(index) : 0;
-}
-
 bool Method::is_package_private() const noexcept
 {
     runtime::AccessFlags af = get_access_flags_obj();

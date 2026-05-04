@@ -30,7 +30,6 @@ class Method : public MetaData
     uint16_t get_size_of_parameters() const noexcept { return get_constMethod().get_size_of_parameters(); }
     uint16_t get_name_index() const noexcept { return get_constMethod().get_name_index(); }
     uint16_t get_signature_index() const noexcept { return get_constMethod().get_signature_index(); }
-    uint16_t get_generic_signature_index() const noexcept { return get_constMethod().get_signature_index(); }
     int32_t get_access_flags() const noexcept { return read_field<int32_t>(access_flags_offset); }
     uint16_t get_code_size() const noexcept { return get_constMethod().get_code_size(); }
     uint32_t get_vtable_index() const noexcept { return read_field<uint32_t>(vtable_index_offset); }
@@ -53,7 +52,6 @@ class Method : public MetaData
 
     Symbol get_name() const noexcept { return get_constants().get_symbol_at(get_name_index()); }
     Symbol get_signature() const noexcept { return get_constants().get_symbol_at(get_signature_index()); }
-    Symbol get_generic_signature() const noexcept;
 
     bool is_public() const noexcept { return get_access_flags_obj().is_public(); }
     bool is_private() const noexcept { return get_access_flags_obj().is_private(); }

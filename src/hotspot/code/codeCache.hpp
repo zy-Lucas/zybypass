@@ -24,11 +24,11 @@ class CodeCache
 
 void CodeCache::iterator_nmethods(auto &&visitor)
 {
-    const int32_t heap_lenght = heaps.length();
+    const int32_t heap_length = heaps.length();
 
-    if (std::thread::hardware_concurrency() <= heap_lenght)
+    if (std::thread::hardware_concurrency() <= heap_length)
     {
-        for (int i = 0; i < heap_lenght; ++i)
+        for (int i = 0; i < heap_length; ++i)
             if (auto h = heaps.at(i); h.get_code_blob_type() < 2)
             {
                 pthread_jit_write_protect_np(0);
@@ -39,9 +39,9 @@ void CodeCache::iterator_nmethods(auto &&visitor)
     else
     {
         std::vector<std::thread> threads;
-        threads.reserve(heap_lenght);
+        threads.reserve(heap_length);
 
-        for (int i = 0; i < heap_lenght; ++i)
+        for (int i = 0; i < heap_length; ++i)
             if (auto h = heaps.at(i); h.get_code_blob_type() < 2)
                 threads.emplace_back([&, h]() mutable {
                     pthread_jit_write_protect_np(0);
