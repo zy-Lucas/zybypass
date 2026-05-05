@@ -34,11 +34,11 @@ double CompressedReadStream::read_double() noexcept
     return std::bit_cast<double>(h << 32 | l);
 }
 
-uint64_t CompressedReadStream::read_long() noexcept
+int64_t CompressedReadStream::read_long() noexcept
 {
-    uint64_t h = read_signed_int();
-    uint64_t l = read_signed_int();
-    return h << 32 | l;
+    uint32_t low = read_signed_int();
+    uint32_t high = read_signed_int();
+    return int64_t((uint64_t(high) << 32) | low);
 }
 
 uint32_t CompressedReadStream::read_int_mb(uint8_t b0) noexcept

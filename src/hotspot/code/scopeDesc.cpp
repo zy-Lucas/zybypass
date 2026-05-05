@@ -1,6 +1,5 @@
 #include "scopeDesc.hpp"
 #include "debugInfoReadStream.hpp"
-#include <optional>
 
 namespace hotspot::code
 {

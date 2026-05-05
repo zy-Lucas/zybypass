@@ -12,10 +12,9 @@ uint64_t CodeHeap::find_start(uint64_t p) const noexcept
 {
     if (!contains(p))
         return 0;
-    HeapBlock h{block_start(p)};
-    if (!h || h.is_free())
-        return 0;
-    return h.get_allocated_space();
+    if (HeapBlock h{block_start(p)}; h && !h.is_free())
+        return h.get_allocated_space();
+    return 0;
 }
 
 uint64_t CodeHeap::block_base(uint64_t p) const noexcept
@@ -31,7 +30,7 @@ uint64_t CodeHeap::block_base(uint64_t p) const noexcept
 
 uint64_t CodeHeap::next_block(uint64_t p) const noexcept
 {
-    if (uint64_t base = block_base(p))
+    if (uint64_t base = block_base(p); base)
         return base + HeapBlock(base).get_length() * (1ull << log2_segment_size);
     return 0;
 }

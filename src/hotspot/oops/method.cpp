@@ -10,7 +10,7 @@ code::nmethod Method::get_native_method() const noexcept { return read_field<uin
 bool Method::is_package_private() const noexcept
 {
     runtime::AccessFlags af = get_access_flags_obj();
-    return (!af.is_public() && !af.is_private() && !af.is_protected());
+    return !af.is_public() && !af.is_private() && !af.is_protected();
 }
 
 void Method::initialize()

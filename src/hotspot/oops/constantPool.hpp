@@ -7,6 +7,8 @@
 
 namespace hotspot::oops
 {
+class InstanceKlass;
+
 struct CPSlot
 {
     uint64_t ptr;
@@ -18,8 +20,6 @@ struct CPKlassSlot
     uint16_t name_index;
     uint16_t resolved_klass_index;
 };
-
-class InstanceKlass;
 
 class ConstantPool : public MetaData
 {

@@ -1,42 +1,11 @@
 #pragma once
 
 #include "instanceConstructor.hpp"
-#include <memory>
 
 namespace hotspot::runtime
 {
 template <typename T>
-concept derived_from_base = std::derived_from<T, JvmObject>;
-
-template <typename T>
 concept unknown_policy = std::same_as<T, std::nullopt_t> || derived_from_base<T>;
-
-template <typename T>
-concept type_mapping_like = requires {
-    { T::type_name } -> std::convertible_to<std::string_view>;
-    typename T::type;
-};
-
-template <size_t N> struct FixedString
-{
-    char data[N];
-
-    constexpr FixedString(const char (&str)[N]) noexcept
-    {
-        for (size_t i = 0; i < N; ++i)
-            data[i] = str[i];
-    }
-
-    constexpr operator std::string_view() const noexcept { return std::string_view(data, N - 1); }
-};
-
-template <size_t N> FixedString(const char (&)[N]) -> FixedString<N>;
-
-template <FixedString Name, derived_from_base T> struct TypeMapping
-{
-    static constexpr std::string_view type_name = Name;
-    using type = T;
-};
 
 template <unknown_policy unknown_t, type_mapping_like... Types>
     requires(sizeof...(Types) > 0)
@@ -58,7 +27,7 @@ class VirtualBaseConstructor : public InstanceConstructor
                 return {sv, second(addr)};
         if constexpr (!std::is_same_v<unknown_t, std::nullopt_t>)
             return {sv, std::make_unique<unknown_t>(addr)};
-        throw wrong_type_exception(addr);
+        throw create_wrong_type_exception(addr);
     }
 
   private:

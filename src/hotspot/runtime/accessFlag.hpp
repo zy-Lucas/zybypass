@@ -56,7 +56,7 @@ class AccessFlags
     constexpr bool field_has_generic_signature() const noexcept { return flags & JVM_ACC_FIELD_HAS_GENERIC_SIGNATURE; }
 
     // get flags written to .class files
-    constexpr int32_t getStandardFlags() { return flags & JVM_ACC_WRITTEN_FLAGS; }
+    constexpr int32_t get_standard_flags() { return flags & JVM_ACC_WRITTEN_FLAGS; }
 
     constexpr int32_t value() const noexcept { return flags; }
 

@@ -46,7 +46,7 @@ class CompressedReadStream : public CompressedStream
     uint32_t read_int() noexcept;
     float read_float() noexcept { return std::bit_cast<float>(reverse_int(read_int())); }
     double read_double() noexcept;
-    uint64_t read_long() noexcept;
+    int64_t read_long() noexcept;
 
   private:
     uint32_t read_int_mb(uint8_t b0) noexcept;

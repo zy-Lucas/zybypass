@@ -3,7 +3,7 @@
 #include "../runtime/accessFlag.hpp"
 #include "constMethod.hpp"
 #include "metaData.hpp"
-#include "methodCounter.hpp"
+#include "methodCounters.hpp"
 #include "symbol.hpp"
 
 namespace hotspot::code

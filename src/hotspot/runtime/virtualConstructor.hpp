@@ -4,36 +4,6 @@
 
 namespace hotspot::runtime
 {
-template <typename T>
-concept derived_from_base = std::derived_from<T, JvmObject>;
-
-template <typename T>
-concept type_mapping_like = requires {
-    { T::type_name } -> std::convertible_to<std::string_view>;
-    typename T::type;
-};
-
-template <size_t N> struct FixedString
-{
-    char data[N];
-
-    constexpr FixedString(const char (&str)[N]) noexcept
-    {
-        for (size_t i = 0; i < N; ++i)
-            data[i] = str[i];
-    }
-
-    constexpr operator std::string_view() const noexcept { return std::string_view(data, N - 1); }
-};
-
-template <size_t N> FixedString(const char (&)[N]) -> FixedString<N>;
-
-template <FixedString Name, derived_from_base T> struct TypeMapping
-{
-    static constexpr std::string_view type_name = Name;
-    using type = T;
-};
-
 template <type_mapping_like... Types>
     requires(sizeof...(Types) > 0)
 class VirtualConstructor : public InstanceConstructor
@@ -48,7 +18,7 @@ class VirtualConstructor : public InstanceConstructor
         for (const auto &[name, factory] : arr)
             if (Jvm::address_type_is_equal_to_type(addr, Jvm::lookup_type(name)))
                 return {name, factory(addr)};
-        throw wrong_type_exception(addr);
+        throw create_wrong_type_exception(addr);
     }
 
   private:
