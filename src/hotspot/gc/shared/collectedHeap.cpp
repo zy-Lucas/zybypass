@@ -2,12 +2,12 @@
 
 namespace hotspot::gc::shared
 {
-debugger::OopHandle CollectedHeap::oop_load_at(debugger::OopHandle handle, uint64_t offset) const noexcept
+debugger::OopHandle CollectedHeap::oop_load_at(debugger::OopHandle handle, uint64_t offset) const
 {
     return handle.get_oop_handle_at(offset);
 }
 
-debugger::OopHandle CollectedHeap::oop_load_in_native(uint64_t addr) const noexcept
+debugger::OopHandle CollectedHeap::oop_load_in_native(uint64_t addr) const
 {
     return runtime::Jvm::read<uint64_t>(addr);
 }

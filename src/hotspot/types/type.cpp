@@ -12,14 +12,16 @@ Type::Type(std::string_view name, Type *super_class, uint64_t size, bool is_oop_
 
 const Field *Type::get_field(std::string_view field_name) const noexcept
 {
-    auto it = name_to_field.find(field_name);
-    return it != name_to_field.end() ? it->second.get() : nullptr;
+    if (auto it = name_to_field.find(field_name); it != name_to_field.end())
+        return it->second.get();
+    return nullptr;
 }
 
 std::optional<uint64_t> Type::get_field_offset(std::string_view field_name) const noexcept
 {
-    auto field = get_field(field_name);
-    return field ? std::make_optional(field->get_offset()) : std::nullopt;
+    if (const Field *field = get_field(field_name); field)
+        return field->get_offset();
+    return std::nullopt;
 }
 
 bool Type::add_field(std::unique_ptr<Field> field)

@@ -40,6 +40,7 @@ class Jvm
     template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept;
     template <typename T> static void write(uint64_t addr, const T &value) noexcept;
 
+    static uint64_t read_comp_oop_address_value(uint64_t addr) noexcept;
     static uint64_t read_comp_klass_address_value(uint64_t addr) noexcept;
 
     static bool is_client_compiler() noexcept { return using_client_compiler; }
@@ -52,6 +53,7 @@ class Jvm
 
     static int32_t get_invocation_entry_bic() noexcept { return invocation_entry_bic; }
 
+    static bool is_compressed_oops_enabled();
     static bool is_compressed_klass_pointers_enabled();
 
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }

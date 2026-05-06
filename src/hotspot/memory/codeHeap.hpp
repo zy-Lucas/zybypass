@@ -24,7 +24,7 @@ class CodeHeap : public runtime::JvmObject
 
     uint64_t find_start(uint64_t p) const noexcept;
 
-    void iterate(auto &&visitor);
+    void iterate(auto &&visitor) const;
 
   private:
     uint64_t segment_for(uint64_t p) const noexcept { return (p - begin()) >> log2_segment_size; }
@@ -45,7 +45,7 @@ class CodeHeap : public runtime::JvmObject
     static inline uint64_t log2_segment_size_offset;
 };
 
-inline void CodeHeap::iterate(auto &&visitor)
+inline void CodeHeap::iterate(auto &&visitor) const
 {
     code::CodeBlob last_blob{0};
     uint64_t ptr = begin();

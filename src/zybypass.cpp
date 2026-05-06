@@ -19,6 +19,7 @@
 #include <iostream>
 #include <jni.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define DLLEXPORT
 
@@ -138,22 +139,31 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     // void *cm = malloc(constm.get_constMethod_size() * 8);
     // memcpy(cm, (void *)cm_addr, constm.get_constMethod_size() * 8);
 
-    size_t len = 2;
-    hotspot::oops::MySymbol *sym = new (len) hotspot::oops::MySymbol("sb", len);
-    void *cp_addr = malloc(cp.get_size() + 8);
-    memcpy(cp_addr, (void *)cp.address(), cp.get_size() - 8);
-    return (uint64_t)cp_addr;
+    size_t len = 11;
+    hotspot::oops::MySymbol *sym = new (len) hotspot::oops::MySymbol("checkAccess", len);
+    cp.set_symbol_at(31, (uint64_t)sym);
+    return 0;
 }
 
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
-    std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_klass_pointers_enabled() << std::endl;
+    // std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_oops_enabled() << std::endl;
+    if (hotspot::runtime::Jvm::is_compressed_oops_enabled())
+    {
+        std::cout << hotspot::oops::Klass{hotspot::runtime::Jvm::read_comp_klass_address_value(
+                                              hotspot::runtime::Jvm::read<uint64_t>((uint64_t)klass_name) + 8)}
+                         .get_name()
+                         .as_view()
+                  << std::endl;
+    }
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
     const char *name = env->GetStringUTFChars(method_name, nullptr);
     const char *sig = env->GetStringUTFChars(method_sign, nullptr);
 
-    hotspot::oops::Method method = hotspot::oops::InstanceKlass(hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()).find_method(name, sig);
+    hotspot::oops::Method method =
+        hotspot::oops::InstanceKlass(hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address())
+            .find_method(name, sig);
     env->ReleaseStringUTFChars(klass_name, kl_name);
     env->ReleaseStringUTFChars(method_name, name);
     env->ReleaseStringUTFChars(method_sign, sig);

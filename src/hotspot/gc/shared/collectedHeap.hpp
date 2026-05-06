@@ -21,13 +21,13 @@ class CollectedHeap : public runtime::JvmObject
 
     memory::MemRegion reserved_region() const noexcept { return address() + reserved_offset; }
 
-    bool is_in(uint64_t a) const noexcept { return is_in_reserved(a); }
-    bool is_in_reserved(uint64_t a) const noexcept { return reserved_region().contains(a); }
+    virtual bool is_in(uint64_t a) const noexcept { return is_in_reserved(a); }
+    virtual bool is_in_reserved(uint64_t a) const noexcept { return reserved_region().contains(a); }
 
     virtual CollectedHeapName kind() const noexcept;
 
-    virtual debugger::OopHandle oop_load_at(debugger::OopHandle handle, uint64_t offset) const noexcept;
-    virtual debugger::OopHandle oop_load_in_native(uint64_t addr) const noexcept;
+    virtual debugger::OopHandle oop_load_at(debugger::OopHandle handle, uint64_t offset) const;
+    virtual debugger::OopHandle oop_load_in_native(uint64_t addr) const;
 
   private:
     DECLARE_STATIC_INIT

@@ -12,9 +12,9 @@ class CodeCache
   public:
     CodeCache() = delete;
 
-    bool static contains(uint64_t p) noexcept;
+    static bool contains(uint64_t p) noexcept;
 
-    void static iterator_nmethods(auto &&visitor);
+    static void iterator_nmethods(auto &&visitor);
 
   private:
     DECLARE_STATIC_INIT

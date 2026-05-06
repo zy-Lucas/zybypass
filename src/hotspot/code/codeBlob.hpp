@@ -38,10 +38,7 @@ class CodeBlob : public runtime::JvmObject
     bool content_contains(uint64_t addr) const noexcept { return content_begin() <= addr && content_end() > addr; }
     bool code_contains(uint64_t addr) const noexcept { return code_begin() <= addr && code_end() > addr; }
     bool data_contains(uint64_t addr) const noexcept { return data_begin() <= addr && data_end() > addr; }
-    bool is_frame_complete_at(uint64_t addr) const noexcept
-    {
-        return code_contains(addr) && addr - code_begin() >= get_frame_complete_offset();
-    }
+    bool is_frame_complete_at(uint64_t addr) const noexcept;
 
     uint32_t get_frame_size() const noexcept { return sizeof(void *) * get_frame_size_word(); }
 

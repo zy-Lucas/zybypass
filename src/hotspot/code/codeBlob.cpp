@@ -2,6 +2,11 @@
 
 namespace hotspot::code
 {
+bool CodeBlob::is_frame_complete_at(uint64_t addr) const noexcept
+{
+    return code_contains(addr) && addr - code_begin() >= get_frame_complete_offset();
+}
+
 std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob)
 {
     os << code_blob.get_name() << std::endl

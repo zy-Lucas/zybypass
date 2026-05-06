@@ -2,21 +2,28 @@
 #include "../gc/epsilon/epsilonHeap.hpp"
 #include "../gc/g1/g1CollectedHeap.hpp"
 #include "../gc/parallel/parallelScavengeHeap.hpp"
+#include "../gc/serial/serialHeap.hpp"
+#include "../gc/shenandoah/shenandoahHeap.hpp"
+#include "../gc/z/zCollectedHeap.hpp"
 #include "../runtime/virtualConstructor.hpp"
 
 namespace hotspot::memory
 {
 using UniverseConstructor =
-    runtime::VirtualConstructor<runtime::TypeMapping<"ParallelScavengeHeap", gc::parallel::ParallelScavengeHeap>,
+    runtime::VirtualConstructor<runtime::TypeMapping<"SerialHeap", gc::serial::SerialHeap>,
+                                runtime::TypeMapping<"ParallelScavengeHeap", gc::parallel::ParallelScavengeHeap>,
                                 runtime::TypeMapping<"G1CollectedHeap", gc::g1::G1CollectedHeap>,
-                                runtime::TypeMapping<"EpsilonHeap", gc::epsilon::EpsilonHeap>>;
+                                runtime::TypeMapping<"EpsilonHeap", gc::epsilon::EpsilonHeap>,
+                                runtime::TypeMapping<"ZCollectedHeap", gc::z::ZCollectedHeap>,
+                                runtime::TypeMapping<"ShenandoahHeap", gc::shenandoah::ShenandoahHeap>>;
 
-std::unique_ptr<gc::shared::CollectedHeap> Universe::heap()
+gc::shared::CollectedHeap *Universe::heap()
 {
-    static UniverseConstructor heap_constructor{};
-    return std::unique_ptr<gc::shared::CollectedHeap>{static_cast<gc::shared::CollectedHeap *>(
-        heap_constructor.instantiate_wrapper_for(runtime::Jvm::read<uint64_t>(collected_heap_offset))
+    static std::unique_ptr<gc::shared::CollectedHeap> heap{static_cast<gc::shared::CollectedHeap *>(
+        UniverseConstructor{}
+            .instantiate_wrapper_for(runtime::Jvm::read<uint64_t>(collected_heap_offset))
             .second.release())};
+    return heap.get();
 }
 
 void Universe::initialize()

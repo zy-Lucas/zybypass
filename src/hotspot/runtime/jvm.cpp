@@ -1,5 +1,6 @@
 #include "jvm.hpp"
 #include "../oops/compressedKlassPointers.hpp"
+#include "../oops/compressedOops.hpp"
 #ifndef _WIN32
 #include "../debugger/aarch64/symbol_lookup.h"
 #else
@@ -220,11 +221,26 @@ std::string_view Jvm::get_string_view(uint64_t addr) noexcept
     return {(const char *)addr};
 }
 
+uint64_t Jvm::read_comp_oop_address_value(uint64_t addr) noexcept
+{
+    if (uint64_t value = read<uint32_t>(addr); value)
+        return oops::CompressedOops::get_base() + (value << oops::CompressedOops::get_shift());
+    return 0;
+}
+
 uint64_t Jvm::read_comp_klass_address_value(uint64_t addr) noexcept
 {
     if (uint64_t value = read<uint32_t>(addr); value)
         return oops::CompressedKlassPointers::get_base() + (value << oops::CompressedKlassPointers::get_shift());
     return 0;
+}
+
+bool Jvm::is_compressed_oops_enabled()
+{
+    static bool compressed_oops_enabled = get_command_line_flag("UseCompressedOops")
+                                              .transform([](const Flag &f) { return f.get_bool(); })
+                                              .value_or(false);
+    return compressed_oops_enabled;
 }
 
 bool Jvm::is_compressed_klass_pointers_enabled()
