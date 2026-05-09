@@ -4,8 +4,8 @@ namespace hotspot::classfile
 {
 oops::Klass ClassLoaderDataGraph::find(std::string_view class_name) noexcept
 {
-    for (ClassLoaderData cld = get_head(); cld; cld = cld.next())
-        if (oops::Klass k = cld.find(class_name); k)
+    for (ClassLoaderData cld{get_head()}; cld; cld = cld.next())
+        if (oops::Klass k{cld.find(class_name)}; k)
             return k;
     return 0;
 }

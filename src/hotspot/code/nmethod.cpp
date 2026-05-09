@@ -44,7 +44,7 @@ PcDesc nmethod::get_pc_desc_at(uint64_t pc) const noexcept
 
 std::optional<ScopeDesc> nmethod::get_scope_desc_at(uint64_t pc) const noexcept
 {
-    if (PcDesc pd = get_pc_desc_at(pc); pd)
+    if (PcDesc pd{get_pc_desc_at(pc)}; pd)
         return std::make_optional<ScopeDesc>(*this, pd.get_scope_decode_offset(), pd.get_obj_decode_offset(),
                                              pd.get_reexecute());
     return std::nullopt;
@@ -57,8 +57,8 @@ bool nmethod::contains_method(oops::Method method_addr) const
         PcDesc pc_desc{p};
         if (pc_desc.get_scope_decode_offset() == DebugInformationRecorder::SERIALIZED_NULL)
             continue;
-        std::optional<ScopeDesc> scope = std::make_optional<ScopeDesc>(
-            *this, pc_desc.get_scope_decode_offset(), pc_desc.get_obj_decode_offset(), pc_desc.get_reexecute());
+        std::optional<ScopeDesc> scope{std::make_optional<ScopeDesc>(
+            *this, pc_desc.get_scope_decode_offset(), pc_desc.get_obj_decode_offset(), pc_desc.get_reexecute())};
         while (scope)
         {
             if (scope->get_method() == method_addr)

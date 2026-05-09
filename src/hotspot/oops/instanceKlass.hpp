@@ -2,6 +2,7 @@
 
 #include "constantPool.hpp"
 #include "klass.hpp"
+#include <cstdint>
 #include <string>
 
 namespace hotspot::oops
@@ -60,7 +61,13 @@ class InstanceKlass : public Klass
 
     uint64_t get_size() const noexcept;
 
-    uint16_t get_field_access_flags(int32_t index) const noexcept;
+    uint16_t get_field_access_flags(uint32_t index) const noexcept;
+    Symbol get_field_name(uint32_t index) const noexcept;
+    Symbol get_field_signature(uint32_t index) const noexcept;
+    uint16_t get_field_generic_signature_index(uint32_t index) const noexcept;
+    Symbol get_field_generic_signature(uint32_t index) const noexcept;
+    uint16_t get_field_initial_value_index(uint32_t index) const noexcept;
+    uint32_t get_field_offset(uint32_t index) const noexcept;
 
     ConstantPool get_constants() const noexcept { return read_field<uint64_t>(constants_offset); }
     uint16_t major_version() const noexcept { return get_constants().get_major(); }

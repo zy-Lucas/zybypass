@@ -39,11 +39,7 @@ class Type
     void set_is_oop_type(bool new_is_oop_type) noexcept { is_oop_type = new_is_oop_type; }
     void set_is_int(bool new_is_int) noexcept { is_int = new_is_int; }
     void set_is_unsigned(bool new_is_unsigned) noexcept { is_unsigned = new_is_unsigned; }
-    void set_is_pointer(bool new_is_pointer, types::Type *new_target_type = nullptr) noexcept
-    {
-        is_pointer = new_is_pointer;
-        target_type = new_target_type;
-    }
+    void set_is_pointer(bool new_is_pointer, types::Type *new_target_type = nullptr) noexcept;
 
     bool add_field(std::unique_ptr<Field> field); // unique_ptr明确所有权
 

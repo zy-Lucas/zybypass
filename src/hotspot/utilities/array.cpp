@@ -31,6 +31,16 @@ uint64_t GenericArray::get_address_at(uint32_t index) const noexcept
     return read_field<uint64_t>(data_offset + index * elem_type->get_size());
 }
 
+void GenericArray::set_address_at(uint32_t index, uint64_t addr) noexcept
+{
+    if (index >= length())
+        return;
+    types::Type *elem_type = get_elem_type();
+    if (elem_type->get_is_int())
+        return;
+    write_field<uint64_t>(data_offset + index * elem_type->get_size(), addr);
+}
+
 void GenericArray::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("Array<int>");

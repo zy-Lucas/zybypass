@@ -5,7 +5,7 @@ namespace hotspot::gc::z
 {
 uint64_t ZRelocate::forwarding_find(ZForwarding forwarding, uint64_t from) noexcept
 {
-    if (ZForwardingEntry entry = forwarding.find(forwarding_index(forwarding, from)); entry.populated())
+    if (ZForwardingEntry entry{forwarding.find(forwarding_index(forwarding, from))}; entry.populated())
         return ZAddress::good(entry.to_offset());
     return 0;
 }

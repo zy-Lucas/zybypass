@@ -16,8 +16,7 @@ ZForwardingEntry ZAttachedArrayForForwarding::get(ZForwarding obj) const noexcep
 uint64_t ZAttachedArrayForForwarding::align_up(uint64_t size, uint64_t alignment) noexcept
 {
     uint64_t mask = alignment - 1;
-    uint64_t adjusted = size + mask;
-    return adjusted & ~mask;
+    return size + mask & ~mask;
 }
 
 void ZAttachedArrayForForwarding::initialize()

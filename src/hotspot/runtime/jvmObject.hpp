@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jvm.hpp"
+#include <functional>
 
 #define DECLARE_STATIC_INIT                                                                                            \
     static void initialize();                                                                                          \
@@ -29,6 +30,8 @@ class JvmObject
     explicit operator bool() const noexcept { return addr; }
     explicit operator uint64_t() const noexcept { return addr; }
 
+    size_t hash_code() const noexcept { return std::hash<uint64_t>{}(addr); }
+
   protected:
     template <typename T> T read_field(uint64_t offset) const noexcept { return Jvm::read<T>(address() + offset); }
 
@@ -45,6 +48,14 @@ class JvmObject
     }
 
   private:
-    uint64_t addr;
+    uint64_t addr = 0;
 };
 } // namespace hotspot::runtime
+
+namespace std
+{
+template <> struct hash<hotspot::runtime::JvmObject>
+{
+    size_t operator()(const hotspot::runtime::JvmObject &obj) const noexcept { return obj.hash_code(); }
+};
+} // namespace std

@@ -1,5 +1,6 @@
 #include "instanceKlass.hpp"
 #include "method.hpp"
+#include "vmSymbols.hpp"
 
 namespace hotspot::oops
 {
@@ -33,9 +34,55 @@ uint64_t InstanceKlass::get_size() const noexcept
     return align_size(size);
 }
 
-uint16_t InstanceKlass::get_field_access_flags(int32_t index) const noexcept
+uint16_t InstanceKlass::get_field_access_flags(uint32_t index) const noexcept
 {
     return get_fields().at(index * FIELD_SLOTS + ACCESS_FLAGS_OFFSET);
+}
+
+Symbol InstanceKlass::get_field_name(uint32_t index) const noexcept
+{
+    uint16_t name_index = get_fields().at(index * FIELD_SLOTS + NAME_INDEX_OFFSET);
+    if (index < get_java_fields_count())
+        return get_constants().get_symbol_at(name_index);
+    return vmSymbols::symbol_at(name_index);
+}
+
+Symbol InstanceKlass::get_field_signature(uint32_t index) const noexcept
+{
+    uint16_t name_index = get_fields().at(index * FIELD_SLOTS + SIGNATURE_INDEX_OFFSET);
+    if (index < get_java_fields_count())
+        return get_constants().get_symbol_at(name_index);
+    return vmSymbols::symbol_at(name_index);
+}
+
+uint16_t InstanceKlass::get_field_generic_signature_index(uint32_t index) const noexcept
+{
+    uint32_t slot = get_all_fields_count() * FIELD_SLOTS;
+    for (uint32_t i = 0; i < index; ++i)
+        slot += runtime::AccessFlags{get_field_access_flags(i)}.field_has_generic_signature();
+    if (runtime::AccessFlags{get_field_access_flags(index)}.field_has_generic_signature())
+        return get_fields().at(slot);
+    return 0;
+}
+
+Symbol InstanceKlass::get_field_generic_signature(uint32_t index) const noexcept
+{
+    if (uint16_t generic_signature_index = get_field_generic_signature_index(index); generic_signature_index)
+        return get_constants().get_symbol_at(generic_signature_index);
+    return 0;
+}
+
+uint16_t InstanceKlass::get_field_initial_value_index(uint32_t index) const noexcept
+{
+    return get_fields().at(index * FIELD_SLOTS + INITVAL_INDEX_OFFSET);
+}
+
+uint32_t InstanceKlass::get_field_offset(uint32_t index) const noexcept
+{
+    utilities::U2Array fields{get_fields()};
+    short lo = fields.at(index * FIELD_SLOTS + LOW_OFFSET);
+    short hi = fields.at(index * FIELD_SLOTS + HIGH_OFFSET);
+    return runtime::Jvm::build_int_from_shorts(lo, hi) >> FIELDINFO_TAG_SIZE;
 }
 
 uint16_t InstanceKlass::get_all_fields_count() const noexcept
@@ -71,7 +118,7 @@ Method InstanceKlass::find_method(utilities::MethodArray methods, std::string_vi
                                   std::string_view signature) noexcept
 {
     const int32_t len = methods.length();
-    for (int32_t i = 0; i < len; ++i)
+    for (uint32_t i = 0; i < len; ++i)
         if (Method m{methods.at(i)}; m.get_name().equals(name) && m.get_signature().equals(signature))
             return m;
     return 0;

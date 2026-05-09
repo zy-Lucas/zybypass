@@ -3,6 +3,7 @@
 #include "../types/field.hpp"
 #include "../types/type.hpp"
 #include <bit>
+#include <cstdint>
 #include <vector>
 
 namespace hotspot::runtime
@@ -59,6 +60,7 @@ class Jvm
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
     static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
 
+    static constexpr uint32_t build_int_from_shorts(uint16_t low, uint16_t high) noexcept { return (high << 16) | low; }
     static constexpr uint64_t build_long_from_intsPD(uint32_t oneHalf, uint32_t otherHalf) noexcept;
 
     static constexpr bool is_big_endian() noexcept { return std::endian::native == std::endian::big; }

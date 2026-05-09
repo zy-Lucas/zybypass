@@ -72,7 +72,7 @@ class Method : public MetaData
 
     bool is_obsolete() const noexcept { return get_access_flags_obj().is_obsolete(); }
 
-    uint32_t get_size() const noexcept { return type->get_size() + (is_native() ? 2 : 0); }
+    uint64_t get_size() const noexcept { return type->get_size() + (is_native() ? 2 * sizeof(void *) : 0); }
 
   private:
     static constexpr std::string_view object_initializer_name() noexcept { return "<init>"; }

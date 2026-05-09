@@ -36,6 +36,8 @@ class GenericArray : public runtime::JvmObject
 
     uint64_t get_size() const noexcept;
 
+    void set_address_at(uint32_t index, uint64_t addr) noexcept;
+
   protected:
     int64_t get_integer_at(uint32_t index) const noexcept;
     uint64_t get_address_at(uint32_t index) const noexcept;

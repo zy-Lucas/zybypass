@@ -24,6 +24,12 @@ std::optional<uint64_t> Type::get_field_offset(std::string_view field_name) cons
     return std::nullopt;
 }
 
+void Type::set_is_pointer(bool new_is_pointer, types::Type *new_target_type) noexcept
+{
+    is_pointer = new_is_pointer;
+    target_type = new_target_type;
+}
+
 bool Type::add_field(std::unique_ptr<Field> field)
 {
     if (!field)

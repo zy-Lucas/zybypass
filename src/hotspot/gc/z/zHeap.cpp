@@ -4,14 +4,14 @@ namespace hotspot::gc::z
 {
 uint64_t ZHeap::relocate_object(uint64_t addr) const noexcept
 {
-    if (ZForwarding forwarding = forwardingTable().get(addr); forwarding)
+    if (ZForwarding forwarding{forwardingTable().get(addr)}; forwarding)
         return relocate().relocate_object(forwarding, ZAddress::good(addr));
     return ZAddress::good(addr);
 }
 
 uint64_t ZHeap::remap_object(uint64_t o) const noexcept
 {
-    if (ZForwarding forwarding = forwardingTable().get(address()); forwarding)
+    if (ZForwarding forwarding{forwardingTable().get(address())}; forwarding)
         return relocate().forwarding_find(forwarding, ZAddress::good(o));
     return ZAddress::good(o);
 }

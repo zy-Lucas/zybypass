@@ -11,7 +11,7 @@ ZForwardingEntry ZForwarding::find(uint64_t from_index) noexcept
 {
     ZForwardEntryIterator itr{from_index, this};
     while (itr.has_next())
-        if (ZForwardingEntry entry = itr.next(); entry.from_index() == from_index)
+        if (ZForwardingEntry entry{itr.next()}; entry.from_index() == from_index)
             return entry;
     return itr.peak();
 }
@@ -24,11 +24,9 @@ ZForwarding::ZForwardEntryIterator::ZForwardEntryIterator(uint64_t from_index, Z
 
 ZForwardingEntry ZForwarding::ZForwardEntryIterator::next() noexcept
 {
-    ZForwardingEntry entry = next_entry;
-
+    ZForwardingEntry entry{next_entry};
     cursor = (cursor + 1) & mask;
     next_entry = forwarding->at(cursor);
-
     return entry;
 }
 

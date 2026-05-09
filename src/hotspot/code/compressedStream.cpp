@@ -46,7 +46,7 @@ uint32_t CompressedReadStream::read_int_mb(uint8_t b0) noexcept
     uint32_t base_pos = position - 1;
     uint32_t sum = b0;
     int32_t shift = lg_H;
-    for (int i = 0;;)
+    for (uint32_t i = 0;;)
     {
         uint32_t b_i = read(base_pos + (++i));
         sum += b_i << shift;

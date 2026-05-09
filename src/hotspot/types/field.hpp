@@ -13,6 +13,7 @@ class Field
 
     Field(const Field &) = delete;
     Field &operator=(const Field &) = delete;
+    
     Field(Field &&) = delete;
     Field &operator=(Field &&) = delete;
 

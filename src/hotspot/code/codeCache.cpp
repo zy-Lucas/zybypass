@@ -4,7 +4,7 @@ namespace hotspot::code
 {
 bool CodeCache::contains(uint64_t p) noexcept
 {
-    for (int i = 0; i < heaps.length(); ++i)
+    for (uint32_t i = 0; i < heaps.length(); ++i)
         if (heaps.at(i).contains(p))
             return true;
     return false;

@@ -63,7 +63,7 @@ types::Type *Jvm::lookup_type(std::string_view type_name, bool throw_if_not_foun
         if (type_name.starts_with("GrowableArray<") && type_name.ends_with('>'))
         {
             constexpr std::string_view prefix("GrowableArray<");
-            auto element_type_name = type_name.substr(prefix.size(), type_name.size() - prefix.size() - 1);
+            auto element_type_name{type_name.substr(prefix.size(), type_name.size() - prefix.size() - 1)};
 
             auto element_type = lookup_type(element_type_name);
             if (!element_type && is_pointer_type(element_type_name))
@@ -71,7 +71,7 @@ types::Type *Jvm::lookup_type(std::string_view type_name, bool throw_if_not_foun
             if (!element_type)
                 throw std::runtime_error("Unknown type: " + std::string(element_type_name));
 
-            auto new_type = std::make_unique<types::Type>(type_name, nullptr, -1, false, false, false);
+            auto new_type{std::make_unique<types::Type>(type_name, nullptr, -1, false, false, false)};
             auto target_type = new_type.get();
             name_to_type.try_emplace(target_type->get_name(), std::move(new_type));
 
@@ -97,7 +97,7 @@ types::Type *Jvm::basic_lookup_type(std::string_view type_name) noexcept
 {
     if (type_name.empty())
         return nullptr;
-    auto it = name_to_type.find(type_name);
+    auto it{name_to_type.find(type_name)};
     return it != name_to_type.end() ? it->second.get() : nullptr;
 }
 
@@ -105,7 +105,7 @@ std::optional<int32_t> Jvm::lookup_int_constant(std::string_view constant_name) 
 {
     if (constant_name.empty())
         return std::nullopt;
-    auto it = name_to_int_constant.find(constant_name);
+    auto it{name_to_int_constant.find(constant_name)};
     return it != name_to_int_constant.end() ? std::make_optional(it->second) : std::nullopt;
 }
 
@@ -113,7 +113,7 @@ std::optional<int64_t> Jvm::lookup_long_constant(std::string_view constant_name)
 {
     if (constant_name.empty())
         return std::nullopt;
-    auto it = name_to_long_constant.find(constant_name);
+    auto it{name_to_long_constant.find(constant_name)};
     return it != name_to_long_constant.end() ? std::make_optional(it->second) : std::nullopt;
 }
 
@@ -121,15 +121,15 @@ std::optional<uint64_t> Jvm::get_vtbl_for_type(types::Type *type)
 {
     if (!type)
         return std::nullopt;
-    if (auto result = type_to_vtbl.find(type); result != type_to_vtbl.cend())
+    if (auto result{type_to_vtbl.find(type)}; result != type_to_vtbl.cend())
         return result->second;
-    std::string vtbl_symbol{vtbl_symbol_for_type(type)};
+    auto vtbl_symbol{vtbl_symbol_for_type(type)};
     uint64_t addr;
 #ifdef _WIN32
     HMODULE libjvm = get_jvm_handle();
     if (!libjvm)
         return std::nullopt;
-    addr = (uint64_t)GetProcAddress(libjvm, vtbl_symbol);
+    addr = (uint64_t)GetProcAddress(libjvm, vtbl_symbol.c_str());
 #else
     addr = debugger::aarch64::lookup_by_name(vtbl_symbol.c_str());
 #endif
@@ -146,7 +146,7 @@ bool Jvm::address_type_is_equal_to_type(uint64_t addr, types::Type *type)
 {
     if (!addr)
         return false;
-    if (auto vtable_addr = get_vtbl_for_type(type); vtable_addr && *vtable_addr == *(uint64_t *)addr)
+    if (auto vtable_addr{get_vtbl_for_type(type)}; vtable_addr && *vtable_addr == read<uint64_t>(addr))
         return true;
     return false;
 }
@@ -156,20 +156,20 @@ types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base
     if (!addr || !get_vtbl_for_type(base_type))
         return nullptr;
     static constexpr size_t ptr_size = sizeof(void *);
-    uint64_t candidates[3] = {*(uint64_t *)addr, 0, 0};
+    uint64_t candidates[3] = {read<uint64_t>(addr), 0, 0};
     int64_t offset2 = base_type->get_size() - (base_type->get_size() % ptr_size) - ptr_size;
 
     if (offset2 > 0)
     {
-        candidates[1] = *(uint64_t *)(addr + offset2);
+        candidates[1] = read<uint64_t>(addr + offset2);
         if (offset2 - (int64_t)ptr_size > 0)
-            candidates[2] = *(uint64_t *)(addr + offset2 - ptr_size);
+            candidates[2] = read<uint64_t>(addr + offset2 - ptr_size);
     }
     for (uint64_t loc : candidates)
     {
         if (!loc)
             continue;
-        if (auto it = vtbl_to_type.find(loc); it != vtbl_to_type.end())
+        if (auto it{vtbl_to_type.find(loc)}; it != vtbl_to_type.end())
             for (const auto *super = it->second; super; super = super->get_super_class())
                 if (super == base_type)
                     return it->second;
@@ -182,7 +182,7 @@ types::Type *Jvm::find_dynamic_type_for_address(uint64_t addr, types::Type *base
             super = super->get_super_class();
         if (!super)
             continue;
-        if (auto vtable_addr = get_vtbl_for_type(type))
+        if (auto vtable_addr{get_vtbl_for_type(type)})
             if (uint64_t v = *vtable_addr; v == candidates[0] || v == candidates[1] || v == candidates[2])
                 return type;
     };
@@ -197,12 +197,12 @@ uint64_t Jvm::deref_symbol(const char *symbol_name)
     HMODULE libjvm = get_jvm_handle();
     if (!libjvm)
         return 0;
-    if (auto addr = (uint64_t)GetProcAddress(libjvm, symbol_name); addr)
-        return *(uint64_t *)addr;
+    if (auto addr = (uint64_t)GetProcAddress(libjvm, symbol_name.c_str()); addr)
+        return read<uint64_t>(addr);
     return 0;
 #else
     if (uint64_t addr = debugger::aarch64::lookup_by_name(symbol_name); addr)
-        return *(uint64_t *)addr;
+        return read<uint64_t>(addr);
     return 0;
 #endif
 }
@@ -211,7 +211,7 @@ std::string_view Jvm::get_string_view_ref(uint64_t addr) noexcept
 {
     if (!addr)
         return {};
-    return get_string_view(*(const uint64_t *)addr);
+    return get_string_view(read<uint64_t>(addr));
 }
 
 std::string_view Jvm::get_string_view(uint64_t addr) noexcept
@@ -270,18 +270,18 @@ void Jvm::read_vm_types()
 
     for (;; entry_addr += type_entry_array_stride)
     {
-        std::string_view type_name = get_string_view_ref(entry_addr + type_entry_type_name_offset);
+        auto type_name{get_string_view_ref(entry_addr + type_entry_type_name_offset)};
         if (type_name.empty())
             break;
-        std::string_view superclass_name = get_string_view_ref(entry_addr + type_entry_superclass_name_offset);
-        bool is_oop_type = *(int *)(entry_addr + type_entry_is_oop_type_offset);
-        bool is_integer_type = *(int *)(entry_addr + type_entry_is_integer_type_offset);
-        bool is_unsigned = *(int *)(entry_addr + type_entry_is_unsigned_offset);
-        uint64_t size = *(uint64_t *)(entry_addr + type_entry_size_Offset);
+        auto superclass_name{get_string_view_ref(entry_addr + type_entry_superclass_name_offset)};
+        bool is_oop_type = read<int32_t>(entry_addr + type_entry_is_oop_type_offset);
+        bool is_integer_type = read<int32_t>(entry_addr + type_entry_is_integer_type_offset);
+        bool is_unsigned = read<int32_t>(entry_addr + type_entry_is_unsigned_offset);
+        uint64_t size = read<uint64_t>(entry_addr + type_entry_size_Offset);
 
-        auto type = std::make_unique<types::Type>(type_name,
-                                                  lookup_type_or_create_type(superclass_name, -1, false, false, false),
-                                                  size, is_oop_type, is_integer_type, is_unsigned);
+        auto type{std::make_unique<types::Type>(type_name,
+                                                lookup_type_or_create_type(superclass_name, -1, false, false, false),
+                                                size, is_oop_type, is_integer_type, is_unsigned)};
         name_to_type.try_emplace(type_name, std::move(type));
     }
 }
@@ -301,16 +301,16 @@ void Jvm::read_vm_structs()
 
     for (;; entry_addr += struct_entry_array_stride)
     {
-        std::string_view field_name = get_string_view_ref(entry_addr + struct_entry_field_name_offset);
-        std::string_view type_name = get_string_view_ref(entry_addr + struct_entry_type_name_offset);
+        auto field_name{get_string_view_ref(entry_addr + struct_entry_field_name_offset)};
+        auto type_name{get_string_view_ref(entry_addr + struct_entry_type_name_offset)};
         if (field_name.empty())
             break;
-        std::string_view type_string = get_string_view_ref(entry_addr + struct_entry_type_string_offset);
+        auto type_string{get_string_view_ref(entry_addr + struct_entry_type_string_offset)};
         if (type_string.empty())
             type_string = "<opaque>";
-        bool is_static = *(int *)(entry_addr + struct_entry_is_static_offset);
+        bool is_static = read<int32_t>(entry_addr + struct_entry_is_static_offset);
         uint64_t offset =
-            *(uint64_t *)(entry_addr + (is_static ? struct_entry_address_offset : struct_entry_offset_offset));
+            read<uint64_t>(entry_addr + (is_static ? struct_entry_address_offset : struct_entry_offset_offset));
 
         if (auto type = lookup_type(type_name); type)
             type->add_field(
@@ -327,10 +327,10 @@ void Jvm::read_vm_int_constants()
 
     for (;; entry_addr += int_constant_entry_array_stride)
     {
-        std::string_view name = get_string_view_ref(entry_addr + int_constant_entry_name_offset);
+        auto name{get_string_view_ref(entry_addr + int_constant_entry_name_offset)};
         if (name.empty())
             break;
-        int32_t value = *(int32_t *)(entry_addr + int_constant_entry_value_offset);
+        int32_t value = read<int32_t>(entry_addr + int_constant_entry_value_offset);
         if (!lookup_int_constant(name))
             name_to_int_constant.try_emplace(name, value);
     }
@@ -345,10 +345,10 @@ void Jvm::read_vm_long_constants()
 
     for (;; entry_addr += long_constant_entry_array_stride)
     {
-        std::string_view name = get_string_view_ref(entry_addr + long_constant_entry_name_offset);
+        auto name{get_string_view_ref(entry_addr + long_constant_entry_name_offset)};
         if (name.empty())
             break;
-        int64_t value = *(int64_t *)(entry_addr + long_constant_entry_value_offset);
+        int64_t value = read<int64_t>(entry_addr + long_constant_entry_value_offset);
         if (!lookup_long_constant(name))
             name_to_long_constant.try_emplace(name, value);
     }
@@ -373,10 +373,10 @@ void Jvm::read_command_line_flags()
     num_flags -= 1;
     flags_map.reserve(num_flags);
 
-    for (int f = 0; f < num_flags; ++f)
+    for (uint32_t f = 0; f < num_flags; ++f)
     {
         uint64_t addr = read<uint64_t>(flag_addr + addr_offset);
-        std::string_view name = get_string_view_ref(flag_addr + name_offset);
+        std::string_view name{get_string_view_ref(flag_addr + name_offset)};
         int32_t type = read<int32_t>(flag_addr + type_offset);
         int32_t flags = read<int32_t>(flag_addr + flags_offset);
         flags_map.try_emplace(name, Flag{addr, name, (CmdFlagTypes)type, flags});
@@ -394,11 +394,11 @@ types::Type *Jvm::lookup_type_or_create_type(std::string_view type_name, size_t 
 types::Type *Jvm::createBasicType(std::string_view type_name, size_t size, bool is_oop_type, bool is_integer_type,
                                   bool is_unsigned)
 {
-    std::unique_ptr<types::Type> new_type;
 
     if (is_integer_type || !is_pointer_type(type_name))
     {
-        new_type = std::make_unique<types::Type>(type_name, nullptr, size, is_oop_type, is_integer_type, is_unsigned);
+        auto new_type{
+            std::make_unique<types::Type>(type_name, nullptr, size, is_oop_type, is_integer_type, is_unsigned)};
         types::Type *type = new_type.get();
         return name_to_type.try_emplace(type->get_name(), std::move(new_type)).first->second.get();
     }
@@ -409,7 +409,7 @@ std::optional<Jvm::Flag> Jvm::get_command_line_flag(std::string_view name)
 {
     if (name.empty())
         return std::nullopt;
-    auto it = flags_map.find(name);
+    auto it{flags_map.find(name)};
     return it != flags_map.end() ? std::make_optional(it->second) : std::nullopt;
 }
 
@@ -430,7 +430,7 @@ types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
     auto star_pos = type_name.find_last_of('*');
     if (star_pos == std::string_view::npos)
         return nullptr;
-    auto target_type_name = trim(type_name.substr(0, star_pos));
+    auto target_type_name{trim(type_name.substr(0, star_pos))};
     types::Type *target_type;
 
     if (is_pointer_type(target_type_name))
@@ -450,8 +450,8 @@ types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
                 target_type = createBasicType(target_type_name, -1, false, false, false);
         }
     }
-    auto new_type =
-        std::make_unique<types::Type>(type_name, nullptr, sizeof(void *), false, false, false, true, target_type);
+    auto new_type{
+        std::make_unique<types::Type>(type_name, nullptr, sizeof(void *), false, false, false, true, target_type)};
     result_type = new_type.get();
     name_to_type.try_emplace(result_type->get_name(), std::move(new_type));
     return result_type;
@@ -459,7 +459,7 @@ types::Type *Jvm::recursive_create_pointer_type(std::string_view type_name)
 
 bool Jvm::is_pointer_type(std::string_view type_name) noexcept
 {
-    auto it = type_name.rbegin();
+    auto it{type_name.rbegin()};
     while (it != type_name.rend() && std::isspace((unsigned char)*it))
         ++it;
     return it != type_name.rend() && *it == '*';

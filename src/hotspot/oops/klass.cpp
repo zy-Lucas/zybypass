@@ -4,7 +4,7 @@ namespace hotspot::oops
 {
 bool Klass::is_subclass_of(const Klass &k) const noexcept
 {
-    for (Klass t = *this; t.address(); t = t.get_super())
+    for (Klass t{*this}; t; t = t.get_super())
         if (t == k)
             return true;
     return false;

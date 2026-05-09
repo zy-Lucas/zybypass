@@ -6,6 +6,7 @@
 #include "hotspot/memory/universe.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
+#include "hotspot/oops/field.hpp"
 #include "hotspot/oops/instanceKlass.hpp"
 #include "hotspot/oops/klass.hpp"
 #include "hotspot/oops/method.hpp"
@@ -13,6 +14,7 @@
 #include "hotspot/runtime/jvm.hpp"
 #include "jni_md.h"
 #include "render/overlay.h"
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
@@ -132,16 +134,22 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 
 JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) { g_javaVM = nullptr; }
 
-extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass, jlong cm_addr)
-{
-    hotspot::oops::ConstMethod cm{(uint64_t)cm_addr};
-    hotspot::oops::ConstantPool cp{cm.get_constants()};
-    // void *cm = malloc(constm.get_constMethod_size() * 8);
-    // memcpy(cm, (void *)cm_addr, constm.get_constMethod_size() * 8);
+jint ex() { return 0; }
 
-    size_t len = 11;
-    hotspot::oops::MySymbol *sym = new (len) hotspot::oops::MySymbol("checkAccess", len);
-    cp.set_symbol_at(31, (uint64_t)sym);
+extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass, jstring klass_name,
+                                                                       jlong method_addr)
+{
+    const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
+
+    hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()};
+    hotspot::oops::Method method{uint64_t(method_addr)};
+    uint8_t *new_method = (uint8_t *)malloc(method.get_size() + 16);
+    void *a = (void *)ex;
+    memcpy(new_method, (void *)method_addr, method.get_size());
+    memcpy(new_method + method.get_size(), &a, 8);
+    ik.get_methods().set_address_at(1, (uint64_t)new_method);
+
+    env->ReleaseStringUTFChars(klass_name, kl_name);
     return 0;
 }
 
@@ -151,10 +159,13 @@ extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv 
     // std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_oops_enabled() << std::endl;
     if (hotspot::runtime::Jvm::is_compressed_oops_enabled())
     {
-        std::cout << hotspot::oops::Klass{hotspot::runtime::Jvm::read_comp_klass_address_value(
-                                              hotspot::runtime::Jvm::read<uint64_t>((uint64_t)klass_name) + 8)}
-                         .get_name()
-                         .as_view()
+        hotspot::oops::InstanceKlass ik{hotspot::runtime::Jvm::read_comp_klass_address_value(
+            hotspot::runtime::Jvm::read<uint64_t>((uint64_t)klass_name) + 8)};
+
+        hotspot::oops::Field field{ik, 2};
+        std::cout << "name: " << field.get_name().as_view() << " value: "
+                  << hotspot::runtime::Jvm::read<int32_t>(
+                         hotspot::runtime::Jvm::read<uint64_t>((uint64_t)klass_name) + field.get_offset())
                   << std::endl;
     }
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
