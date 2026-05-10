@@ -67,17 +67,14 @@ class Method : public MetaData
     bool is_strict() const noexcept { return get_access_flags_obj().is_strict(); }
     bool is_synthetic() const noexcept { return get_access_flags_obj().is_synthetic(); }
 
-    bool is_constructor() const noexcept { return !is_static() && get_name().equals(object_initializer_name()); }
-    bool is_static_initializer() const noexcept { return is_static() && get_name().equals(class_initializer_name()); }
+    bool is_constructor() const noexcept { return !is_static() && get_name().equals("<init>"); }
+    bool is_static_initializer() const noexcept { return is_static() && get_name().equals("<clinit>"); }
 
     bool is_obsolete() const noexcept { return get_access_flags_obj().is_obsolete(); }
 
     uint64_t get_size() const noexcept { return type->get_size() + (is_native() ? 2 * sizeof(void *) : 0); }
 
   private:
-    static constexpr std::string_view object_initializer_name() noexcept { return "<init>"; }
-    static constexpr std::string_view class_initializer_name() noexcept { return "<clinit>"; }
-
     DECLARE_STATIC_INIT
 
     static inline types::Type *type;

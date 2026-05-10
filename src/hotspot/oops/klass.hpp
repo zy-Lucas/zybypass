@@ -60,6 +60,7 @@ class Klass : public MetaData
 
     static inline std::optional<uint64_t> trace_id_offset;
 
+  public:
     static inline int32_t LH_NEUTRAL_VALUE;
     static inline int32_t LH_INSTANCE_SLOW_PATH_BIT;
     static inline int32_t LH_LOG2_ELEMENT_SIZE_SHIFT;
