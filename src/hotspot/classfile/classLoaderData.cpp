@@ -5,7 +5,7 @@ namespace hotspot::classfile
 {
 oops::Klass ClassLoaderData::find(std::string_view class_name) const noexcept
 {
-    for (auto k{get_klasses()}; k; k = k.get_next_link())
+    for (oops::Klass k{get_klasses()}; k; k = k.get_next_link())
     {
         if (!k.get_name().equals(class_name))
             continue;

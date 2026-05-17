@@ -7,6 +7,8 @@ namespace hotspot::oops
 class TypeArrayKlass : public ArrayKlass
 {
   public:
+    TypeArrayKlass(uint64_t addr) : ArrayKlass(addr) {}
+
     int32_t get_max_length() const noexcept { return read_field<int32_t>(max_length_offset); }
 
     std::string_view get_type_name() const noexcept;

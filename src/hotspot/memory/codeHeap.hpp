@@ -66,7 +66,7 @@ inline void CodeHeap::iterate(auto &&visitor) const
                 last_blob = blob;
             }
         uint64_t next = base + (block.get_length() << log2_segment_size);
-        if (next != 0 && next < ptr)
+        if (next && next < ptr)
             throw std::runtime_error("pointer moved backwards");
         ptr = next;
     }

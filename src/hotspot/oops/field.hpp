@@ -1,7 +1,9 @@
 #pragma once
 
 #include "instanceKlass.hpp"
+#include "oop.hpp"
 #include "symbol.hpp"
+#include <cstdint>
 #include <variant>
 
 namespace hotspot::oops
@@ -99,19 +101,6 @@ class FieldType
 
 class Field
 {
-  protected:
-    Symbol name{0};
-    uint64_t offset;
-    FieldIdentifier id;
-    bool vm_field = false;
-
-    InstanceKlass holder{0};
-    Symbol generic_signature{0};
-    Symbol signature{0};
-    FieldType field_type{0};
-    runtime::AccessFlags access_flags{0};
-    uint32_t field_index = 0;
-
   public:
     Field(uint64_t offset, FieldIdentifier id, bool is_vm_field);
     Field(InstanceKlass holder, uint32_t field_index);
@@ -152,45 +141,88 @@ class Field
     bool operator==(const Field &other) const;
 
     size_t hash_code() const noexcept;
+
+  private:
+    Symbol name{0};
+    uint64_t offset;
+    FieldIdentifier id;
+    bool vm_field = false;
+
+    InstanceKlass holder{0};
+    Symbol generic_signature{0};
+    Symbol signature{0};
+    FieldType field_type{0};
+    runtime::AccessFlags access_flags{0};
+    uint32_t field_index = 0;
 };
 
-// #define DECLARE_PRIMITIVE_FIELD(ClassName, ValueType, GetterSuffix)                                                    \
-//     class ClassName : public Field                                                                                     \
-//     {                                                                                                                  \
-//       public:                                                                                                          \
-//         using Field::Field;                                                                                            \
-//                                                                                                                        \
-//         ClassName(std::shared_ptr<FieldIdentifier> id, uint64_t off, bool vm) : Field(std::move(id), off, vm) {}       \
-//                                                                                                                        \
-//         /* TODO: 把你 types 体系里的 J##ClassName 映射过来 */                                                          \
-//         template <typename VMField>                                                                                    \
-//         ClassName(const VMField *vmField, uint64_t startOffset)                                                        \
-//             : Field(std::make_shared<NamedFieldIdentifier>(vmField->getName()), vmField->getOffset() + startOffset,    \
-//                     true)                                                                                              \
-//         {                                                                                                              \
-//         }                                                                                                              \
-//                                                                                                                        \
-//         ClassName(InstanceKlass *holder, int fieldArrayIndex) : Field(holder, fieldArrayIndex) {}                      \
-//                                                                                                                        \
-//         ValueType getValue(const Oop *obj) const { return obj->getHandle()->getJ##GetterSuffix##At(offset); }          \
-//         ValueType getValue(const VMObject *obj) const { return obj->getAddress()->getJ##GetterSuffix##At(offset); }    \
-//         void setValue(Oop *obj, ValueType value) const                                                                 \
-//         {                                                                                                              \
-//             (void)obj;                                                                                                 \
-//             (void)value;                                                                                               \
-//             throw MutationException(#ClassName "::setValue not implemented");                                          \
-//         }                                                                                                              \
-//     };
+#define DECLARE_PRIMITIVE_FIELD(ClassName, Type)                                                                       \
+    class ClassName : public Field                                                                                     \
+    {                                                                                                                  \
+      public:                                                                                                          \
+        ClassName(uint64_t offset, FieldIdentifier id, bool is_vm_field)                                               \
+            : Field(offset, std::move(id), is_vm_field) {}                                                             \
+                                                                                                                       \
+        ClassName(InstanceKlass holder, uint32_t field_array_index) : Field(holder, field_array_index) {}              \
+                                                                                                                       \
+        Type get_value(const Oop &obj) const noexcept                                                                  \
+        {                                                                                                              \
+            return runtime::Jvm::read<Type>(obj.get_handle().address() + get_offset());                                \
+        }                                                                                                              \
+                                                                                                                       \
+        void set_value(const Oop &obj, Type value) noexcept                                                            \
+        {                                                                                                              \
+            runtime::Jvm::write(obj.get_handle().address() + get_offset(), value);                                     \
+        }                                                                                                              \
+    };
 
-// DECLARE_PRIMITIVE_FIELD(CharField, char, Char)
-// DECLARE_PRIMITIVE_FIELD(BooleanField, bool, Boolean)
-// DECLARE_PRIMITIVE_FIELD(ByteField, int8_t, Byte) // Java byte -> int8_t
-// DECLARE_PRIMITIVE_FIELD(DoubleField, double, Double)
-// DECLARE_PRIMITIVE_FIELD(FloatField, float, Float)
-// DECLARE_PRIMITIVE_FIELD(IntField, int32_t, Int)   // Java int -> int32_t
-// DECLARE_PRIMITIVE_FIELD(LongField, int64_t, Long) // Java long -> int64_t
+DECLARE_PRIMITIVE_FIELD(CharField, int16_t)
+DECLARE_PRIMITIVE_FIELD(BooleanField, bool)
+DECLARE_PRIMITIVE_FIELD(ByteField, int8_t)
+DECLARE_PRIMITIVE_FIELD(DoubleField, double)
+DECLARE_PRIMITIVE_FIELD(FloatField, float)
+DECLARE_PRIMITIVE_FIELD(IntField, int32_t)
+DECLARE_PRIMITIVE_FIELD(LongField, int64_t)
 
-// #undef DECLARE_PRIMITIVE_FIELD
+#undef DECLARE_PRIMITIVE_FIELD
+
+// class OopField : public Field
+// {
+//   public:
+//     OopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) : Field(offset, std::move(id), is_vm_field) {}
+
+//     OopField(InstanceKlass holder, int field_array_index) : Field(holder, field_array_index) {}
+
+//     Oop get_value(const Oop &obj) const;
+
+//     debugger::OopHandle get_value_as_oop_handle(const Oop &obj) const;
+
+//     void set_value(Oop *obj) noexcept {}
+// };
+
+// class NarrowOopField : public OopField
+// {
+//   public:
+//     using OopField::OopField;
+
+//     NarrowOopField(std::shared_ptr<FieldIdentifier> id, uint64_t offset, bool isVMField)
+//         : OopField(std::move(id), offset, isVMField)
+//     {
+//     }
+
+//     template <typename VMField>
+//     NarrowOopField(const VMField *vmField, uint64_t startOffset)
+//         : OopField(std::make_shared<NamedFieldIdentifier>(vmField->getName()), vmField->getOffset() + startOffset,
+//         true)
+//     {
+//     }
+
+//     NarrowOopField(InstanceKlass *holder, int fieldArrayIndex) : OopField(holder, fieldArrayIndex) {}
+
+//     // 压缩指针：先读 32bit narrowOop，再解码
+//     Oop *getValue(const Oop *obj) const override;
+//     OopHandle *getValueAsOopHandle(const Oop *obj) const override;
+// };
 } // namespace hotspot::oops
 
 namespace std

@@ -10,6 +10,7 @@
 #include "hotspot/oops/instanceKlass.hpp"
 #include "hotspot/oops/klass.hpp"
 #include "hotspot/oops/method.hpp"
+#include "hotspot/oops/oop.hpp"
 #include "hotspot/oops/symbol.hpp"
 #include "hotspot/runtime/jvm.hpp"
 #include "jni_md.h"
@@ -22,6 +23,7 @@
 #include <jni.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <utility>
 
 #define DLLEXPORT
 
@@ -156,18 +158,16 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
-    // std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_oops_enabled() << std::endl;
-    if (hotspot::runtime::Jvm::is_compressed_oops_enabled())
-    {
-        hotspot::oops::InstanceKlass ik{hotspot::runtime::Jvm::read_comp_klass_address_value(
-            hotspot::runtime::Jvm::read<uint64_t>((uint64_t)klass_name) + 8)};
+    // //std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_oops_enabled() << std::endl;
+    // if (hotspot::runtime::Jvm::is_compressed_oops_enabled())
+    // {
+    //     hotspot::oops::Oop oop{hotspot::oops::Oop::Kind::instance, hotspot::runtime::Jvm::read<uint64_t>((uint64_t)cl)};
 
-        hotspot::oops::Field field{ik, 2};
-        std::cout << "name: " << field.get_name().as_view() << " value: "
-                  << hotspot::runtime::Jvm::read<int32_t>(
-                         hotspot::runtime::Jvm::read<uint64_t>((uint64_t)klass_name) + field.get_offset())
-                  << std::endl;
-    }
+    //     hotspot::oops::CharField field{oop.get_klass().address(), 0};
+    //     field.set_value(oop, 'b');
+
+    //     std::cout << "is name field: " << field.is_named_field() << " name: " << field.get_name().as_view() << " value: " << (char)field.get_value(oop) << std::endl;
+    // }
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
     const char *name = env->GetStringUTFChars(method_name, nullptr);
     const char *sig = env->GetStringUTFChars(method_sign, nullptr);
@@ -184,9 +184,11 @@ extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv 
     pthread_jit_write_protect_np(1);
 
     auto f = [method](hotspot::code::CodeBlob cb) {
+        pthread_jit_write_protect_np(0);
         hotspot::code::nmethod nm{cb.address()};
         if (nm.is_alive() && nm.contains_method(method))
             nm.make_not_entrant();
+        pthread_jit_write_protect_np(1);
     };
 
     hotspot::code::CodeCache::iterator_nmethods(f);

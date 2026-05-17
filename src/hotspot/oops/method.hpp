@@ -30,7 +30,6 @@ class Method : public MetaData
     uint16_t get_size_of_parameters() const noexcept { return get_constMethod().get_size_of_parameters(); }
     uint16_t get_name_index() const noexcept { return get_constMethod().get_name_index(); }
     uint16_t get_signature_index() const noexcept { return get_constMethod().get_signature_index(); }
-    int32_t get_access_flags() const noexcept { return read_field<int32_t>(access_flags_offset); }
     uint16_t get_code_size() const noexcept { return get_constMethod().get_code_size(); }
     uint32_t get_vtable_index() const noexcept { return read_field<uint32_t>(vtable_index_offset); }
     uint32_t get_invocation_counter() const noexcept { return get_method_counters().get_invocation_counter(); }
@@ -38,6 +37,7 @@ class Method : public MetaData
 
     code::nmethod get_native_method() const noexcept;
 
+    int32_t get_access_flags() const noexcept { return read_field<int32_t>(access_flags_offset); }
     runtime::AccessFlags get_access_flags_obj() const noexcept { return get_access_flags(); }
 
     uint8_t get_u1_at(uint32_t bci) const noexcept { return get_constMethod().get_u1_at(bci); }

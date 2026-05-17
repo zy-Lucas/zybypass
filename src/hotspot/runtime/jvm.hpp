@@ -57,6 +57,8 @@ class Jvm
     static bool is_compressed_oops_enabled();
     static bool is_compressed_klass_pointers_enabled();
 
+    static int32_t get_object_alignment_in_bytes();
+
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
     static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
 

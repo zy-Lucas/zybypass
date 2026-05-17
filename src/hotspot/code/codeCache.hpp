@@ -7,6 +7,15 @@
 
 namespace hotspot::code
 {
+enum
+{
+    MethodNonProfiled = 0,
+    MethodProfiled = 1,
+    NonNMethod = 2,
+    All = 3,
+    NumTypes = 4
+};
+
 class CodeCache
 {
   public:
@@ -25,29 +34,33 @@ class CodeCache
 void CodeCache::iterator_nmethods(auto &&visitor)
 {
     const int32_t heap_length = heaps.length();
+    static bool segmented_mode = heap_length != 1;
 
-    if (std::thread::hardware_concurrency() <= heap_length)
-    {
+    if (std::thread::hardware_concurrency() <= heap_length || !segmented_mode)
         for (uint32_t i = 0; i < heap_length; ++i)
-            if (auto h = heaps.at(i); h.get_code_blob_type() < 2)
+        {
+            auto h{heaps.at(i)};
+            auto type = h.get_code_blob_type();
+
+            if (segmented_mode)
             {
-                pthread_jit_write_protect_np(0);
-                h.iterate(visitor);
-                pthread_jit_write_protect_np(1);
+                if (type < NonNMethod)
+                    h.iterate(visitor);
             }
-    }
+            else
+                h.iterate([&visitor](code::CodeBlob cb) {
+                    if (cb.get_name_view() == "nmethod")
+                        visitor(cb);
+                });
+        }
     else
     {
         std::vector<std::thread> threads;
         threads.reserve(heap_length);
 
         for (uint32_t i = 0; i < heap_length; ++i)
-            if (auto h = heaps.at(i); h.get_code_blob_type() < 2)
-                threads.emplace_back([&, h]() mutable {
-                    pthread_jit_write_protect_np(0);
-                    h.iterate(visitor);
-                    pthread_jit_write_protect_np(1);
-                });
+            if (auto h{heaps.at(i)}; h.get_code_blob_type() < NonNMethod)
+                threads.emplace_back([&, h]() mutable { h.iterate(visitor); });
         for (auto &t : threads)
             t.join();
     }

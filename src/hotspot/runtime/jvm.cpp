@@ -251,6 +251,14 @@ bool Jvm::is_compressed_klass_pointers_enabled()
     return compressed_klass_pointers_enabled;
 }
 
+int32_t Jvm::get_object_alignment_in_bytes()
+{
+    static int32_t object_alignment_in_bytes = get_command_line_flag("ObjectAlignmentInBytes")
+                                                   .transform([](const Flag &f) { return f.get_intx(); })
+                                                   .value_or(8);
+    return object_alignment_in_bytes;
+}
+
 std::vector<void (*)()> &Jvm::get_post_init_callbacks()
 {
     static std::vector<void (*)()> callbacks;
@@ -370,7 +378,7 @@ void Jvm::read_command_line_flags()
 
     if (!num_flags)
         return;
-    num_flags -= 1;
+    --num_flags;
     flags_map.reserve(num_flags);
 
     for (uint32_t f = 0; f < num_flags; ++f)

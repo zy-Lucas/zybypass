@@ -7,6 +7,8 @@ namespace hotspot::oops
 class ArrayKlass : public Klass
 {
   public:
+    ArrayKlass(uint64_t addr) : Klass(addr) {}
+    
     int32_t get_dimension() const noexcept { return read_field<int32_t>(dimension_offset); }
     Klass get_higher_dimension() const noexcept { return read_field<uint64_t>(higher_dimension_offset); }
     Klass get_lower_dimension() const noexcept { return read_field<uint64_t>(lower_dimension_offset); }

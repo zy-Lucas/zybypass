@@ -5,6 +5,7 @@
 #include "../gc/serial/serialHeap.hpp"
 #include "../gc/shenandoah/shenandoahHeap.hpp"
 #include "../gc/z/zCollectedHeap.hpp"
+#include "../runtime/basicType.hpp"
 #include "../runtime/virtualConstructor.hpp"
 
 namespace hotspot::memory
@@ -24,6 +25,11 @@ gc::shared::CollectedHeap *Universe::heap()
             .instantiate_wrapper_for(runtime::Jvm::read<uint64_t>(collected_heap_offset))
             .second.release())};
     return heap.get();
+}
+
+bool Universe::element_type_should_be_aligned(int32_t type) noexcept
+{
+    return type == runtime::BasicType::T_DOUBLE || type == runtime::BasicType::T_LONG;
 }
 
 void Universe::initialize()

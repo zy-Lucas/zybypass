@@ -3,15 +3,20 @@
 #include "constMethod.hpp"
 #include "constantPool.hpp"
 #include "constantPoolCache.hpp"
+#include "instanceKlass.hpp"
 #include "klass.hpp"
 #include "method.hpp"
+#include "objArrayKlass.hpp"
+#include "typeArrayKlass.hpp"
 
 namespace hotspot::oops
 {
 using MetaDataConstructor = runtime::VirtualBaseConstructor<
     std::nullopt_t, runtime::TypeMapping<"Metadata", MetaData>, runtime::TypeMapping<"Klass", Klass>,
-    runtime::TypeMapping<"Method", Method>, runtime::TypeMapping<"ConstMethod", ConstMethod>,
-    runtime::TypeMapping<"ConstantPool", ConstantPool>, runtime::TypeMapping<"ConstantPoolCache", ConstantPoolCache>>;
+    runtime::TypeMapping<"InstanceKlass", InstanceKlass>, runtime::TypeMapping<"TypeArrayKlass", TypeArrayKlass>,
+    runtime::TypeMapping<"ObjArrayKlass", ObjArrayKlass>, runtime::TypeMapping<"Method", Method>,
+    runtime::TypeMapping<"ConstMethod", ConstMethod>, runtime::TypeMapping<"ConstantPool", ConstantPool>,
+    runtime::TypeMapping<"ConstantPoolCache", ConstantPoolCache>>;
 
 void MetaData::initialize() {}
 
