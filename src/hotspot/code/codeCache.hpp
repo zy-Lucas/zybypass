@@ -49,7 +49,7 @@ void CodeCache::iterator_nmethods(auto &&visitor)
             }
             else
                 h.iterate([&visitor](code::CodeBlob cb) {
-                    if (cb.get_name_view() == "nmethod")
+                    if (cb.get_header_size() == 344/*sizeof(nmethod)*/)
                         visitor(cb);
                 });
         }
