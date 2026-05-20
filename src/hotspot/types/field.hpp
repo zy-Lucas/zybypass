@@ -9,7 +9,7 @@ class Type;
 class Field
 {
   public:
-    Field(std::string_view type_name, std::string_view field_name, Type *field_type, bool is_static, uint64_t offset);
+    Field(std::string_view type_name, std::string_view field_name, Type *field_type, bool is_static, uint64_t offset) noexcept;
 
     Field(const Field &) = delete;
     Field &operator=(const Field &) = delete;
@@ -19,25 +19,28 @@ class Field
 
     ~Field() = default;
 
-    std::string_view get_type_name() const noexcept { return type_name; }
-    std::string_view get_field_name() const noexcept { return field_name; }
-    bool get_is_static() const noexcept { return is_static; }
-    uint64_t get_offset() const noexcept { return offset; }
-    const Type *get_field_type() const noexcept { return field_type; }
+    std::string_view type_name() const noexcept { return type_name_; }
+    void set_type_name(std::string_view new_type_name) { type_name_ = new_type_name; }
 
-    void set_type_name(std::string_view new_type_name) { type_name = new_type_name; }
-    void set_field_name(std::string_view new_field_name) { field_name = new_field_name; }
-    void set_is_static(bool new_is_static) noexcept { is_static = new_is_static; }
-    void set_offset(uint64_t new_offset) noexcept { offset = new_offset; }
-    void set_field_type(Type *new_field_type) noexcept { field_type = new_field_type; }
+    std::string_view field_name() const noexcept { return field_name_; }
+    void set_field_name(std::string_view new_field_name) { field_name_ = new_field_name; }
+
+    bool is_static() const noexcept { return is_static_; }
+    void set_is_static(bool new_is_static) noexcept { is_static_ = new_is_static; }
+
+    uint64_t offset() const noexcept { return offset_; }
+    void set_offset(uint64_t new_offset) noexcept { offset_ = new_offset; }
+
+    const Type *field_type() const noexcept { return field_type_; }
+    void set_field_type(Type *new_field_type) noexcept { field_type_ = new_field_type; }
 
   private:
     friend std::ostream &operator<<(std::ostream &os, const Field &field);
 
-    std::string_view type_name;
-    std::string_view field_name;
-    bool is_static;
-    uint64_t offset;
-    Type *field_type;
+    std::string_view type_name_;
+    std::string_view field_name_;
+    bool is_static_;
+    uint64_t offset_;
+    Type *field_type_;
 };
 } // namespace hotspot::types

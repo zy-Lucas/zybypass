@@ -19,7 +19,7 @@ class ZBarrier
 
     static ZHeap zheap();
 
-    static bool during_relocate() { return ZGlobals::z_global_phase() == ZGlobals::z_phase_relocate; }
+    static bool during_relocate() { return ZGlobals::z_global_phase() == ZGlobals::z_phase_relocate_; }
 
     static uint64_t relocate(uint64_t addr) { return zheap().relocate_object(addr); }
     static uint64_t remap(uint64_t addr) { return zheap().remap_object(addr); }

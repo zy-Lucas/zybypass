@@ -9,9 +9,9 @@ namespace hotspot::gc::z
 class ZCollectedHeap : public shared::CollectedHeap
 {
   public:
-    ZCollectedHeap(uint64_t addr) : shared::CollectedHeap(addr) {}
+    ZCollectedHeap(uint64_t addr) noexcept : shared::CollectedHeap(addr) {}
 
-    ZHeap heap() const noexcept { return address() + heap_offset; }
+    ZHeap heap() const noexcept { return address() + heap_offset_; }
 
     shared::CollectedHeapName kind() const noexcept override { return shared::CollectedHeapName::Z; }
 
@@ -23,6 +23,6 @@ class ZCollectedHeap : public shared::CollectedHeap
 
     DECLARE_STATIC_INIT
 
-    static inline uint64_t heap_offset;
+    static inline uint64_t heap_offset_;
 };
 } // namespace hotspot::gc::z

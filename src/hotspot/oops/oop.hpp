@@ -17,20 +17,22 @@ class Oop
         obj_array
     };
 
-    debugger::OopHandle get_handle() const noexcept { return handle; }
-    Kind get_kind() const noexcept { return kind; }
+    debugger::OopHandle handle() const noexcept { return handle_; }
+    Kind kind() const noexcept { return kind_; }
 
-    bool is_instance() const noexcept { return kind == Kind::instance; }
-    bool is_array() const noexcept { return kind == Kind::type_array || kind == Kind::obj_array; }
-    bool is_type_array() const noexcept { return kind == Kind::type_array; }
-    bool is_obj_array() const noexcept { return kind == Kind::obj_array; }
+    bool is_instance() const noexcept { return kind_ == Kind::instance; }
+    bool is_array() const noexcept { return kind_ == Kind::type_array || kind_ == Kind::obj_array; }
+    bool is_type_array() const noexcept { return kind_ == Kind::type_array; }
+    bool is_obj_array() const noexcept { return kind_ == Kind::obj_array; }
 
-    Mark get_mark() const noexcept { return get_handle().address(); }
-    Klass get_klass() const noexcept;
+    Mark mark() const noexcept { return handle().address(); }
+    Klass klass() const noexcept;
 
-    bool operator==(const Oop &o) const noexcept { return handle == o.handle; }
+    bool operator==(const Oop &o) const noexcept { return handle_ == o.handle_; }
 
-    size_t hash_code() const noexcept { return handle.hash_code(); }
+    explicit operator bool() const noexcept { return (bool)handle_; }
+
+    size_t hash_code() const noexcept { return handle_.hash_code(); }
 
     // Instance as_instance() const noexcept;
     // TypeArray as_type_array() const noexcept;
@@ -38,77 +40,76 @@ class Oop
 
     // template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const;
 
-    static Klass get_klass_for_oop_handle(debugger::OopHandle handle);
+    static uint64_t align_object_size(uint64_t size) noexcept;
+
+    static Klass klass_for_oop_handle(debugger::OopHandle handle) noexcept;
 
   protected:
-    Oop(Kind k, debugger::OopHandle h) noexcept : kind(k), handle(h) {}
+    Oop(Kind k, debugger::OopHandle h) noexcept : kind_(k), handle_(h) {}
 
   private:
-    Kind kind;
-    debugger::OopHandle handle;
+    Kind kind_;
+    debugger::OopHandle handle_;
 
     DECLARE_STATIC_INIT
 
-    static inline uint64_t mark_offset;
-    static inline uint64_t klass_offset;
-    static inline uint64_t compressed_klass_offset;
+    static inline uint64_t mark_offset_;
+    static inline uint64_t klass_offset_;
+    static inline uint64_t compressed_klass_offset_;
 
-    static inline uint64_t header_size;
+    static inline uint64_t header_size_;
 };
 
 class Array : public Oop
 {
   public:
-    uint64_t length() const;
+    uint64_t length() const noexcept;
+    uint64_t array_object_size() const noexcept;
 
-    static uint64_t base_offset_in_bytes(int32_t type);
-    static uint64_t length_offset_in_bytes();
-
-    uint64_t array_object_size() const;
+    static uint64_t base_offset_in_bytes(int32_t type) noexcept;
 
   protected:
     Array(Kind k, debugger::OopHandle h) noexcept : Oop(k, h) {}
 
   private:
-    static uint64_t header_size_in_bytes();
-    static long header_size(int32_t type);
+    static uint64_t header_size_in_bytes() noexcept;
+    static uint64_t header_size(int32_t type) noexcept;
+
+    static uint64_t length_offset_in_bytes() noexcept;
 
     DECLARE_STATIC_INIT
 
-    static inline uint64_t type_size;
+    static inline uint64_t type_size_;
 };
 
-// class Instance final : public Oop
-// {
-//     static inline uint64_t type_size{0};
+class Instance : public Oop
+{
+  public:
+    Instance(debugger::OopHandle h) noexcept : Oop(Kind::instance, h) {}
+    Instance(const Oop &o) noexcept : Oop(o) {}
 
-//   public:
-//     Instance(debugger::OopHandle h) noexcept : Oop(Kind::instance, h) {}
-//     explicit Instance(const Oop &o) noexcept : Oop(o) {}
+    static uint64_t get_header_size() noexcept;
 
-//     static uint64_t get_header_size() noexcept;
+    // template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const
+    // {
+    //     if (do_vm_fields)
+    //     {
+    //         visitor(LongField(NamedFieldIdentifier("_mark"), mark_off, true));
+    //         if (runtime::Jvm::is_compressed_klass_pointers_enabled())
+    //         {
+    //             visitor(NarrowOopField(NamedFieldIdentifier("_compressed_klass"), compressed_klass_off, true));
+    //         }
+    //         else
+    //         {
+    //             visitor(OopField(NamedFieldIdentifier("_klass"), klass_off, true));
+    //         }
+    //     }
+    //     InstanceKlass{klass()}.iterate_non_static_fields(visitor, *this);
+    // }
 
-//     void print_value_on(std::ostream &os) const;
-
-//     template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const
-//     {
-//         if (do_vm_fields)
-//         {
-//             visitor(LongField(NamedFieldIdentifier("_mark"), mark_off, true));
-//             if (runtime::Jvm::is_compressed_klass_pointers_enabled())
-//             {
-//                 visitor(NarrowOopField(NamedFieldIdentifier("_compressed_klass"), compressed_klass_off, true));
-//             }
-//             else
-//             {
-//                 visitor(OopField(NamedFieldIdentifier("_klass"), klass_off, true));
-//             }
-//         }
-//         InstanceKlass{klass()}.iterate_non_static_fields(visitor, *this);
-//     }
-
-//     static void initialize();
-// };
+  private:
+    static inline uint64_t type_size_;
+};
 
 // class TypeArray final : public Array
 // {

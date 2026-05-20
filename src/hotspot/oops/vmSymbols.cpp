@@ -5,18 +5,18 @@ namespace hotspot::oops
 {
 Symbol vmSymbols::symbol_at(uint32_t id) noexcept
 {
-    if (id < FIRST_SID || id >= SID_LIMIT)
+    if (id < first_sid_ || id >= sid_limit_)
         return 0;
-    return runtime::Jvm::read<uint64_t>(symbols_address + id * sizeof(void *));
+    return runtime::Jvm::read<uint64_t>(symbols_address_ + id * sizeof(void *));
 }
 
 void vmSymbols::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("Symbol");
 
-    symbols_address = *type->get_field_offset("_vm_symbols[0]");
+    symbols_address_ = *type->field_offset("_vm_symbols[0]");
 
-    FIRST_SID = *runtime::Jvm::lookup_int_constant("vmSymbols::FIRST_SID");
-    SID_LIMIT = *runtime::Jvm::lookup_int_constant("vmSymbols::SID_LIMIT");
+    first_sid_ = *runtime::Jvm::lookup_int_constant("vmSymbols::FIRST_SID");
+    sid_limit_ = *runtime::Jvm::lookup_int_constant("vmSymbols::SID_LIMIT");
 }
 } // namespace hotspot::oops

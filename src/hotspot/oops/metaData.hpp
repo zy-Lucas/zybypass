@@ -8,13 +8,13 @@ namespace hotspot::oops
 class MetaData : public runtime::JvmObject
 {
   public:
-    MetaData(uint64_t addr) : runtime::JvmObject(addr) {}
+    MetaData(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
     static std::pair<std::string_view, runtime::JvmObjectPtr> instantiate_wrapper_for(uint64_t addr);
 
     static uint64_t align_size(uint64_t size)
     {
-        return runtime::Jvm::align_up(size, runtime::Jvm::get_bytes_per_word());
+        return runtime::Jvm::align_up(size, runtime::Jvm::bytes_per_word());
     }
 
   private:

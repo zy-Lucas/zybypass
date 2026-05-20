@@ -18,24 +18,24 @@ class ZGlobals
     static int32_t z_object_alignment_small_shift() noexcept { return instance().z_object_alignment_small_shift(); }
     static int32_t z_object_alignment_small() noexcept { return instance().z_object_alignment_small(); }
 
-    static inline uint32_t z_phase_relocate;
+    static inline uint32_t z_phase_relocate_;
 
-    static inline uint8_t z_page_type_small;
-    static inline uint8_t z_page_type_medium;
-    static inline uint8_t z_page_type_large;
+    static inline uint8_t z_page_type_small_;
+    static inline uint8_t z_page_type_medium_;
+    static inline uint8_t z_page_type_large_;
 
-    static inline uint64_t z_granule_size_shift;
+    static inline uint64_t z_granule_size_shift_;
 
-    static inline uint64_t z_page_size_small_shift;
-    static inline uint64_t z_page_size_medium_shift;
+    static inline uint64_t z_page_size_small_shift_;
+    static inline uint64_t z_page_size_medium_shift_;
 
-    static inline int32_t z_object_alignment_medium_shift;
-    static inline int32_t z_object_alignment_large_shift;
+    static inline int32_t z_object_alignment_medium_shift_;
+    static inline int32_t z_object_alignment_large_shift_;
 
-    static inline uint64_t z_address_offset_shift;
+    static inline uint64_t z_address_offset_shift_;
 
-    static inline uint64_t z_address_offset_bits;
-    static inline uint64_t z_address_offset_max;
+    static inline uint64_t z_address_offset_bits_;
+    static inline uint64_t z_address_offset_max_;
 
   private:
     static ZGlobalsForVMStructs instance() noexcept { return runtime::Jvm::read<uint64_t>(instance_offset); }

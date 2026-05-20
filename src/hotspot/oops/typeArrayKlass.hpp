@@ -9,10 +9,10 @@ class TypeArrayKlass : public ArrayKlass
   public:
     TypeArrayKlass(uint64_t addr) : ArrayKlass(addr) {}
 
-    int32_t get_max_length() const noexcept { return read_field<int32_t>(max_length_offset); }
+    int32_t max_length() const noexcept { return read_field<int32_t>(max_length_offset_); }
 
-    std::string_view get_type_name() const noexcept;
-    std::string_view get_element_eype_name() const noexcept;
+    std::string_view type_name() const noexcept;
+    std::string_view element_eype_name() const noexcept;
 
     static constexpr int32_t T_BOOLEAN = 4;
     static constexpr int32_t T_CHAR = 5;
@@ -26,6 +26,6 @@ class TypeArrayKlass : public ArrayKlass
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t max_length_offset;
+    static inline uint64_t max_length_offset_;
 };
 } // namespace hotspot::oops

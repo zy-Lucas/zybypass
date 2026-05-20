@@ -15,14 +15,14 @@ class VirtualConstructor : public InstanceConstructor
     {
         if (!addr)
             return {{}, {nullptr, nullptr}};
-        for (const auto &[name, factory] : arr)
-            if (Jvm::address_type_is_equal_to_type(addr, Jvm::lookup_type(name)))
+        for (const auto &[name, factory] : arr_)
+            if (Jvm::address_matches_type(addr, Jvm::lookup_type(name)))
                 return {name, factory(addr)};
         throw create_wrong_type_exception(addr);
     }
 
   private:
-    static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectPtr {
+    static constexpr std::array arr_{std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectPtr {
                                                   using ConcreteType = typename Types::type;
                                                   return JvmObjectPtr{new ConcreteType(addr), +[](JvmObject *p) {
                                                                           delete static_cast<ConcreteType *>(p);

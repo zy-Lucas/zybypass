@@ -2,8 +2,6 @@
 
 #include "constantPool.hpp"
 #include "klass.hpp"
-#include <cstdint>
-#include <string>
 
 namespace hotspot::oops
 {
@@ -34,8 +32,8 @@ struct ClassState
     constexpr bool is_being_initialized() const noexcept { return value == Value::being_initialized; }
     constexpr bool is_in_error_state() const noexcept { return value == Value::initialization_error; }
 
-    constexpr auto operator<=>(const ClassState &) const noexcept = default;
     constexpr bool operator==(const ClassState &) const noexcept = default;
+    constexpr auto operator<=>(const ClassState &) const noexcept = default;
 
     static constexpr Value ALLOCATED = Value::allocated;
     static constexpr Value LOADED = Value::loaded;
@@ -48,58 +46,58 @@ struct ClassState
 class InstanceKlass : public Klass
 {
   public:
-    InstanceKlass(uint64_t addr) : Klass(addr) {}
+    InstanceKlass(uint64_t addr) noexcept : Klass(addr) {}
 
-    ClassState get_init_state() const noexcept { return read_field<uint8_t>(init_state_offset); }
+    ClassState init_state() const noexcept { return read_field<uint8_t>(init_state_offset_); }
 
-    bool is_loaded() const noexcept { return get_init_state().is_loaded(); }
-    bool is_linked() const noexcept { return get_init_state().is_linked(); }
-    bool is_initialized() const noexcept { return get_init_state().is_initialized(); }
-    bool is_not_initialized() const noexcept { return get_init_state().is_not_initialized(); }
-    bool is_being_initialized() const noexcept { return get_init_state().is_being_initialized(); }
-    bool is_in_error_state() const noexcept { return get_init_state().is_in_error_state(); }
+    bool is_loaded() const noexcept { return init_state().is_loaded(); }
+    bool is_linked() const noexcept { return init_state().is_linked(); }
+    bool is_initialized() const noexcept { return init_state().is_initialized(); }
+    bool is_not_initialized() const noexcept { return init_state().is_not_initialized(); }
+    bool is_being_initialized() const noexcept { return init_state().is_being_initialized(); }
+    bool is_in_error_state() const noexcept { return init_state().is_in_error_state(); }
 
-    uint64_t get_size() const noexcept;
+    uint64_t size() const noexcept;
 
-    uint16_t get_field_access_flags(uint32_t index) const noexcept;
-    Symbol get_field_name(uint32_t index) const noexcept;
-    Symbol get_field_signature(uint32_t index) const noexcept;
-    uint16_t get_field_generic_signature_index(uint32_t index) const noexcept;
-    Symbol get_field_generic_signature(uint32_t index) const noexcept;
-    uint16_t get_field_initial_value_index(uint32_t index) const noexcept;
-    uint32_t get_field_offset(uint32_t index) const noexcept;
+    uint16_t field_access_flags(uint32_t index) const noexcept;
+    Symbol field_name(uint32_t index) const noexcept;
+    Symbol field_signature(uint32_t index) const noexcept;
+    uint16_t field_generic_signature_index(uint32_t index) const noexcept;
+    Symbol field_generic_signature(uint32_t index) const noexcept;
+    uint16_t field_initial_value_index(uint32_t index) const noexcept;
+    uint32_t field_offset(uint32_t index) const noexcept;
 
-    ConstantPool get_constants() const noexcept { return read_field<uint64_t>(constants_offset); }
-    uint16_t major_version() const noexcept { return get_constants().get_major(); }
-    uint16_t minor_version() const noexcept { return get_constants().get_minor(); }
-    Symbol get_source_file_name() const noexcept { return get_constants().get_source_file_name(); }
-    Symbol get_generic_signature() const noexcept { return get_constants().get_generic_signature(); }
+    ConstantPool constants() const noexcept { return read_field<uint64_t>(constants_offset_); }
+    uint16_t major_version() const noexcept { return constants().major(); }
+    uint16_t minor_version() const noexcept { return constants().minor(); }
+    Symbol source_file_name() const noexcept { return constants().source_file_name(); }
+    Symbol generic_signature() const noexcept { return constants().generic_signature(); }
 
-    std::string_view get_source_debug_extension_view() const noexcept;
-    std::string get_source_debug_extension() const { return std::string{get_source_debug_extension_view()}; }
-    int32_t get_nonstatic_field_size() const noexcept { return read_field<int32_t>(nonstatic_field_size_offset); }
-    int32_t get_nonstatic_oop_map_size() const noexcept { return read_field<int32_t>(nonstatic_oop_map_size_offset); }
-    int32_t get_itable_len() const noexcept { return read_field<int32_t>(itable_len_offset); }
-    uint16_t get_static_oop_field_count() const noexcept { return read_field<uint16_t>(static_oop_field_count_offset); }
-    uint16_t get_java_fields_count() const noexcept { return read_field<uint16_t>(java_fields_count_offset); }
-    uint16_t get_all_fields_count() const noexcept;
-    bool get_is_marked_dependent() const noexcept { return read_field<bool>(is_marked_dependent_offset); }
+    std::string_view source_debug_extension_view() const noexcept;
+    std::string source_debug_extension() const { return std::string{source_debug_extension_view()}; }
+    int32_t nonstatic_field_size() const noexcept { return read_field<int32_t>(nonstatic_field_size_offset_); }
+    int32_t nonstatic_oop_map_size() const noexcept { return read_field<int32_t>(nonstatic_oop_map_size_offset_); }
+    int32_t itable_len() const noexcept { return read_field<int32_t>(itable_len_offset_); }
+    uint16_t static_oop_field_count() const noexcept { return read_field<uint16_t>(static_oop_field_count_offset_); }
+    uint16_t java_fields_count() const noexcept { return read_field<uint16_t>(java_fields_count_offset_); }
+    uint16_t all_fields_count() const noexcept;
+    bool is_marked_dependent() const noexcept { return read_field<bool>(is_marked_dependent_offset_); }
 
-    utilities::MethodArray get_methods() const noexcept { return read_field<uint64_t>(methods_offset); }
-    utilities::MethodArray get_default_methods() const noexcept { return read_field<uint64_t>(default_methods_offset); }
+    utilities::MethodArray methods() const noexcept { return read_field<uint64_t>(methods_offset_); }
+    utilities::MethodArray default_methods() const noexcept { return read_field<uint64_t>(default_methods_offset_); }
 
-    utilities::KlassArray get_local_interfaces() const noexcept;
-    utilities::KlassArray get_transitive_interfaces() const noexcept;
+    utilities::KlassArray local_interfaces() const noexcept;
+    utilities::KlassArray transitive_interfaces() const noexcept;
 
-    int32_t get_size_helper() const noexcept { return get_layout_helper() / sizeof(void *); }
+    int32_t size_helper() const noexcept { return layout_helper() / sizeof(void *); }
 
     Method find_method(std::string_view name, std::string_view sig) const noexcept;
 
-    utilities::U2Array get_inner_classes() const noexcept { return read_field<uint64_t>(inner_classes_offset); }
-    utilities::IntArray get_method_ordering() const noexcept { return read_field<uint64_t>(method_ordering_offset); }
-    utilities::U2Array get_fields() const noexcept { return read_field<uint64_t>(fields_offset); }
+    utilities::U2Array inner_classes() const noexcept { return read_field<uint64_t>(inner_classes_offset_); }
+    utilities::IntArray method_ordering() const noexcept { return read_field<uint64_t>(method_ordering_offset_); }
+    utilities::U2Array fields() const noexcept { return read_field<uint64_t>(fields_offset_); }
 
-    static uint64_t get_header_size() noexcept { return header_size; }
+    static uint64_t header_size() noexcept { return header_size_; }
 
   private:
     static Method find_method(utilities::MethodArray methods, std::string_view name,
@@ -107,57 +105,57 @@ class InstanceKlass : public Klass
 
     DECLARE_STATIC_INIT
 
-    static inline uint64_t array_klasses_offset;
-    static inline uint64_t constants_offset;
-    static inline uint64_t inner_classes_offset;
-    static inline uint64_t source_debug_extension_offset;
-    static inline uint64_t nonstatic_field_size_offset;
-    static inline uint64_t static_field_size_offset;
-    static inline uint64_t nonstatic_oop_map_size_offset;
-    static inline uint64_t itable_len_offset;
-    static inline uint64_t static_oop_field_count_offset;
-    static inline uint64_t java_fields_count_offset;
-    static inline uint64_t is_marked_dependent_offset;
-    static inline uint64_t init_state_offset;
-    static inline uint64_t misc_flags_offset;
-    static inline uint64_t methods_offset;
-    static inline uint64_t default_methods_offset;
-    static inline uint64_t local_interfaces_offset;
-    static inline uint64_t transitive_interfaces_offset;
-    static inline uint64_t method_ordering_offset;
-    static inline uint64_t fields_offset;
+    static inline uint64_t array_klasses_offset_;
+    static inline uint64_t constants_offset_;
+    static inline uint64_t inner_classes_offset_;
+    static inline uint64_t source_debug_extension_offset_;
+    static inline uint64_t nonstatic_field_size_offset_;
+    static inline uint64_t static_field_size_offset_;
+    static inline uint64_t nonstatic_oop_map_size_offset_;
+    static inline uint64_t itable_len_offset_;
+    static inline uint64_t static_oop_field_count_offset_;
+    static inline uint64_t java_fields_count_offset_;
+    static inline uint64_t is_marked_dependent_offset_;
+    static inline uint64_t init_state_offset_;
+    static inline uint64_t misc_flags_offset_;
+    static inline uint64_t methods_offset_;
+    static inline uint64_t default_methods_offset_;
+    static inline uint64_t local_interfaces_offset_;
+    static inline uint64_t transitive_interfaces_offset_;
+    static inline uint64_t method_ordering_offset_;
+    static inline uint64_t fields_offset_;
 
-    static inline std::optional<uint64_t> breakpoints_offset;
+    static inline std::optional<uint64_t> breakpoints_offset_;
 
-    static inline uint64_t header_size;
+    static inline uint64_t header_size_;
 
-    static inline int32_t ACCESS_FLAGS_OFFSET;
-    static inline int32_t NAME_INDEX_OFFSET;
-    static inline int32_t SIGNATURE_INDEX_OFFSET;
-    static inline int32_t INITVAL_INDEX_OFFSET;
-    static inline int32_t LOW_OFFSET;
-    static inline int32_t HIGH_OFFSET;
-    static inline int32_t FIELD_SLOTS;
-    static inline int32_t FIELDINFO_TAG_SIZE;
-    static inline int32_t FIELDINFO_TAG_OFFSET;
+    static inline int32_t access_flags_offset_;
+    static inline int32_t name_index_offset_;
+    static inline int32_t signature_index_offset_;
+    static inline int32_t initval_index_offset_;
+    static inline int32_t low_offset_;
+    static inline int32_t high_offset_;
+    static inline int32_t field_slots_;
+    static inline int32_t field_info_tag_size_;
+    static inline int32_t field_info_tag_offset_;
 
-    static inline int32_t CLASS_STATE_ALLOCATED;
-    static inline int32_t CLASS_STATE_LOADED;
-    static inline int32_t CLASS_STATE_LINKED;
-    static inline int32_t CLASS_STATE_BEING_INITIALIZED;
-    static inline int32_t CLASS_STATE_FULLY_INITIALIZED;
-    static inline int32_t CLASS_STATE_INITIALIZATION_ERROR;
+    static inline int32_t class_state_allocated_;
+    static inline int32_t class_state_loaded_;
+    static inline int32_t class_state_linked_;
+    static inline int32_t class_state_being_initialized_;
+    static inline int32_t class_state_fully_initialized_;
+    static inline int32_t class_state_initialization_error_;
 
-    static inline int32_t MISC_REWRITTEN;
-    static inline int32_t MISC_HAS_NONSTATIC_FIELDS;
-    static inline int32_t MISC_SHOULD_VERIFY_CLASS;
-    static inline int32_t MISC_IS_CONTENDED;
-    static inline int32_t MISC_HAS_NONSTATIC_CONCRETE_METHODS;
-    static inline int32_t MISC_DECLARES_NONSTATIC_CONCRETE_METHODS;
-    static inline int32_t MISC_HAS_BEEN_REDEFINED;
-    static inline int32_t MISC_IS_SCRATCH_CLASS;
-    static inline int32_t MISC_IS_SHARED_BOOT_CLASS;
-    static inline int32_t MISC_IS_SHARED_PLATFORM_CLASS;
-    static inline int32_t MISC_IS_SHARED_APP_CLASS;
+    static inline int32_t misc_rewritten_;
+    static inline int32_t misc_has_nonstatic_fields_;
+    static inline int32_t misc_should_verify_class_;
+    static inline int32_t misc_is_contended_;
+    static inline int32_t misc_has_nonstatic_concrete_methods_;
+    static inline int32_t misc_declares_nonstatic_concrete_methods_;
+    static inline int32_t misc_has_beed_redefined_;
+    static inline int32_t misc_is_scratch_class_;
+    static inline int32_t misc_is_shared_boot_class_;
+    static inline int32_t misc_is_shared_platform_class_;
+    static inline int32_t misc_is_shared_app_class_;
 };
 } // namespace hotspot::oops

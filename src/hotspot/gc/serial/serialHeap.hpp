@@ -7,7 +7,7 @@ namespace hotspot::gc::serial
 class SerialHeap : public shared::GenCollectedHeap
 {
   public:
-    SerialHeap(uint64_t addr) : shared::GenCollectedHeap(addr) {}
+    SerialHeap(uint64_t addr) noexcept : shared::GenCollectedHeap(addr) {}
 
     shared::CollectedHeapName kind() { return shared::CollectedHeapName::Serial; }
 };

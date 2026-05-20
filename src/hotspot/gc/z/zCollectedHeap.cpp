@@ -16,6 +16,6 @@ void ZCollectedHeap::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("ZCollectedHeap");
 
-    heap_offset = *type->get_field_offset("_heap");
+    heap_offset_ = *type->field_offset("_heap");
 }
 } // namespace hotspot::gc::z

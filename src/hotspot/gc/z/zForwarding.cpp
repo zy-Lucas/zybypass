@@ -4,7 +4,7 @@ namespace hotspot::gc::z
 {
 ZForwardingEntry ZForwarding::at(uint64_t cursor) const noexcept
 {
-    return entries().get(*this).address() + ZForwardingEntry::get_size() * cursor;
+    return entries().entry(*this).address() + ZForwardingEntry::size() * cursor;
 }
 
 ZForwardingEntry ZForwarding::find(uint64_t from_index) noexcept
@@ -17,16 +17,16 @@ ZForwardingEntry ZForwarding::find(uint64_t from_index) noexcept
 }
 
 ZForwarding::ZForwardEntryIterator::ZForwardEntryIterator(uint64_t from_index, ZForwarding *forwarding) noexcept
-    : mask(forwarding->entries().length() - 1), cursor(ZForwarding::uint32_to_uint32(from_index) & mask),
-      forwarding(forwarding), next_entry(forwarding->at(cursor))
+    : mask_(forwarding->entries().length() - 1), cursor_(ZForwarding::uint32_to_uint32(from_index) & mask_),
+      forwarding_(forwarding), next_entry_(forwarding->at(cursor_))
 {
 }
 
 ZForwardingEntry ZForwarding::ZForwardEntryIterator::next() noexcept
 {
-    ZForwardingEntry entry{next_entry};
-    cursor = (cursor + 1) & mask;
-    next_entry = forwarding->at(cursor);
+    ZForwardingEntry entry{next_entry_};
+    cursor_ = (cursor_ + 1) & mask_;
+    next_entry_ = forwarding_->at(cursor_);
     return entry;
 }
 
@@ -43,11 +43,11 @@ uint32_t ZForwarding::uint32_to_uint32(uint32_t key) noexcept
 
 void ZForwarding::initialize()
 {
-    type = runtime::Jvm::lookup_type("ZForwarding");
+    type_ = runtime::Jvm::lookup_type("ZForwarding");
 
-    virtual_offset = *type->get_field_offset("_virtual");
-    entries_offset = *type->get_field_offset("_entries");
-    object_alignment_shift_offset = *type->get_field_offset("_object_alignment_shift");
-    ref_count_offset = *type->get_field_offset("_ref_count");
+    virtual_offset_ = *type_->field_offset("_virtual");
+    entries_offset_ = *type_->field_offset("_entries");
+    object_alignment_shift_offset_ = *type_->field_offset("_object_alignment_shift");
+    ref_count_offset_ = *type_->field_offset("_ref_count");
 }
 } // namespace hotspot::gc::z

@@ -6,7 +6,7 @@ namespace hotspot::oops
 {
 class Klass;
 class Method;
-}
+} // namespace hotspot::oops
 
 namespace hotspot::utilities
 {
@@ -28,76 +28,77 @@ DEFINE_ARRAY_TRAITS(int32_t, "Array<int>", "int");
 class GenericArray : public runtime::JvmObject
 {
   public:
-    GenericArray(uint64_t addr, uint64_t data_offset) : runtime::JvmObject(addr), data_offset(data_offset) {}
+    GenericArray(uint64_t addr, uint64_t data_offset) noexcept : runtime::JvmObject(addr), data_offset_(data_offset) {}
 
-    int32_t length() const noexcept { return read_field<int32_t>(length_offset); }
+    int32_t length() const noexcept { return read_field<int32_t>(length_offset_); }
 
-    virtual types::Type *get_elem_type() const noexcept = 0;
+    virtual types::Type *elem_type() const noexcept = 0;
 
-    uint64_t get_size() const noexcept;
-
-    void set_address_at(uint32_t index, uint64_t addr) noexcept;
+    uint64_t size() const noexcept;
 
   protected:
-    int64_t get_integer_at(uint32_t index) const noexcept;
-    uint64_t get_address_at(uint32_t index) const noexcept;
+    int64_t integer_at(uint32_t index) const noexcept;
+
+    uint64_t address_at(uint32_t index) const noexcept;
+    void set_address_at(uint32_t index, uint64_t addr) noexcept;
 
   private:
-    uint64_t byte_sizeof(int32_t length) const noexcept { return length * get_elem_type()->get_size(); }
+    uint64_t byte_sizeof(int32_t length) const noexcept { return length * elem_type()->size(); }
 
     DECLARE_STATIC_INIT
 
-    static inline uint64_t length_offset;
+    static inline uint64_t length_offset_;
 
-    uint64_t data_offset;
+    uint64_t data_offset_;
 };
 
 class MethodArray : public GenericArray
 {
   public:
-    MethodArray(uint64_t addr) : GenericArray(addr, data_offset) {}
+    MethodArray(uint64_t addr) noexcept : GenericArray(addr, data_offset_) {}
 
-    oops::Method at(uint32_t i) const noexcept;
+    oops::Method at(uint32_t index) const noexcept;
+    void set_at(uint32_t index, uint64_t addr) noexcept { set_address_at(index, addr); }
 
-    types::Type *get_elem_type() const noexcept override { return elem_type; }
+    types::Type *elem_type() const noexcept override { return elem_type_; }
 
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t data_offset;
-    static inline types::Type *elem_type;
+    static inline uint64_t data_offset_;
+    static inline types::Type *elem_type_;
 };
 
 class KlassArray : public GenericArray
 {
   public:
-    KlassArray(uint64_t addr) : GenericArray(addr, data_offset) {}
+    KlassArray(uint64_t addr) noexcept : GenericArray(addr, data_offset_) {}
 
-    oops::Klass at(uint32_t i) const noexcept;
+    oops::Klass at(uint32_t index) const noexcept;
 
-    types::Type *get_elem_type() const noexcept override { return elem_type; }
+    types::Type *elem_type() const noexcept override { return elem_type_; }
 
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t data_offset;
-    static inline types::Type *elem_type;
+    static inline uint64_t data_offset_;
+    static inline types::Type *elem_type_;
 };
 
 template <typename T> class IntegerArray : public GenericArray
 {
   public:
-    IntegerArray(uint64_t addr) : GenericArray(addr, data_offset) {}
+    IntegerArray(uint64_t addr) : GenericArray(addr, data_offset_) {}
 
-    T at(uint32_t i) const noexcept { return get_integer_at(i); }
+    T at(uint32_t index) const noexcept { return integer_at(index); }
 
-    types::Type *get_elem_type() const noexcept override { return elem_type; }
+    types::Type *elem_type() const noexcept override { return elem_type_; }
 
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t data_offset;
-    static inline types::Type *elem_type;
+    static inline uint64_t data_offset_;
+    static inline types::Type *elem_type_;
 };
 
 extern template class IntegerArray<uint8_t>;

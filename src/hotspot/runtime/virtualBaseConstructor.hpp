@@ -21,8 +21,8 @@ class VirtualBaseConstructor : public InstanceConstructor
         types::Type *type = Jvm::find_dynamic_type_for_address(addr, base_type);
         if (!type)
             return {{}, {nullptr, nullptr}};
-        std::string_view sv = type->get_name();
-        for (const auto &[first, second] : arr)
+        std::string_view sv = type->name();
+        for (const auto &[first, second] : arr_)
             if (first == sv)
                 return {sv, second(addr)};
         if constexpr (!std::is_same_v<unknown_t, std::nullopt_t>)
@@ -31,7 +31,7 @@ class VirtualBaseConstructor : public InstanceConstructor
     }
 
   private:
-    static constexpr std::array arr{std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectPtr {
+    static constexpr std::array arr_{std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectPtr {
                                                   using ConcreteType = typename Types::type;
                                                   return JvmObjectPtr{new ConcreteType(addr), +[](JvmObject *p) {
                                                                           delete static_cast<ConcreteType *>(p);

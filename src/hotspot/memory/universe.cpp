@@ -22,7 +22,7 @@ gc::shared::CollectedHeap *Universe::heap()
 {
     static std::unique_ptr<gc::shared::CollectedHeap> heap{static_cast<gc::shared::CollectedHeap *>(
         UniverseConstructor{}
-            .instantiate_wrapper_for(runtime::Jvm::read<uint64_t>(collected_heap_offset))
+            .instantiate_wrapper_for(runtime::Jvm::read<uint64_t>(collected_heap_offset_))
             .second.release())};
     return heap.get();
 }
@@ -36,6 +36,6 @@ void Universe::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("Universe");
 
-    collected_heap_offset = *type->get_field_offset("_collectedHeap");
+    collected_heap_offset_ = *type->field_offset("_collectedHeap");
 }
 } // namespace hotspot::memory

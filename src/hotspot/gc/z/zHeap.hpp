@@ -9,11 +9,11 @@ namespace hotspot::gc::z
 class ZHeap : public runtime::JvmObject
 {
   public:
-    ZHeap(uint64_t addr) : runtime::JvmObject(addr) {}
+    ZHeap(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
-    ZForwardingTable forwardingTable() const noexcept { return address() + forwarding_table_offset; }
+    ZForwardingTable forwardingTable() const noexcept { return address() + forwarding_table_offset_; }
 
-    ZRelocate relocate() const noexcept { return address() + relocate_offset; }
+    ZRelocate relocate() const noexcept { return address() + relocate_offset_; }
 
     uint64_t relocate_object(uint64_t addr) const noexcept;
     uint64_t remap_object(uint64_t o) const noexcept;
@@ -21,9 +21,9 @@ class ZHeap : public runtime::JvmObject
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t page_allocator_offset;
-    static inline uint64_t page_table_offset;
-    static inline uint64_t forwarding_table_offset;
-    static inline uint64_t relocate_offset;
+    static inline uint64_t page_allocator_offset_;
+    static inline uint64_t page_table_offset_;
+    static inline uint64_t forwarding_table_offset_;
+    static inline uint64_t relocate_offset_;
 };
 } // namespace hotspot::gc::z

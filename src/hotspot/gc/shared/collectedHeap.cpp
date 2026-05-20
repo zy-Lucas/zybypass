@@ -4,7 +4,7 @@ namespace hotspot::gc::shared
 {
 debugger::OopHandle CollectedHeap::oop_load_at(debugger::OopHandle handle, uint64_t offset) const
 {
-    return handle.get_oop_handle_at(offset);
+    return handle.oop_handle_at(offset);
 }
 
 debugger::OopHandle CollectedHeap::oop_load_in_native(uint64_t addr) const
@@ -16,6 +16,6 @@ void CollectedHeap::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("CollectedHeap");
 
-    reserved_offset = *type->get_field_offset("_reserved");
+    reserved_offset_ = *type->field_offset("_reserved");
 }
 } // namespace hotspot::gc::shared

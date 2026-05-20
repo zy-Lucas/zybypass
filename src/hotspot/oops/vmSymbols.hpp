@@ -13,9 +13,9 @@ class vmSymbols
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t symbols_address;
+    static inline uint64_t symbols_address_;
 
-    static inline int32_t FIRST_SID;
-    static inline int32_t SID_LIMIT;
+    static inline int32_t first_sid_;
+    static inline int32_t sid_limit_;
 };
-} // namespace hotspot::oops
+} // namespace hotspot::oSID_LIMITops

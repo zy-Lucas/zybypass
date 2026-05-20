@@ -7,15 +7,15 @@ namespace hotspot::oops
 class ObjArrayKlass : public ArrayKlass
 {
   public:
-    ObjArrayKlass(uint64_t addr) : ArrayKlass(addr) {}
+    ObjArrayKlass(uint64_t addr) noexcept : ArrayKlass(addr) {}
     
-    Klass get_element_klass() const noexcept { return read_field<uint64_t>(element_Klass_offset); }
-    Klass get_bottom_Klass() const noexcept { return read_field<uint64_t>(bottom_klass_offset); }
+    Klass element_klass() const noexcept { return read_field<uint64_t>(element_Klass_offset_); }
+    Klass bottom_Klass() const noexcept { return read_field<uint64_t>(bottom_klass_offset_); }
 
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t element_Klass_offset;
-    static inline uint64_t bottom_klass_offset;
+    static inline uint64_t element_Klass_offset_;
+    static inline uint64_t bottom_klass_offset_;
 };
 } // namespace hotspot::oops

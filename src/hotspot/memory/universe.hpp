@@ -18,6 +18,6 @@ class Universe
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t collected_heap_offset;
+    static inline uint64_t collected_heap_offset_;
 };
 } // namespace hotspot::memory

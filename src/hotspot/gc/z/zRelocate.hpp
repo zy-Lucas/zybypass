@@ -8,7 +8,7 @@ namespace hotspot::gc::z
 class ZRelocate : public runtime::JvmObject
 {
   public:
-    ZRelocate(uint64_t addr) : runtime::JvmObject(addr) {}
+    ZRelocate(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
     static uint64_t forwarding_find(ZForwarding forwarding, uint64_t from) noexcept;
 

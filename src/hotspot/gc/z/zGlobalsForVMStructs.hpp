@@ -7,7 +7,7 @@ namespace hotspot::gc::z
 class ZGlobalsForVMStructs : public runtime::JvmObject
 {
   public:
-    ZGlobalsForVMStructs(uint64_t addr) : runtime::JvmObject(addr) {}
+    ZGlobalsForVMStructs(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
     uint32_t z_global_phase() const noexcept;
     uint32_t z_global_seq_num() const noexcept;
@@ -23,15 +23,15 @@ class ZGlobalsForVMStructs : public runtime::JvmObject
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t z_global_phase_offset;
-    static inline uint64_t z_global_seq_num_offset;
-    static inline uint64_t z_address_offset_mask_offset;
-    static inline uint64_t z_address_metadata_mask_offset;
-    static inline uint64_t z_address_metadata_finalizable_offset;
-    static inline uint64_t z_address_good_mask_offset;
-    static inline uint64_t z_address_bad_mask_offset;
-    static inline uint64_t z_address_weak_bad_mask_offset;
-    static inline uint64_t z_object_alignment_small_shift_offset;
-    static inline uint64_t z_object_alignment_small_offset;
+    static inline uint64_t z_global_phase_offset_;
+    static inline uint64_t z_global_seq_num_offset_;
+    static inline uint64_t z_address_offset_mask_offset_;
+    static inline uint64_t z_address_metadata_mask_offset_;
+    static inline uint64_t z_address_metadata_finalizable_offset_;
+    static inline uint64_t z_address_good_mask_offset_;
+    static inline uint64_t z_address_bad_mask_offset_;
+    static inline uint64_t z_address_weak_bad_mask_offset_;
+    static inline uint64_t z_object_alignment_small_shift_offset_;
+    static inline uint64_t z_object_alignment_small_offset_;
 };
 } // namespace hotspot::gc::z

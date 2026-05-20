@@ -5,10 +5,10 @@ namespace hotspot::gc::z
 {
 uint64_t ZAttachedArrayForForwarding::object_size() const noexcept
 {
-    return align_up(ZForwarding::get_size(), ZForwardingEntry::get_size());
+    return align_up(ZForwarding::size(), ZForwardingEntry::size());
 }
 
-ZForwardingEntry ZAttachedArrayForForwarding::get(ZForwarding obj) const noexcept
+ZForwardingEntry ZAttachedArrayForForwarding::entry(ZForwarding obj) const noexcept
 {
     return obj.address() + object_size();
 }
@@ -23,6 +23,6 @@ void ZAttachedArrayForForwarding::initialize()
 {
     types::Type *type = runtime::Jvm::lookup_type("ZAttachedArrayForForwarding");
 
-    length_offset = *type->get_field_offset("_length");
+    length_offset_ = *type->field_offset("_length");
 }
 } // namespace hotspot::gc::z

@@ -22,6 +22,7 @@
 #include <iostream>
 #include <jni.h>
 #include <pthread.h>
+#include <string>
 #include <unistd.h>
 #include <utility>
 
@@ -145,11 +146,11 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 
     hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()};
     hotspot::oops::Method method{uint64_t(method_addr)};
-    uint8_t *new_method = (uint8_t *)malloc(method.get_size() + 16);
+    uint8_t *new_method = (uint8_t *)malloc(method.size() + 16);
     void *a = (void *)ex;
-    memcpy(new_method, (void *)method_addr, method.get_size());
-    memcpy(new_method + method.get_size(), &a, 8);
-    ik.get_methods().set_address_at(1, (uint64_t)new_method);
+    memcpy(new_method, (void *)method_addr, method.size());
+    memcpy(new_method + method.size(), &a, 8);
+    ik.methods().set_at(1, (uint64_t)new_method);
 
     env->ReleaseStringUTFChars(klass_name, kl_name);
     return 0;
@@ -161,12 +162,14 @@ extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv 
     // //std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_oops_enabled() << std::endl;
     // if (hotspot::runtime::Jvm::is_compressed_oops_enabled())
     // {
-    //     hotspot::oops::Oop oop{hotspot::oops::Oop::Kind::instance, hotspot::runtime::Jvm::read<uint64_t>((uint64_t)cl)};
+    //     hotspot::oops::Oop oop{hotspot::oops::Oop::Kind::instance,
+    //     hotspot::runtime::Jvm::read<uint64_t>((uint64_t)cl)};
 
     //     hotspot::oops::CharField field{oop.get_klass().address(), 0};
     //     field.set_value(oop, 'b');
 
-    //     std::cout << "is name field: " << field.is_named_field() << " name: " << field.get_name().as_view() << " value: " << (char)field.get_value(oop) << std::endl;
+    //     std::cout << "is name field: " << field.is_named_field() << " name: " << field.get_name().as_view() << "
+    //     value: " << (char)field.get_value(oop) << std::endl;
     // }
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
     const char *name = env->GetStringUTFChars(method_name, nullptr);
@@ -179,7 +182,7 @@ extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv 
     env->ReleaseStringUTFChars(method_name, name);
     env->ReleaseStringUTFChars(method_sign, sig);
     pthread_jit_write_protect_np(0);
-    if (hotspot::code::nmethod nm(method.get_native_method()); nm)
+    if (hotspot::code::nmethod nm(method.native_method()); nm)
         nm.make_not_entrant();
     pthread_jit_write_protect_np(1);
 

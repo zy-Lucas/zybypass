@@ -10,7 +10,7 @@ namespace hotspot::gc::shared
 class CollectedHeap : public runtime::JvmObject
 {
   public:
-    CollectedHeap(uint64_t addr) : runtime::JvmObject(addr) {}
+    CollectedHeap(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
     virtual ~CollectedHeap() = default;
 
@@ -19,7 +19,7 @@ class CollectedHeap : public runtime::JvmObject
     virtual uint64_t capacity() const noexcept { return 0; }
     virtual uint64_t used() const noexcept { return 0; }
 
-    memory::MemRegion reserved_region() const noexcept { return address() + reserved_offset; }
+    memory::MemRegion reserved_region() const noexcept { return address() + reserved_offset_; }
 
     virtual bool is_in(uint64_t a) const noexcept { return is_in_reserved(a); }
     virtual bool is_in_reserved(uint64_t a) const noexcept { return reserved_region().contains(a); }
@@ -32,6 +32,6 @@ class CollectedHeap : public runtime::JvmObject
   private:
     DECLARE_STATIC_INIT
 
-    static inline uint64_t reserved_offset;
+    static inline uint64_t reserved_offset_;
 };
 } // namespace hotspot::gc::shared

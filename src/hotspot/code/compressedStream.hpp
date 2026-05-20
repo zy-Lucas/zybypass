@@ -18,10 +18,10 @@ class CompressedStream
 
     CompressedStream(const uint8_t *buffer, uint32_t position) noexcept;
 
-    const uint8_t *get_buffer() const noexcept { return buffer; }
+    const uint8_t *buffer() const noexcept { return buffer_; }
 
-    uint32_t get_position() const noexcept { return position; }
-    void set_position(uint32_t new_position) noexcept { position = new_position; }
+    uint32_t position() const noexcept { return position_; }
+    void set_position(uint32_t new_position) noexcept { position_ = new_position; }
 
     uint32_t encode_sign(uint32_t value) const noexcept { return (value << 1) ^ (value >> 31); }
     uint32_t decode_sign(uint32_t value) const noexcept { return (value >> 1u) ^ -(value & 1); }
@@ -29,8 +29,8 @@ class CompressedStream
     uint32_t reverse_int(uint32_t i) const noexcept;
 
   protected:
-    const uint8_t *buffer;
-    uint32_t position;
+    const uint8_t *buffer_;
+    uint32_t position_;
 };
 
 class CompressedReadStream : public CompressedStream
@@ -50,7 +50,7 @@ class CompressedReadStream : public CompressedStream
 
   private:
     uint32_t read_int_mb(uint8_t b0) noexcept;
-    uint8_t read(uint32_t index) const noexcept { return buffer[index]; }
-    uint8_t read() noexcept { return buffer[position++]; }
+    uint8_t read(uint32_t index) const noexcept { return buffer_[index]; }
+    uint8_t read() noexcept { return buffer_[position_++]; }
 };
 } // namespace hotspot::code
