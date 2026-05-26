@@ -2,7 +2,6 @@
 
 #include "../debugger/oopHandle.hpp"
 #include "instanceKlass.hpp"
-#include "klass.hpp"
 #include "mark.hpp"
 
 namespace hotspot::oops
@@ -14,8 +13,11 @@ class Oop
     {
         instance,
         type_array,
-        obj_array
+        obj_array,
+        non_type
     };
+
+    Oop(Kind k, debugger::OopHandle h) noexcept : kind_(k), handle_(h) {}
 
     debugger::OopHandle handle() const noexcept { return handle_; }
     Kind kind() const noexcept { return kind_; }
@@ -38,14 +40,11 @@ class Oop
     // TypeArray as_type_array() const noexcept;
     // ObjArray as_obj_array() const noexcept;
 
-    // template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const;
+    template <typename Visitor> void iterate_fields(Visitor &&visitor);
 
     static uint64_t align_object_size(uint64_t size) noexcept;
 
     static Klass klass_for_oop_handle(debugger::OopHandle handle) noexcept;
-
-  protected:
-    Oop(Kind k, debugger::OopHandle h) noexcept : kind_(k), handle_(h) {}
 
   private:
     Kind kind_;
@@ -63,13 +62,13 @@ class Oop
 class Array : public Oop
 {
   public:
-    uint64_t length() const noexcept;
+    Array(Kind k, debugger::OopHandle h) noexcept : Oop(k, h) {}
+    Array(const Oop &o) noexcept : Oop(o) {}
+
+    uint32_t length() const noexcept;
     uint64_t array_object_size() const noexcept;
 
     static uint64_t base_offset_in_bytes(int32_t type) noexcept;
-
-  protected:
-    Array(Kind k, debugger::OopHandle h) noexcept : Oop(k, h) {}
 
   private:
     static uint64_t header_size_in_bytes() noexcept;
@@ -88,188 +87,102 @@ class Instance : public Oop
     Instance(debugger::OopHandle h) noexcept : Oop(Kind::instance, h) {}
     Instance(const Oop &o) noexcept : Oop(o) {}
 
-    static uint64_t get_header_size() noexcept;
+    static uint64_t header_size() noexcept;
 
-    // template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const
-    // {
-    //     if (do_vm_fields)
-    //     {
-    //         visitor(LongField(NamedFieldIdentifier("_mark"), mark_off, true));
-    //         if (runtime::Jvm::is_compressed_klass_pointers_enabled())
-    //         {
-    //             visitor(NarrowOopField(NamedFieldIdentifier("_compressed_klass"), compressed_klass_off, true));
-    //         }
-    //         else
-    //         {
-    //             visitor(OopField(NamedFieldIdentifier("_klass"), klass_off, true));
-    //         }
-    //     }
-    //     InstanceKlass{klass()}.iterate_non_static_fields(visitor, *this);
-    // }
+    template <typename Visitor> void iterate_fields(Visitor &&visitor);
 
   private:
+    DECLARE_STATIC_INIT
+
     static inline uint64_t type_size_;
 };
 
-// class TypeArray final : public Array
-// {
-//   public:
-//     TypeArray(debugger::OopHandle h) noexcept : Array(Kind::type_array, h) {}
-//     explicit TypeArray(const Oop &o) noexcept : Array(o) {}
+class TypeArray : public Array
+{
+  public:
+    TypeArray(debugger::OopHandle h) noexcept : Array(Kind::type_array, h) {}
+    TypeArray(const Oop &o) noexcept : Array(o) {}
 
-//     int8_t byte_at(uint64_t index) const;
-//     bool boolean_at(uint64_t index) const;
-//     char16_t char_at(uint64_t index) const;
-//     int32_t int_at(uint64_t index) const;
-//     int16_t short_at(uint64_t index) const;
-//     int64_t long_at(uint64_t index) const;
-//     float float_at(uint64_t index) const;
-//     double double_at(uint64_t index) const;
+    int8_t byte_at(uint32_t index) const;
+    bool boolean_at(uint32_t index) const;
+    uint16_t char_at(uint32_t) const;
+    int32_t int_at(uint32_t index) const;
+    int16_t short_at(uint32_t index) const;
+    int64_t long_at(uint32_t index) const;
+    float float_at(uint32_t index) const;
+    double double_at(uint32_t index) const;
 
-//     uint64_t object_size() const { return array_object_size(); }
-//     static uint64_t object_size_of(const Oop &o) { return TypeArray{o}.array_object_size(); }
+    uint64_t object_size() const { return array_object_size(); }
 
-//     void print_value_on(std::ostream &os) const;
+    static uint64_t object_size_of(const Oop &o) { return TypeArray{o}.array_object_size(); }
 
-//     template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const
-//     {
-//         if (do_vm_fields)
-//         {
-//             visitor(LongField(NamedFieldIdentifier("_mark"), mark_off, true));
-//             if (runtime::Jvm::is_compressed_klass_pointers_enabled())
-//             {
-//                 visitor(NarrowOopField(NamedFieldIdentifier("_compressed_klass"), compressed_klass_off, true));
-//             }
-//             else
-//             {
-//                 visitor(OopField(NamedFieldIdentifier("_klass"), klass_off, true));
-//             }
-//         }
+    template <typename Visitor> void iterate_fields(Visitor &&visitor);
 
-//         auto k = static_cast<TypeArrayKlass>(klass());
-//         uint64_t len = length();
-//         int type = k.get_element_type();
+  private:
+    DECLARE_STATIC_INIT
+};
 
-//         for (uint64_t index = 0; index < len; ++index)
-//         {
-//             IndexableFieldIdentifier id(static_cast<uint32_t>(index));
-//             switch (type)
-//             {
-//             case TypeArrayKlass::T_BOOLEAN: {
-//                 uint64_t off =
-//                     base_offset_in_bytes(runtime::BasicType::T_BOOLEAN) + index * runtime::Jvm::get_boolean_size();
-//                 visitor(BooleanField(id, off, false));
-//                 break;
-//             }
-//             case TypeArrayKlass::T_CHAR: {
-//                 uint64_t off = base_offset_in_bytes(runtime::BasicType::T_CHAR) + index *
-//                 runtime::Jvm::get_char_size(); visitor(CharField(id, off, false)); break;
-//             }
-//             case TypeArrayKlass::T_FLOAT: {
-//                 uint64_t off =
-//                     base_offset_in_bytes(runtime::BasicType::T_FLOAT) + index * runtime::Jvm::get_float_size();
-//                 visitor(FloatField(id, off, false));
-//                 break;
-//             }
-//             case TypeArrayKlass::T_DOUBLE: {
-//                 uint64_t off =
-//                     base_offset_in_bytes(runtime::BasicType::T_DOUBLE) + index * runtime::Jvm::get_double_size();
-//                 visitor(DoubleField(id, off, false));
-//                 break;
-//             }
-//             case TypeArrayKlass::T_BYTE: {
-//                 uint64_t off = base_offset_in_bytes(runtime::BasicType::T_BYTE) + index *
-//                 runtime::Jvm::get_byte_size(); visitor(ByteField(id, off, false)); break;
-//             }
-//             case TypeArrayKlass::T_SHORT: {
-//                 uint64_t off =
-//                     base_offset_in_bytes(runtime::BasicType::T_SHORT) + index * runtime::Jvm::get_short_size();
-//                 visitor(ShortField(id, off, false));
-//                 break;
-//             }
-//             case TypeArrayKlass::T_INT: {
-//                 uint64_t off = base_offset_in_bytes(runtime::BasicType::T_INT) + index *
-//                 runtime::Jvm::get_int_size(); visitor(IntField(id, off, false)); break;
-//             }
-//             case TypeArrayKlass::T_LONG: {
-//                 uint64_t off = base_offset_in_bytes(runtime::BasicType::T_LONG) + index *
-//                 runtime::Jvm::get_long_size(); visitor(LongField(id, off, false)); break;
-//             }
-//             }
-//         }
-//     }
+class ObjArray : public Array
+{
+  public:
+    ObjArray(debugger::OopHandle h) noexcept : Array(Kind::obj_array, h) {}
+    ObjArray(const Oop &o) noexcept : Array(o) {}
 
-//     static void initialize();
-// };
+    debugger::OopHandle oop_handle_at(uint32_t index) const;
+    Oop obj_at(uint32_t index) const noexcept;
 
-// // ============================================================================
-// // ObjArray
-// // ============================================================================
-// class ObjArray final : public Array
-// {
-//     static inline uint64_t element_size{0};
+    uint64_t object_size() const { return array_object_size(); }
 
-//   public:
-//     ObjArray(OopHandle h, ObjectHeap *p) noexcept : Array(Kind::obj_array, h, p) {}
-//     explicit ObjArray(const Oop &o) noexcept : Array(o) {}
+    static uint64_t object_size_of(const Oop &o) { return ObjArray{o}.array_object_size(); }
 
-//     OopHandle oop_handle_at(uint64_t index) const;
-//     Oop obj_at(uint64_t index) const;
+    template <typename Visitor> void iterate_fields(Visitor &&visitor);
 
-//     uint64_t object_size() const { return array_object_size(); }
-//     static uint64_t object_size_of(const Oop &o) { return ObjArray{o}.array_object_size(); }
+  private:
+    DECLARE_STATIC_INIT
 
-//     void print_value_on(std::ostream &os) const;
+    static inline uint64_t element_size;
+};
 
-//     template <typename Visitor> void iterate_fields(Visitor &&visitor, bool do_vm_fields) const
-//     {
-//         if (do_vm_fields)
-//         {
-//             visitor(LongField(NamedFieldIdentifier("_mark"), mark_off, true));
-//             if (runtime::Jvm::is_compressed_klass_pointers_enabled())
-//             {
-//                 visitor(NarrowOopField(NamedFieldIdentifier("_compressed_klass"), compressed_klass_off, true));
-//             }
-//             else
-//             {
-//                 visitor(OopField(NamedFieldIdentifier("_klass"), klass_off, true));
-//             }
-//         }
+template <typename Visitor> void Oop::iterate_fields(Visitor &&visitor)
+{
+    switch (kind_)
+    {
+    case Kind::instance:
+        Instance{*this}.iterate_fields(std::forward<Visitor>(visitor));
+        break;
+    case Kind::type_array:
+        TypeArray{*this}.iterate_fields(std::forward<Visitor>(visitor));
+        break;
+    case Kind::obj_array:
+        ObjArray{*this}.iterate_fields(std::forward<Visitor>(visitor));
+        break;
+    case Kind::non_type:
+        break;
+    }
+}
 
-//         uint64_t len = length();
-//         uint64_t base = base_offset_in_bytes(runtime::BasicType::T_OBJECT);
+template <typename Visitor> void Instance::iterate_fields(Visitor &&visitor)
+{
+    visitor.set_oop(*this);
+    InstanceKlass{klass().address()}.iterate_non_static_fields(visitor, *this);
+}
 
-//         for (uint64_t index = 0; index < len; ++index)
-//         {
-//             uint64_t offset = base + (index * element_size);
-//             IndexableFieldIdentifier id(static_cast<uint32_t>(index));
-//             if (runtime::Jvm::is_compressed_oops_enabled())
-//             {
-//                 visitor(NarrowOopField(id, offset, false));
-//             }
-//             else
-//             {
-//                 visitor(OopField(id, offset, false));
-//             }
-//         }
-//     }
+template <typename Visitor> void InstanceKlass::iterate_static_fields(Visitor &&visitor)
+{
+    visitor.set_oop(java_mirror());
+    uint16_t length = all_fields_count();
+    for (uint32_t index = 0; index < length; ++index)
+        if (runtime::AccessFlags access{field_access_flags(index)}; access.is_static())
+            visit_field(visitor, FieldType(field_signature(index)), index);
+}
 
-//     static void initialize();
-// };
-
-// template <typename Visitor> void Oop::iterate_fields(Visitor &&visitor, bool do_vm_fields) const
-// {
-//     switch (kind_)
-//     {
-//     case Kind::instance:
-//         Instance{*this}.iterate_fields(std::forward<Visitor>(visitor), do_vm_fields);
-//         break;
-//     case Kind::type_array:
-//         TypeArray{*this}.iterate_fields(std::forward<Visitor>(visitor), do_vm_fields);
-//         break;
-//     case Kind::obj_array:
-//         ObjArray{*this}.iterate_fields(std::forward<Visitor>(visitor), do_vm_fields);
-//         break;
-//     }
-// }
+template <typename Visitor> void InstanceKlass::iterate_non_static_fields(Visitor &&visitor, const Oop &obj)
+{
+    if (InstanceKlass ik{super().address()}; ik)
+        ik.iterate_non_static_fields(visitor, obj);
+    uint16_t length = all_fields_count();
+    for (uint32_t index = 0; index < length; ++index)
+        if (runtime::AccessFlags access{field_access_flags(index)}; !access.is_static())
+            visit_field(visitor, FieldType(field_signature(index)), index);
+}
 } // namespace hotspot::oops

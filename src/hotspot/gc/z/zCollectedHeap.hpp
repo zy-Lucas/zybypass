@@ -18,6 +18,8 @@ class ZCollectedHeap : public shared::CollectedHeap
     debugger::OopHandle oop_load_at(debugger::OopHandle handle, uint64_t offset) const override;
     debugger::OopHandle oop_load_in_native(uint64_t addr) const override;
 
+    void oop_store_at(debugger::OopHandle obj, uint64_t offset, debugger::OopHandle value) const noexcept override;
+
   private:
     debugger::OopHandle oop_load_barrier(uint64_t oop_address) const { return ZBarrier::weak_barrier(oop_address); }
 

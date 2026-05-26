@@ -1,7 +1,8 @@
 #include "instanceKlass.hpp"
+#include "field.hpp"
 #include "method.hpp"
+#include "symbol.hpp"
 #include "vmSymbols.hpp"
-#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -49,10 +50,10 @@ Symbol InstanceKlass::field_name(uint32_t index) const noexcept
 
 Symbol InstanceKlass::field_signature(uint32_t index) const noexcept
 {
-    uint16_t name_index = fields().at(index * field_slots_ + signature_index_offset_);
+    uint16_t signature_index = fields().at(index * field_slots_ + signature_index_offset_);
     if (index < java_fields_count())
-        return constants().symbol_at(name_index);
-    return vmSymbols::symbol_at(name_index);
+        return constants().symbol_at(signature_index);
+    return vmSymbols::symbol_at(signature_index);
 }
 
 uint16_t InstanceKlass::field_generic_signature_index(uint32_t index) const noexcept
@@ -87,11 +88,11 @@ uint32_t InstanceKlass::field_offset(uint32_t index) const noexcept
 
 uint16_t InstanceKlass::all_fields_count() const noexcept
 {
-    uint16_t allFieldsCount = 0;
-    for (uint16_t len = fields().length(); allFieldsCount * field_slots_ < len; ++allFieldsCount)
-        if (runtime::AccessFlags{field_access_flags(allFieldsCount)}.field_has_generic_signature())
+    uint16_t all_fields_cunt = 0;
+    for (uint16_t len = fields().length(); all_fields_cunt * field_slots_ < len; ++all_fields_cunt)
+        if (runtime::AccessFlags{field_access_flags(all_fields_cunt)}.field_has_generic_signature())
             --len;
-    return allFieldsCount;
+    return all_fields_cunt;
 }
 
 utilities::KlassArray InstanceKlass::local_interfaces() const noexcept
@@ -112,6 +113,41 @@ std::string_view InstanceKlass::source_debug_extension_view() const noexcept
 Method InstanceKlass::find_method(std::string_view name, std::string_view sig) const noexcept
 {
     return find_method(methods(), name, sig);
+}
+
+Field InstanceKlass::find_field(std::string_view name, std::string_view sig) const noexcept
+{
+    if (Field f{find_local_field(name, sig)}; f)
+        return f;
+    if (Field f{find_interface_field(name, sig)}; f)
+        return f;
+    if (InstanceKlass supr{super().address()}; supr)
+        return supr.find_field(name, sig);
+    return {0, 0};
+}
+
+Field InstanceKlass::find_local_field(std::string_view name, std::string_view sig) const noexcept
+{
+    uint16_t length = all_fields_count();
+    for (uint32_t i = 0; i < length; ++i)
+        if (field_name(i).equals(name) && field_signature(i).equals(sig))
+            return Field{*this, i};
+    return {0, 0};
+}
+
+Field InstanceKlass::find_interface_field(std::string_view name, std::string_view sig) const noexcept
+{
+    utilities::KlassArray interfaces{local_interfaces()};
+    int32_t length = interfaces.length();
+    for (uint32_t i = 0; i < length; ++i)
+    {
+        InstanceKlass intf{interfaces.at(i).address()};
+        if (Field f{intf.find_local_field(name, sig)}; f)
+            return f;
+        if (Field f{intf.find_interface_field(name, sig)}; f)
+            return f;
+    }
+    return {0, 0};
 }
 
 Method InstanceKlass::find_method(utilities::MethodArray methods, std::string_view name,

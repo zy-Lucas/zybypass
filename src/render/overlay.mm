@@ -209,7 +209,7 @@ static void LoadResources(void)
     CGFloat guiScale = 1;
     while (guiScale < 4 && fbW / (guiScale + 1) >= 320 && fbH / (guiScale + 1) >= 240)
     {
-        guiScale++;
+        ++guiScale;
     }
 
     CGFloat ratio = (CGFloat)guiScale / backingScale;
@@ -301,7 +301,7 @@ static void LoadResources(void)
     CGFloat cursorX = x;
     NSUInteger len = [text length];
 
-    for (NSUInteger i = 0; i < len; i++)
+    for (NSUInteger i = 0; i < len; ++i)
     {
         unichar ch = [text characterAtIndex:i];
         if (ch < 32 || ch > 126)
@@ -360,7 +360,7 @@ static void LoadResources(void)
 {
     NSUInteger len = [text length];
     CGFloat width = 0.0f;
-    for (NSUInteger i = 0; i < len; i++)
+    for (NSUInteger i = 0; i < len; ++i)
     {
         unichar ch = [text characterAtIndex:i];
         if (ch < 32 || ch > 126)

@@ -1,7 +1,11 @@
 #include "klass.hpp"
+#include "oop.hpp"
+#include "vmOopHandle.hpp"
 
 namespace hotspot::oops
 {
+Instance Klass::java_mirror() const { return VMOopHandle{address() + java_mirror_offset_}.resolve(); }
+
 bool Klass::is_subclass_of(const Klass &k) const noexcept
 {
     for (Klass t{*this}; t; t = t.super())

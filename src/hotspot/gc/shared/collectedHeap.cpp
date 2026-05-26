@@ -9,7 +9,16 @@ debugger::OopHandle CollectedHeap::oop_load_at(debugger::OopHandle handle, uint6
 
 debugger::OopHandle CollectedHeap::oop_load_in_native(uint64_t addr) const
 {
+    if (!addr)
+        return 0;
     return runtime::Jvm::read<uint64_t>(addr);
+}
+
+void CollectedHeap::oop_store_at(debugger::OopHandle obj, uint64_t offset, debugger::OopHandle value) const noexcept
+{
+    if (!obj)
+        return;
+    runtime::Jvm::write<uint64_t>(obj.address() + offset, value.address());
 }
 
 void CollectedHeap::initialize()

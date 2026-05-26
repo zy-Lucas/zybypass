@@ -29,6 +29,8 @@ class CollectedHeap : public runtime::JvmObject
     virtual debugger::OopHandle oop_load_at(debugger::OopHandle handle, uint64_t offset) const;
     virtual debugger::OopHandle oop_load_in_native(uint64_t addr) const;
 
+    virtual void oop_store_at(debugger::OopHandle obj, uint64_t offset, debugger::OopHandle value) const noexcept;
+
   private:
     DECLARE_STATIC_INIT
 

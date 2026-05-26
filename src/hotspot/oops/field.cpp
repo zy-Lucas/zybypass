@@ -1,33 +1,9 @@
 #include "field.hpp"
-#include "../runtime/basicType.hpp"
+#include "../memory/universe.hpp"
 #include "symbol.hpp"
 
 namespace hotspot::oops
 {
-FieldType::ArrayInfo FieldType::get_array_info() const noexcept
-{
-    uint32_t index = 1;
-    int32_t dim = 1;
-    skip_optional_size(signature_, index);
-    while (signature_.byte_at(index) == '[')
-    {
-        index++;
-        dim++;
-        skip_optional_size(signature_, index);
-    }
-    return {dim, runtime::BasicType::char_to_type(signature_.byte_at(index))};
-}
-
-void FieldType::skip_optional_size(Symbol sig, uint32_t &index) noexcept
-{
-    uint8_t c = sig.byte_at(index);
-    while (c >= '0' && c <= '9')
-    {
-        ++index;
-        c = sig.byte_at(index);
-    }
-}
-
 Field::Field(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept
     : offset_(offset), id_(std::move(id)), vm_field_(is_vm_field)
 {
@@ -53,5 +29,35 @@ size_t Field::hash_code() const noexcept
     if (!holder_)
         return 0;
     return holder_.hash_code() ^ ::hotspot::oops::hash_code(id_);
+}
+
+OopField::OopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept
+    : Field(offset, std::move(id), is_vm_field)
+{
+}
+
+debugger::OopHandle OopField::value_as_oop_handle(const Oop &obj) const
+{
+    return memory::Universe::heap()->oop_load_at(obj.handle(), offset());
+}
+
+void OopField::set_value(const Oop &obj, const Oop &value) noexcept
+{
+    memory::Universe::heap()->oop_store_at(obj.handle(), offset(), value.handle());
+}
+
+NarrowOopField::NarrowOopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept
+    : OopField(offset, std::move(id), is_vm_field)
+{
+}
+
+debugger::OopHandle NarrowOopField::value_as_oop_handle(const Oop &obj) const noexcept
+{
+    return obj.handle().compressed_oop_handle_at(offset());
+}
+
+void NarrowOopField::set_value(const Oop &obj, const Oop &value) noexcept
+{
+    //runtime::Jvm::write(uint64_t addr, const T &value);
 }
 } // namespace hotspot::oops

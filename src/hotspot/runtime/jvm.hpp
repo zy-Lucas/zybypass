@@ -50,6 +50,7 @@ class Jvm
 
     static int32_t bytes_per_word() noexcept { return bytes_per_word_; }
     static int32_t heap_word_size() noexcept { return heap_word_size_; }
+    static int32_t heap_oop_size() noexcept { return heap_oop_size_; }
     static int32_t oop_size() noexcept { return oop_size_; }
 
     static int32_t invocation_entry_bci() noexcept { return invocation_entry_bic_; }
@@ -135,11 +136,11 @@ class Jvm
 
     static types::Type *lookup_or_fail(std::string_view type_name) { return lookup_type(type_name, true); }
     static types::Type *lookup_or_create_type(std::string_view type_name, size_t size, bool is_oop_type,
-                                                   bool is_integer_type, bool is_unsigned);
+                                              bool is_integer_type, bool is_unsigned);
 
-    static types::Type *create_basic_type(std::string_view type_name, size_t size, bool is_oop_type, bool is_integer_type,
-                                        bool is_unsigned);
-
+    static types::Type *create_basic_type(std::string_view type_name, size_t size, bool is_oop_type,
+                                          bool is_integer_type, bool is_unsigned);
+public:
     static std::optional<Jvm::Flag> lookup_command_line_flag(std::string_view name) noexcept;
 
     static std::string_view trim(std::string_view sv) noexcept;
@@ -167,6 +168,7 @@ class Jvm
 
     static inline int32_t bytes_per_word_;
     static inline int32_t heap_word_size_;
+    static inline int32_t heap_oop_size_;
     static inline int32_t oop_size_;
 
     static inline int32_t flags_default_;

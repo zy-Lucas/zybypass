@@ -1,7 +1,11 @@
 #pragma once
 
+#include "../runtime/basicType.hpp"
+#include "fieldType.hpp"
 #include "instanceKlass.hpp"
+#include "objHeap.hpp"
 #include "oop.hpp"
+#include "typeArrayKlass.hpp"
 #include <variant>
 
 namespace hotspot::oops
@@ -64,39 +68,6 @@ inline bool operator==(const FieldIdentifier &a, const FieldIdentifier &b)
         a, b);
 }
 
-class FieldType
-{
-  public:
-    FieldType(Symbol signature) noexcept : signature_(signature), first_(signature.byte_at(0)) {}
-
-    bool is_oop() const noexcept { return is_object() || is_array(); }
-    bool is_byte() const noexcept { return first_ == 'B'; }
-    bool is_char() const noexcept { return first_ == 'C'; }
-    bool is_double() const noexcept { return first_ == 'D'; }
-    bool is_float() const noexcept { return first_ == 'F'; }
-    bool is_int() const noexcept { return first_ == 'I'; }
-    bool is_long() const noexcept { return first_ == 'J'; }
-    bool is_short() const noexcept { return first_ == 'S'; }
-    bool is_boolean() const noexcept { return first_ == 'Z'; }
-    bool is_object() const noexcept { return first_ == 'L'; }
-    bool is_array() const noexcept { return first_ == '['; }
-
-    Symbol signature() const noexcept { return signature_; }
-
-    struct ArrayInfo
-    {
-        int32_t dimension_;
-        int32_t element_basic_type_;
-    };
-    ArrayInfo get_array_info() const noexcept;
-
-  private:
-    static void skip_optional_size(Symbol sig, uint32_t &index) noexcept;
-
-    Symbol signature_;
-    uint8_t first_;
-};
-
 class Field
 {
   public:
@@ -111,7 +82,7 @@ class Field
     bool is_named_field() const noexcept { return std::holds_alternative<NamedFieldIdentifier>(id_); }
 
     uint32_t field_index() const noexcept { return field_index_; }
-    InstanceKlass get_field_holder() const noexcept { return holder_; }
+    InstanceKlass field_holder() const noexcept { return holder_; }
 
     uint64_t access_flags() const noexcept { return access_flags_.value(); };
     runtime::AccessFlags access_flags_obj() const noexcept { return access_flags_; };
@@ -137,6 +108,8 @@ class Field
     bool is_enum_constant() const noexcept { return access_flags_.is_enum(); }
 
     bool operator==(const Field &other) const;
+
+    explicit operator bool() const noexcept { return (bool)holder_; }
 
     size_t hash_code() const noexcept;
 
@@ -176,53 +149,122 @@ class Field
         }                                                                                                              \
     };
 
-DECLARE_PRIMITIVE_FIELD(CharField, int16_t)
+DECLARE_PRIMITIVE_FIELD(CharField, uint16_t)
 DECLARE_PRIMITIVE_FIELD(BooleanField, bool)
 DECLARE_PRIMITIVE_FIELD(ByteField, int8_t)
 DECLARE_PRIMITIVE_FIELD(DoubleField, double)
 DECLARE_PRIMITIVE_FIELD(FloatField, float)
+DECLARE_PRIMITIVE_FIELD(ShortField, int16_t)
 DECLARE_PRIMITIVE_FIELD(IntField, int32_t)
 DECLARE_PRIMITIVE_FIELD(LongField, int64_t)
 
 #undef DECLARE_PRIMITIVE_FIELD
 
-// class OopField : public Field
-// {
-//   public:
-//     OopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) : Field(offset, std::move(id), is_vm_field) {}
+class OopField : public Field
+{
+  public:
+    OopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept;
+    OopField(InstanceKlass holder, int field_array_index) noexcept : Field(holder, field_array_index) {}
 
-//     OopField(InstanceKlass holder, int field_array_index) : Field(holder, field_array_index) {}
+    Oop value(const Oop &obj) const { return ObjHeap::new_oop(value_as_oop_handle(obj)); }
+    debugger::OopHandle value_as_oop_handle(const Oop &obj) const;
 
-//     Oop get_value(const Oop &obj) const;
+    void set_value(const Oop &obj, const Oop &value) noexcept;
+};
 
-//     debugger::OopHandle get_value_as_oop_handle(const Oop &obj) const;
+class NarrowOopField : public OopField
+{
+  public:
+    NarrowOopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept;
+    NarrowOopField(InstanceKlass holder, int field_array_index) noexcept : OopField(holder, field_array_index) {}
 
-//     void set_value(Oop *obj) noexcept {}
-// };
+    Oop value(const Oop &obj) const noexcept { return ObjHeap::new_oop(value_as_oop_handle(obj)); }
+    debugger::OopHandle value_as_oop_handle(const Oop &obj) const noexcept;
 
-// class NarrowOopField : public OopField
-// {
-//   public:
-//     using OopField::OopField;
+    void set_value(const Oop &obj, const Oop &value) noexcept;
+};
 
-//     NarrowOopField(std::shared_ptr<FieldIdentifier> id, uint64_t offset, bool isVMField)
-//         : OopField(std::move(id), offset, isVMField)
-//     {
-//     }
+template <typename Visitor> void TypeArray::iterate_fields(Visitor &&visitor)
+{
+    TypeArrayKlass k{klass().address()};
+    uint32_t len = length();
+    uint32_t type = k.element_type();
+    uint64_t base = base_offset_in_bytes(type);
 
-//     template <typename VMField>
-//     NarrowOopField(const VMField *vmField, uint64_t startOffset)
-//         : OopField(std::make_shared<NamedFieldIdentifier>(vmField->getName()), vmField->getOffset() + startOffset,
-//         true)
-//     {
-//     }
+    for (uint32_t index = 0; index < len; ++index)
+    {
+        switch (type)
+        {
+#define CASE(Tag, FieldClass, ElemSize)                                                                                \
+    case TypeArrayKlass::Tag:                                                                                          \
+        visitor(FieldClass{base + index * ElemSize, index, false});                                                    \
+        break
+            CASE(T_BOOLEAN, BooleanField, sizeof(bool));
+            CASE(T_CHAR, CharField, sizeof(uint16_t));
+            CASE(T_FLOAT, FloatField, sizeof(float));
+            CASE(T_DOUBLE, DoubleField, sizeof(double));
+            CASE(T_BYTE, ByteField, sizeof(int8_t));
+            CASE(T_SHORT, ShortField, sizeof(int16_t));
+            CASE(T_INT, IntField, sizeof(int32_t));
+            CASE(T_LONG, LongField, sizeof(int64_t));
+#undef CASE
+        }
+    }
+}
 
-//     NarrowOopField(InstanceKlass *holder, int fieldArrayIndex) : OopField(holder, fieldArrayIndex) {}
+template <typename Visitor> void ObjArray::iterate_fields(Visitor &&visitor)
+{
+    uint32_t len = length();
+    uint64_t base = base_offset_in_bytes(runtime::BasicType::T_OBJECT);
 
-//     // 压缩指针：先读 32bit narrowOop，再解码
-//     Oop *getValue(const Oop *obj) const override;
-//     OopHandle *getValueAsOopHandle(const Oop *obj) const override;
-// };
+    for (uint32_t index = 0; index < len; ++index)
+    {
+        uint64_t offset = base + (index * element_size);
+        IndexableFieldIdentifier id(index);
+        if (runtime::Jvm::is_compressed_oops_enabled())
+            visitor(NarrowOopField(offset, id, false));
+        else
+            visitor(OopField(offset, id, false));
+    }
+}
+
+template <typename Visitor> void InstanceKlass::visit_field(Visitor &&visitor, FieldType type, uint32_t index)
+{
+    switch (FieldType{field_signature(index)}.tag())
+    {
+    case 'Z':
+        visitor(BooleanField{*this, index});
+        break;
+    case 'B':
+        visitor(ByteField{*this, index});
+        break;
+    case 'C':
+        visitor(CharField{*this, index});
+        break;
+    case 'S':
+        visitor(ShortField{*this, index});
+        break;
+    case 'I':
+        visitor(IntField{*this, index});
+        break;
+    case 'J':
+        visitor(LongField{*this, index});
+        break;
+    case 'F':
+        visitor(FloatField{*this, index});
+        break;
+    case 'D':
+        visitor(DoubleField{*this, index});
+        break;
+    case 'L':
+    case '[':
+        if (runtime::Jvm::is_compressed_oops_enabled())
+            return visitor(NarrowOopField(*this, index));
+        else
+            return visitor(OopField(*this, index));
+        break;
+    }
+}
 } // namespace hotspot::oops
 
 namespace std

@@ -1,10 +1,14 @@
 #pragma once
 
 #include "constantPool.hpp"
+#include "fieldType.hpp"
 #include "klass.hpp"
 
 namespace hotspot::oops
 {
+class Field;
+class Oop;
+
 struct ClassState
 {
     enum Value : uint8_t
@@ -97,9 +101,18 @@ class InstanceKlass : public Klass
     utilities::IntArray method_ordering() const noexcept { return read_field<uint64_t>(method_ordering_offset_); }
     utilities::U2Array fields() const noexcept { return read_field<uint64_t>(fields_offset_); }
 
+    template <typename Visitor> void iterate_static_fields(Visitor &&visitor);
+    template <typename Visitor> void iterate_non_static_fields(Visitor &&visitor, const Oop &obj);
+
+    Field find_field(std::string_view name, std::string_view sig) const noexcept;
+    Field find_local_field(std::string_view name, std::string_view sig) const noexcept;
+    Field find_interface_field(std::string_view name, std::string_view sig) const noexcept;
+
     static uint64_t header_size() noexcept { return header_size_; }
 
   private:
+    template <typename Visitor> void visit_field(Visitor &&visitor, FieldType type, uint32_t index);
+
     static Method find_method(utilities::MethodArray methods, std::string_view name,
                               std::string_view signature) noexcept;
 

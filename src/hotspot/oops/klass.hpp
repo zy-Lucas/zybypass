@@ -6,11 +6,14 @@
 
 namespace hotspot::oops
 {
+class Instance;
+
 class Klass : public MetaData
 {
   public:
     Klass(uint64_t addr) noexcept : MetaData(addr) {}
 
+    Instance java_mirror() const;
     Klass super() const noexcept { return read_field<uint64_t>(super_offset_); }
     int32_t layout_helper() const noexcept { return read_field<int32_t>(layout_helper_offset_); }
     Symbol name() const noexcept { return read_field<uint64_t>(name_offset_); }
@@ -27,6 +30,8 @@ class Klass : public MetaData
 
     bool is_instance_klass() const noexcept { return is_instance(layout_helper()); }
     bool is_array_klass() const noexcept { return is_array(layout_helper()); }
+    bool is_typeArray_klass() const noexcept { return is_typeArray(layout_helper()); }
+    bool is_objArray_klass() const noexcept { return is_objArray(layout_helper()); }
 
     bool is_public() const noexcept { return access_flags_obj().is_public(); }
     bool is_final() const noexcept { return access_flags_obj().is_final(); }

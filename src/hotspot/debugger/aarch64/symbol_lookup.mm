@@ -78,7 +78,7 @@ bool build_symtab_for_lib(const lib_info *lib)
         cpu_type_t target_cpu = CPU_TYPE_ARM64;
 #endif
 
-        for (uint32_t i = 0; i < nfat; i++)
+        for (uint32_t i = 0; i < nfat; ++i)
         {
             if (ntohl(archs[i].cputype) == target_cpu)
             {
@@ -105,7 +105,7 @@ bool build_symtab_for_lib(const lib_info *lib)
 
     struct symtab_command *sym_cmd = nullptr;
     uint8_t *cmd_ptr = data + img_offset + sizeof(mach_header_64);
-    for (uint32_t i = 0; i < header->ncmds; i++)
+    for (uint32_t i = 0; i < header->ncmds; ++i)
     {
         auto *cmd = reinterpret_cast<load_command *>(cmd_ptr);
         if (cmd->cmd == LC_SYMTAB)
@@ -126,7 +126,7 @@ bool build_symtab_for_lib(const lib_info *lib)
     auto *sym_table = reinterpret_cast<nlist_64 *>(data + img_offset + sym_cmd->symoff);
     const char *str_table = reinterpret_cast<const char *>(data + img_offset + sym_cmd->stroff);
 
-    for (uint32_t i = 0; i < sym_cmd->nsyms; i++)
+    for (uint32_t i = 0; i < sym_cmd->nsyms; ++i)
     {
         auto &sym = sym_table[i];
 
@@ -163,7 +163,7 @@ void initialize_libs()
     std::vector<std::unique_ptr<lib_info>> libs;
     libs.reserve(count);
 
-    for (uint32_t i = 0; i < count; i++)
+    for (uint32_t i = 0; i < count; ++i)
     {
         const char *name = _dyld_get_image_name(i);
         const auto *header = _dyld_get_image_header(i);

@@ -12,6 +12,7 @@
 #include "hotspot/oops/method.hpp"
 #include "hotspot/oops/oop.hpp"
 #include "hotspot/oops/symbol.hpp"
+#include "hotspot/runtime/basicType.hpp"
 #include "hotspot/runtime/jvm.hpp"
 #include "jni_md.h"
 #include "render/overlay.h"
@@ -152,25 +153,117 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     memcpy(new_method + method.size(), &a, 8);
     ik.methods().set_at(1, (uint64_t)new_method);
 
+    jbyte d;
+
     env->ReleaseStringUTFChars(klass_name, kl_name);
     return 0;
 }
 
+struct OopPrinter
+{
+    hotspot::oops::Oop obj_{hotspot::oops::Oop::Kind::non_type, 0};
+
+    OopPrinter() {}
+
+    void set_oop(hotspot::oops::Oop obj) { obj_ = obj; }
+
+    void operator()(hotspot::oops::BooleanField f)
+    {
+        std::cout << "bool    " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
+                  << "\n";
+    }
+
+    void operator()(hotspot::oops::CharField f)
+    {
+        std::cout << "char    " << hotspot::oops::name(f.id()) << " value: " << (char)f.value(obj_) << " @ "
+                  << f.offset() << "\n";
+    }
+
+    void operator()(hotspot::oops::ByteField f)
+    {
+        std::cout << "byte    " << hotspot::oops::name(f.id()) << " value: " << (char)f.value(obj_) << " @ "
+                  << f.offset() << "\n";
+        f.set_value(obj_, 'a');
+    }
+
+    void operator()(hotspot::oops::ShortField f)
+    {
+        std::cout << "short   " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
+                  << "\n";
+    }
+
+    void operator()(hotspot::oops::IntField f)
+    {
+        std::cout << "int     " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
+                  << "\n";
+    }
+
+    void operator()(hotspot::oops::LongField f)
+    {
+        std::cout << "long    " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
+                  << "\n";
+    }
+
+    void operator()(hotspot::oops::FloatField f)
+    {
+        std::cout << "float   " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
+                  << "\n";
+    }
+
+    void operator()(hotspot::oops::DoubleField f)
+    {
+        std::cout << "double  " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
+                  << "\n";
+    }
+
+    void operator()(hotspot::oops::OopField f)
+    {
+        auto ref = f.value(obj_);
+        std::cout << "oop     " << hotspot::oops::name(f.id()) << " klass: ";
+        if (ref.handle())
+            std::cout << ref.klass().name().as_view();
+        else
+            std::cout << "<null>";
+        std::cout << " @ " << f.offset() << "\n";
+    }
+
+    void operator()(hotspot::oops::NarrowOopField f)
+    {
+        auto ref = f.value(obj_);
+        std::cout << "narrow  " << hotspot::oops::name(f.id()) << " klass: ";
+        if (ref.handle())
+            std::cout << ref.klass().name().as_view();
+        else
+            std::cout << "<null>";
+        std::cout << " @ " << f.offset() << "\n";
+    }
+};
+
+// const char *GetStringUTFChars(jstring string, bool *isCopy) {
+//     hotspot::oops::Instance java_string{*(uint64_t *)string};
+// }
+
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
-    // //std::cout << "use: " << hotspot::runtime::Jvm::is_compressed_oops_enabled() << std::endl;
-    // if (hotspot::runtime::Jvm::is_compressed_oops_enabled())
-    // {
-    //     hotspot::oops::Oop oop{hotspot::oops::Oop::Kind::instance,
-    //     hotspot::runtime::Jvm::read<uint64_t>((uint64_t)cl)};
+    hotspot::oops::Instance oop{*(uint64_t *)klass_name};
 
-    //     hotspot::oops::CharField field{oop.get_klass().address(), 0};
-    //     field.set_value(oop, 'b');
+    std::cout << "size: " << oop.klass().java_mirror().klass().name().length()
+              << " klass: " << oop.klass().java_mirror().klass().name().as_view() << std::endl;
+    // hotspot::oops::InstanceKlass{oop.klass().address()}.iterate_static_fields(OopPrinter{});
 
-    //     std::cout << "is name field: " << field.is_named_field() << " name: " << field.get_name().as_view() << "
-    //     value: " << (char)field.get_value(oop) << std::endl;
-    // }
+    // oop.iterate_fields(OopPrinter{oop});
+
+    hotspot::oops::NarrowOopField field{oop.klass().address(), 0};
+
+    hotspot::oops::TypeArray array = field.value(oop);
+    uint16_t *cha =
+        (uint16_t *)(array.handle().address() + array.base_offset_in_bytes(hotspot::runtime::BasicType::T_CHAR));
+    for (int i = 0; i < (array.length() / 2); ++i)
+        std::cout << cha[i] << std::endl;
+
+    // std::cout << "is name field: " << field.is_named_field() << " name: " << field.name().as_view()
+    //           << " klass: " << field.value(oop).klass().name().as_view() << std::endl;
     const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
     const char *name = env->GetStringUTFChars(method_name, nullptr);
     const char *sig = env->GetStringUTFChars(method_sign, nullptr);

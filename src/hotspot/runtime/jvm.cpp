@@ -28,6 +28,7 @@ void Jvm::init()
     }
     bytes_per_word_ = *lookup_int_constant("BytesPerWord");
     heap_word_size_ = *lookup_int_constant("HeapWordSize");
+    heap_oop_size_ = is_compressed_oops_enabled() ? sizeof(int32_t) : oop_size();
     oop_size_ = *lookup_int_constant("oopSize");
 
     flags_default_ = *lookup_int_constant("JVMFlagOrigin::DEFAULT");
@@ -231,7 +232,7 @@ uint64_t Jvm::read_compressed_oop_address_value(uint64_t addr) noexcept
 
 uint64_t Jvm::read_compressed_klass_address_value(uint64_t addr) noexcept
 {
-    if (uint64_t value = read<uint32_t>(addr); value)
+    if (uint32_t value = read<uint32_t>(addr); value)
         return oops::CompressedKlassPointers::base() + (value << oops::CompressedKlassPointers::shift());
     return 0;
 }
@@ -368,7 +369,7 @@ void Jvm::read_command_line_flags()
     types::Type *field_type = lookup_type("JVMFlag");
 
     uint64_t flag_addr = read<uint64_t>(*field_type->field_offset("flags"));
-    uint64_t num_flags = read<uint64_t>(*field_type->field_offset("numflags"));
+    uint64_t num_flags = read<uint64_t>(*field_type->field_offset("numFlags"));
 
     uint64_t type_offset = *field_type->field_offset("_type");
     uint64_t name_offset = *field_type->field_offset("_name");
