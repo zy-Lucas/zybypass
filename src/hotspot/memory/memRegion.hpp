@@ -23,7 +23,7 @@ class MemRegion
 
     uint64_t end() const noexcept { return start_ + byte_size_; }
     void set_end(uint64_t end) noexcept { byte_size_ = end - start_; }
-    void set_word_size(uint64_t word_size) noexcept { byte_size_ = sizeof(void *) * word_size; }
+    void set_word_size(uint64_t word_size) noexcept { byte_size_ = word_size * sizeof(void *); }
 
     bool contains(const MemRegion &mr) const noexcept { return start_ <= mr.start_ && end() >= mr.end(); }
     bool contains(uint64_t addr) const noexcept { return addr >= start_ && addr < end(); }

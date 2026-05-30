@@ -1,4 +1,5 @@
 #include "collectedHeap.hpp"
+#include "../../oops/oop.hpp"
 
 namespace hotspot::gc::shared
 {
@@ -19,6 +20,13 @@ void CollectedHeap::oop_store_at(debugger::OopHandle obj, uint64_t offset, debug
     if (!obj)
         return;
     runtime::Jvm::write<uint64_t>(obj.address() + offset, value.address());
+}
+
+uint64_t CollectedHeap::tlab_alloc_reserve() noexcept
+{
+    if (uint64_t size = oops::Oop::header_size(); size > runtime::Jvm::min_obj_alignment_in_bytes())
+        return oops::Oop::align_object_size(size);
+    return 0;
 }
 
 void CollectedHeap::initialize()

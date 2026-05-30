@@ -1,6 +1,7 @@
 #include "jvm.hpp"
 #include "../oops/compressedKlassPointers.hpp"
 #include "../oops/compressedOops.hpp"
+
 #ifndef _WIN32
 #include "../debugger/aarch64/symbol_lookup.h"
 #else
@@ -44,6 +45,9 @@ void Jvm::init()
     flags_was_set_on_command_line_ = *lookup_int_constant("JVMFlag::WAS_SET_ON_COMMAND_LINE");
 
     invocation_entry_bic_ = *lookup_int_constant("InvocationEntryBci");
+
+    reserve_for_allocation_prefetch_ =
+        read<int32_t>(*lookup_type("ThreadLocalAllocBuffer")->field_offset("_reserve_for_allocation_prefetch"));
 
     for (auto func : post_init_callbacks())
         func();
@@ -230,11 +234,25 @@ uint64_t Jvm::read_compressed_oop_address_value(uint64_t addr) noexcept
     return 0;
 }
 
+void Jvm::write_compressed_oop_address_value(uint64_t addr, uint64_t value) noexcept
+{
+    if (!value)
+        return;
+    write<uint32_t>(addr, (value - oops::CompressedOops::base()) >> oops::CompressedOops::shift());
+}
+
 uint64_t Jvm::read_compressed_klass_address_value(uint64_t addr) noexcept
 {
     if (uint32_t value = read<uint32_t>(addr); value)
         return oops::CompressedKlassPointers::base() + (value << oops::CompressedKlassPointers::shift());
     return 0;
+}
+
+void Jvm::write_compressed_klass_address_value(uint64_t addr, uint64_t value) noexcept
+{
+    if (!value)
+        return;
+    write<uint32_t>(addr, (value - oops::CompressedKlassPointers::base()) >> oops::CompressedKlassPointers::shift());
 }
 
 bool Jvm::is_compressed_oops_enabled() noexcept
@@ -253,12 +271,33 @@ bool Jvm::is_compressed_klass_pointers_enabled() noexcept
     return compressed_klass_pointers_enabled;
 }
 
-int32_t Jvm::object_alignment_in_bytes() noexcept
+int32_t Jvm::min_obj_alignment_in_bytes() noexcept
 {
     static int32_t object_alignment_in_bytes = lookup_command_line_flag("ObjectAlignmentInBytes")
                                                    .transform([](const Flag &f) { return f.as_intx(); })
                                                    .value_or(8);
     return object_alignment_in_bytes;
+}
+
+int32_t Jvm::code_entry_alignment() noexcept
+{
+#if defined(__aarch64__)
+    return 64;
+#elif defined(__x86_64__) || defined(_M_X64)
+    return 16;
+#elif defined(__i386__) || defined(_M_IX86)
+    return 32;
+#elif defined(__riscv) && (__riscv_xlen == 64)
+    return 64;
+#elif defined(__powerpc64__) || defined(__ppc64__)
+    return 128;
+#elif defined(__s390x__)
+    return 64;
+#elif defined(__arm__)
+    return 16;
+#else
+    return 64;
+#endif
 }
 
 std::vector<void (*)()> &Jvm::post_init_callbacks()

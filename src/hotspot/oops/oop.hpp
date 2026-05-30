@@ -42,6 +42,8 @@ class Oop
 
     template <typename Visitor> void iterate_fields(Visitor &&visitor);
 
+    static uint64_t header_size() noexcept { return header_size_; }
+
     static uint64_t align_object_size(uint64_t size) noexcept;
 
     static Klass klass_for_oop_handle(debugger::OopHandle handle) noexcept;
@@ -103,14 +105,37 @@ class TypeArray : public Array
     TypeArray(debugger::OopHandle h) noexcept : Array(Kind::type_array, h) {}
     TypeArray(const Oop &o) noexcept : Array(o) {}
 
-    int8_t byte_at(uint32_t index) const;
-    bool boolean_at(uint32_t index) const;
-    uint16_t char_at(uint32_t) const;
-    int32_t int_at(uint32_t index) const;
-    int16_t short_at(uint32_t index) const;
-    int64_t long_at(uint32_t index) const;
-    float float_at(uint32_t index) const;
-    double double_at(uint32_t index) const;
+    int8_t *byte_base() const noexcept;
+    int8_t *byte_at_addr(uint32_t index) const noexcept { return byte_base() + index; }
+    int8_t byte_at(uint32_t index) const noexcept { return *byte_at_addr(index); }
+
+    uint8_t *bool_base() const noexcept;
+    uint8_t *bool_at_addr(uint32_t index) const noexcept { return &bool_base()[index]; }
+    bool bool_at(uint32_t index) const noexcept { return *bool_at_addr(index); }
+
+    uint16_t *char_base() const noexcept;
+    uint16_t *char_at_addr(uint32_t index) const noexcept { return &char_base()[index]; }
+    uint16_t char_at(uint32_t index) const noexcept { return *char_at_addr(index); }
+
+    int32_t *int_base() const noexcept;
+    int32_t *int_at_addr(uint32_t index) const noexcept { return &int_base()[index]; }
+    int32_t int_at(uint32_t index) const noexcept { return *int_at_addr(index); }
+
+    int16_t *short_base() const noexcept;
+    int16_t *short_at_addr(uint32_t index) const noexcept { return &short_base()[index]; }
+    int16_t short_at(uint32_t index) const noexcept { return *short_at_addr(index); }
+
+    int64_t *long_base() const noexcept;
+    int64_t *long_at_addr(uint32_t index) const noexcept { return &long_base()[index]; }
+    int64_t long_at(uint32_t index) const noexcept { return *long_at_addr(index); }
+
+    float *float_base() const noexcept;
+    float *float_at_addr(uint32_t index) const noexcept { return &float_base()[index]; }
+    float float_at(uint32_t index) const noexcept { return *float_at_addr(index); }
+
+    double *double_base() const noexcept;
+    double *double_at_addr(uint32_t index) const noexcept { return &double_base()[index]; }
+    double double_at(uint32_t index) const noexcept { return *double_at_addr(index); }
 
     uint64_t object_size() const { return array_object_size(); }
 

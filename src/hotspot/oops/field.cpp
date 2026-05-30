@@ -38,26 +38,16 @@ OopField::OopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexce
 
 debugger::OopHandle OopField::value_as_oop_handle(const Oop &obj) const
 {
+    if (runtime::Jvm::is_compressed_oops_enabled())
+        return obj.handle().compressed_oop_handle_at(offset());
     return memory::Universe::heap()->oop_load_at(obj.handle(), offset());
 }
 
 void OopField::set_value(const Oop &obj, const Oop &value) noexcept
 {
-    memory::Universe::heap()->oop_store_at(obj.handle(), offset(), value.handle());
-}
-
-NarrowOopField::NarrowOopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept
-    : OopField(offset, std::move(id), is_vm_field)
-{
-}
-
-debugger::OopHandle NarrowOopField::value_as_oop_handle(const Oop &obj) const noexcept
-{
-    return obj.handle().compressed_oop_handle_at(offset());
-}
-
-void NarrowOopField::set_value(const Oop &obj, const Oop &value) noexcept
-{
-    //runtime::Jvm::write(uint64_t addr, const T &value);
+    if (runtime::Jvm::is_compressed_oops_enabled())
+        obj.handle().write_compressed_oop_handle_at(offset(), value.handle());
+    else
+        memory::Universe::heap()->oop_store_at(obj.handle(), offset(), value.handle());
 }
 } // namespace hotspot::oops

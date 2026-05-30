@@ -41,7 +41,10 @@ class Jvm
     template <typename T> static void write(uint64_t addr, const T &value) noexcept;
 
     static uint64_t read_compressed_oop_address_value(uint64_t addr) noexcept;
+    static void write_compressed_oop_address_value(uint64_t addr, uint64_t value) noexcept;
+
     static uint64_t read_compressed_klass_address_value(uint64_t addr) noexcept;
+    static void write_compressed_klass_address_value(uint64_t addr, uint64_t value) noexcept;
 
     static bool is_client_compiler() noexcept { return using_client_compiler_; }
     static bool is_server_compiler() noexcept { return using_server_compiler_; }
@@ -55,10 +58,15 @@ class Jvm
 
     static int32_t invocation_entry_bci() noexcept { return invocation_entry_bic_; }
 
+    static int32_t reserve_for_allocation_prefetch() noexcept { return reserve_for_allocation_prefetch_; }
+
     static bool is_compressed_oops_enabled() noexcept;
     static bool is_compressed_klass_pointers_enabled() noexcept;
 
-    static int32_t object_alignment_in_bytes() noexcept;
+    static int32_t min_obj_alignment_in_bytes() noexcept;
+    static int32_t min_obj_alignment() noexcept { return min_obj_alignment_in_bytes() / heap_word_size(); }
+
+    static int32_t code_entry_alignment() noexcept;
 
     static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
     static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
@@ -124,6 +132,19 @@ class Jvm
         std::string as_ccstrlist() const { return std::string{read_string_view_at(addr_)}; }
     };
 
+    static std::optional<Jvm::Flag> lookup_command_line_flag(std::string_view name) noexcept;
+
+    static std::string_view trim(std::string_view sv) noexcept;
+
+    static types::Type *recursive_create_pointer_type(std::string_view type_name);
+    static bool is_pointer_type(std::string_view type_name) noexcept;
+
+#ifdef _WIN32
+    static HMODULE jvm_handle() noexcept;
+#endif
+
+    static std::string vtbl_symbol_for_type(types::Type *type);
+
   private:
     static std::vector<void (*)()> &post_init_callbacks();
 
@@ -140,19 +161,6 @@ class Jvm
 
     static types::Type *create_basic_type(std::string_view type_name, size_t size, bool is_oop_type,
                                           bool is_integer_type, bool is_unsigned);
-public:
-    static std::optional<Jvm::Flag> lookup_command_line_flag(std::string_view name) noexcept;
-
-    static std::string_view trim(std::string_view sv) noexcept;
-
-    static types::Type *recursive_create_pointer_type(std::string_view type_name);
-    static bool is_pointer_type(std::string_view type_name) noexcept;
-
-#ifdef _WIN32
-    static HMODULE jvm_handle() noexcept;
-#endif
-
-    static std::string vtbl_symbol_for_type(types::Type *type);
 
     static inline std::unordered_map<std::string_view, std::unique_ptr<types::Type>> name_to_type_;
     static inline std::unordered_map<std::string_view, int32_t> name_to_int_constant_;
@@ -184,6 +192,7 @@ public:
     static inline int32_t flags_was_set_on_command_line_;
 
     static inline int32_t invocation_entry_bic_;
+    static inline int32_t reserve_for_allocation_prefetch_;
 };
 
 template <typename T> T Jvm::read(uint64_t addr, size_t size) noexcept

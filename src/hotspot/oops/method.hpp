@@ -36,8 +36,15 @@ class Method : public MetaData
 
     code::nmethod native_method() const noexcept;
 
+    uint64_t from_interpreter_entry() const noexcept { return read_field<uint64_t>(from_interpreter_entry_offset_); }
+    void set_from_interpreter_entry(uint64_t addr) noexcept;
+
     int32_t access_flags() const noexcept { return read_field<int32_t>(access_flags_offset_); }
+    void set_access_flags(int32_t access_flags) noexcept { write_field(access_flags_offset_, access_flags); }
+
     runtime::AccessFlags access_flags_obj() const noexcept { return access_flags(); }
+
+    void set_flag(int32_t flag, bool value) noexcept;
 
     uint8_t u1_at(uint32_t bci) const noexcept { return constMethod().u1_at(bci); }
     uint8_t opcode_at(uint32_t bci) const noexcept { return constMethod().opcode_at(bci); }
@@ -53,23 +60,49 @@ class Method : public MetaData
     Symbol signature() const noexcept { return constants().symbol_at(signature_index()); }
 
     bool is_public() const noexcept { return access_flags_obj().is_public(); }
+    void set_is_public(bool value) noexcept { set_flag(runtime::JVM_ACC_PUBLIC, value); }
+
     bool is_private() const noexcept { return access_flags_obj().is_private(); }
+    void set_is_private(bool value) noexcept { set_flag(runtime::JVM_ACC_PRIVATE, value); }
+
     bool is_protected() const noexcept { return access_flags_obj().is_protected(); }
+    void set_is_protected(bool value) noexcept { set_flag(runtime::JVM_ACC_PROTECTED, value); }
+
     bool is_package_private() const noexcept;
+    void set_is_package_private(bool value) noexcept;
+
     bool is_static() const noexcept { return access_flags_obj().is_static(); }
+    void set_is_static(bool value) noexcept { set_flag(runtime::JVM_ACC_STATIC, value); }
+
     bool is_final() const noexcept { return access_flags_obj().is_final(); }
+    void set_is_final(bool value) noexcept { set_flag(runtime::JVM_ACC_FINAL, value); }
+
     bool is_synchronized() const noexcept { return access_flags_obj().is_synchronized(); }
+    void set_is_synchronized(bool value) noexcept { set_flag(runtime::JVM_ACC_SYNCHRONIZED, value); }
+
     bool is_bridge() const noexcept { return access_flags_obj().is_bridge(); }
-    bool iget_native_u4_ats_varargs() const noexcept { return access_flags_obj().is_varargs(); }
+    void set_is_bridge(bool value) noexcept { set_flag(runtime::JVM_ACC_BRIDGE, value); }
+
+    bool is_varargs() const noexcept { return access_flags_obj().is_varargs(); }
+    void set_is_varargs(bool value) noexcept { set_flag(runtime::JVM_ACC_VARARGS, value); }
+
     bool is_native() const noexcept { return access_flags_obj().is_native(); }
+    void set_is_native(bool value) noexcept { set_flag(runtime::JVM_ACC_NATIVE, value); }
+
     bool is_abstract() const noexcept { return access_flags_obj().is_abstract(); }
+    void set_is_abstract(bool value) noexcept { set_flag(runtime::JVM_ACC_ABSTRACT, value); }
+
     bool is_strict() const noexcept { return access_flags_obj().is_strict(); }
+    void set_is_strict(bool value) noexcept { set_flag(runtime::JVM_ACC_STRICT, value); }
+
     bool is_synthetic() const noexcept { return access_flags_obj().is_synthetic(); }
+    void set_is_synthetic(bool value) noexcept { set_flag(runtime::JVM_ACC_SYNTHETIC, value); }
+
+    bool is_obsolete() const noexcept { return access_flags_obj().is_obsolete(); }
+    void set_is_obsolete(bool value) noexcept { set_flag(runtime::JVM_ACC_IS_OBSOLETE, value); }
 
     bool is_constructor() const noexcept { return !is_static() && name().equals("<init>"); }
     bool is_static_initializer() const noexcept { return is_static() && name().equals("<clinit>"); }
-
-    bool is_obsolete() const noexcept { return access_flags_obj().is_obsolete(); }
 
     uint64_t size() const noexcept { return type_->size() + (is_native() ? 2 * sizeof(void *) : 0); }
 
@@ -85,5 +118,6 @@ class Method : public MetaData
     static inline uint64_t access_flags_offset_;
     static inline uint64_t vtable_index_offset_;
     static inline uint64_t code_offset_;
+    static inline uint64_t from_interpreter_entry_offset_;
 };
 } // namespace hotspot::oops

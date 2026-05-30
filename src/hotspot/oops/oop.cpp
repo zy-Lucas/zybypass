@@ -15,7 +15,7 @@ Klass Oop::klass() const noexcept
 
 uint64_t Oop::align_object_size(uint64_t size) noexcept
 {
-    return runtime::Jvm::align_up(size, runtime::Jvm::object_alignment_in_bytes());
+    return runtime::Jvm::align_up(size, runtime::Jvm::min_obj_alignment_in_bytes());
 }
 
 Klass Oop::klass_for_oop_handle(debugger::OopHandle handle) noexcept
@@ -98,52 +98,44 @@ void Instance::initialize()
     type_size_ = type->size();
 }
 
-int8_t TypeArray::byte_at(uint32_t index) const
+int8_t *TypeArray::byte_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_BYTE) + index * sizeof(int8_t);
-    return runtime::Jvm::read<int8_t>(handle().address() + offset);
+    return (int8_t *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_BYTE));
 }
 
-bool TypeArray::boolean_at(uint32_t index) const
+uint8_t *TypeArray::bool_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_BOOLEAN) + index * sizeof(bool);
-    return runtime::Jvm::read<bool>(handle().address() + offset);
+    return (uint8_t *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_BOOLEAN));
 }
 
-uint16_t TypeArray::char_at(uint32_t index) const
+uint16_t *TypeArray::char_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_CHAR) + index * sizeof(uint16_t);
-    return runtime::Jvm::read<uint16_t>(handle().address() + offset);
+    return (uint16_t *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_CHAR));
 }
 
-int32_t TypeArray::int_at(uint32_t index) const
+int32_t *TypeArray::int_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_INT) + index * sizeof(int32_t);
-    return runtime::Jvm::read<int32_t>(handle().address() + offset);
+    return (int32_t *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_INT));
 }
 
-int16_t TypeArray::short_at(uint32_t index) const
+int16_t *TypeArray::short_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_SHORT) + index * sizeof(int16_t);
-    return runtime::Jvm::read<int16_t>(handle().address() + offset);
+    return (int16_t *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_SHORT));
 }
 
-int64_t TypeArray::long_at(uint32_t index) const
+int64_t *TypeArray::long_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_LONG) + index * sizeof(int64_t);
-    return runtime::Jvm::read<int64_t>(handle().address() + offset);
+    return (int64_t *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_LONG));
 }
 
-float TypeArray::float_at(uint32_t index) const
+float *TypeArray::float_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_FLOAT) + index * sizeof(float);
-    return runtime::Jvm::read<float>(handle().address() + offset);
+    return (float *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_FLOAT));
 }
 
-double TypeArray::double_at(uint32_t index) const
+double *TypeArray::double_base() const noexcept
 {
-    static uint64_t offset = base_offset_in_bytes(runtime::BasicType::T_DOUBLE) + index * sizeof(float);
-    return runtime::Jvm::read<float>(handle().address() + offset);
+    return (double *)(handle().address() + base_offset_in_bytes(runtime::BasicType::T_DOUBLE));
 }
 
 void TypeArray::initialize()

@@ -72,6 +72,7 @@ class InstanceKlass : public Klass
     uint32_t field_offset(uint32_t index) const noexcept;
 
     ConstantPool constants() const noexcept { return read_field<uint64_t>(constants_offset_); }
+    
     uint16_t major_version() const noexcept { return constants().major(); }
     uint16_t minor_version() const noexcept { return constants().minor(); }
     Symbol source_file_name() const noexcept { return constants().source_file_name(); }

@@ -40,7 +40,7 @@ class CodeBlob : public runtime::JvmObject
     bool data_contains(uint64_t addr) const noexcept { return data_begin() <= addr && data_end() > addr; }
     bool is_frame_complete_at(uint64_t addr) const noexcept;
 
-    uint32_t frame_size() const noexcept { return sizeof(void *) * frame_size_word(); }
+    uint32_t frame_size() const noexcept { return frame_size_word() * sizeof(void *); }
 
   private:
     friend std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob);

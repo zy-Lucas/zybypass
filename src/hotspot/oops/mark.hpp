@@ -8,7 +8,7 @@ namespace hotspot::oops
 class Mark : public runtime::JvmObject
 {
   public:
-    Mark(uint64_t addr) : runtime::JvmObject(addr) {}
+    Mark(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
     uint64_t value() const noexcept { return read_field<uint64_t>(mark_offset_); }
 

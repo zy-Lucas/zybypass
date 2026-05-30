@@ -31,6 +31,8 @@ class CollectedHeap : public runtime::JvmObject
 
     virtual void oop_store_at(debugger::OopHandle obj, uint64_t offset, debugger::OopHandle value) const noexcept;
 
+    static uint64_t tlab_alloc_reserve() noexcept;
+
   private:
     DECLARE_STATIC_INIT
 

@@ -136,6 +136,8 @@ class Field
         {                                                                                                              \
         }                                                                                                              \
                                                                                                                        \
+        ClassName(const Field &field) noexcept : Field(field) {}                                                       \
+                                                                                                                       \
         ClassName(InstanceKlass holder, uint32_t field_array_index) noexcept : Field(holder, field_array_index) {}     \
                                                                                                                        \
         Type value(const Oop &obj) const noexcept                                                                      \
@@ -149,14 +151,14 @@ class Field
         }                                                                                                              \
     };
 
-DECLARE_PRIMITIVE_FIELD(CharField, uint16_t)
-DECLARE_PRIMITIVE_FIELD(BooleanField, bool)
 DECLARE_PRIMITIVE_FIELD(ByteField, int8_t)
-DECLARE_PRIMITIVE_FIELD(DoubleField, double)
-DECLARE_PRIMITIVE_FIELD(FloatField, float)
-DECLARE_PRIMITIVE_FIELD(ShortField, int16_t)
+DECLARE_PRIMITIVE_FIELD(BooleanField, uint8_t)
+DECLARE_PRIMITIVE_FIELD(CharField, uint16_t)
 DECLARE_PRIMITIVE_FIELD(IntField, int32_t)
+DECLARE_PRIMITIVE_FIELD(ShortField, int16_t)
 DECLARE_PRIMITIVE_FIELD(LongField, int64_t)
+DECLARE_PRIMITIVE_FIELD(FloatField, float)
+DECLARE_PRIMITIVE_FIELD(DoubleField, double)
 
 #undef DECLARE_PRIMITIVE_FIELD
 
@@ -164,22 +166,11 @@ class OopField : public Field
 {
   public:
     OopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept;
-    OopField(InstanceKlass holder, int field_array_index) noexcept : Field(holder, field_array_index) {}
+    OopField(InstanceKlass holder, uint32_t field_array_index) noexcept : Field(holder, field_array_index) {}
+    OopField(const Field &field) noexcept : Field(field) {}
 
     Oop value(const Oop &obj) const { return ObjHeap::new_oop(value_as_oop_handle(obj)); }
     debugger::OopHandle value_as_oop_handle(const Oop &obj) const;
-
-    void set_value(const Oop &obj, const Oop &value) noexcept;
-};
-
-class NarrowOopField : public OopField
-{
-  public:
-    NarrowOopField(uint64_t offset, FieldIdentifier id, bool is_vm_field) noexcept;
-    NarrowOopField(InstanceKlass holder, int field_array_index) noexcept : OopField(holder, field_array_index) {}
-
-    Oop value(const Oop &obj) const noexcept { return ObjHeap::new_oop(value_as_oop_handle(obj)); }
-    debugger::OopHandle value_as_oop_handle(const Oop &obj) const noexcept;
 
     void set_value(const Oop &obj, const Oop &value) noexcept;
 };
@@ -199,14 +190,14 @@ template <typename Visitor> void TypeArray::iterate_fields(Visitor &&visitor)
     case TypeArrayKlass::Tag:                                                                                          \
         visitor(FieldClass{base + index * ElemSize, index, false});                                                    \
         break
-            CASE(T_BOOLEAN, BooleanField, sizeof(bool));
+            CASE(T_BYTE, ByteField, sizeof(int8_t));
+            CASE(T_BOOLEAN, BooleanField, sizeof(uint8_t));
             CASE(T_CHAR, CharField, sizeof(uint16_t));
+            CASE(T_INT, IntField, sizeof(int32_t));
+            CASE(T_SHORT, ShortField, sizeof(int16_t));
+            CASE(T_LONG, LongField, sizeof(int64_t));
             CASE(T_FLOAT, FloatField, sizeof(float));
             CASE(T_DOUBLE, DoubleField, sizeof(double));
-            CASE(T_BYTE, ByteField, sizeof(int8_t));
-            CASE(T_SHORT, ShortField, sizeof(int16_t));
-            CASE(T_INT, IntField, sizeof(int32_t));
-            CASE(T_LONG, LongField, sizeof(int64_t));
 #undef CASE
         }
     }
@@ -221,10 +212,7 @@ template <typename Visitor> void ObjArray::iterate_fields(Visitor &&visitor)
     {
         uint64_t offset = base + (index * element_size);
         IndexableFieldIdentifier id(index);
-        if (runtime::Jvm::is_compressed_oops_enabled())
-            visitor(NarrowOopField(offset, id, false));
-        else
-            visitor(OopField(offset, id, false));
+        visitor(OopField(offset, id, false));
     }
 }
 
@@ -232,20 +220,20 @@ template <typename Visitor> void InstanceKlass::visit_field(Visitor &&visitor, F
 {
     switch (FieldType{field_signature(index)}.tag())
     {
-    case 'Z':
-        visitor(BooleanField{*this, index});
-        break;
     case 'B':
         visitor(ByteField{*this, index});
+        break;
+    case 'Z':
+        visitor(BooleanField{*this, index});
         break;
     case 'C':
         visitor(CharField{*this, index});
         break;
-    case 'S':
-        visitor(ShortField{*this, index});
-        break;
     case 'I':
         visitor(IntField{*this, index});
+        break;
+    case 'S':
+        visitor(ShortField{*this, index});
         break;
     case 'J':
         visitor(LongField{*this, index});
@@ -258,10 +246,7 @@ template <typename Visitor> void InstanceKlass::visit_field(Visitor &&visitor, F
         break;
     case 'L':
     case '[':
-        if (runtime::Jvm::is_compressed_oops_enabled())
-            return visitor(NarrowOopField(*this, index));
-        else
-            return visitor(OopField(*this, index));
+        visitor(OopField(*this, index));
         break;
     }
 }

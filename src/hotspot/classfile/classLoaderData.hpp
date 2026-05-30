@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../oops/klass.hpp"
-#include "../runtime/jvmObject.hpp"
 
 namespace hotspot::classfile
 {

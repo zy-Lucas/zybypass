@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../runtime/jvmObject.hpp"
 #include "classLoaderData.hpp"
 
 namespace hotspot::classfile

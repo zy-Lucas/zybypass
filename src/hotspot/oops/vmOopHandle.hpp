@@ -8,7 +8,7 @@ namespace hotspot::oops
 class VMOopHandle : runtime::JvmObject
 {
   public:
-    VMOopHandle(uint64_t addr) : runtime::JvmObject(addr) {}
+    VMOopHandle(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
     uint64_t obj() const noexcept { return read_field<uint64_t>(obj_offset); }
 

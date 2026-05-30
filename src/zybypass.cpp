@@ -2,7 +2,10 @@
 #include "hotspot/code/codeBlob.hpp"
 #include "hotspot/code/codeCache.hpp"
 #include "hotspot/code/nmethod.hpp"
+#include "hotspot/code/stubQueue.hpp"
 #include "hotspot/gc/shared/collectedHeapName.hpp"
+#include "hotspot/interpreter/interpreter.hpp"
+#include "hotspot/interpreter/interpreterCodelet.hpp"
 #include "hotspot/memory/universe.hpp"
 #include "hotspot/oops/constMethod.hpp"
 #include "hotspot/oops/constantPool.hpp"
@@ -14,8 +17,11 @@
 #include "hotspot/oops/symbol.hpp"
 #include "hotspot/runtime/basicType.hpp"
 #include "hotspot/runtime/jvm.hpp"
+#include "hotspot/runtime/thread.hpp"
+#include "hotspot/runtime/threads.hpp"
 #include "jni_md.h"
 #include "render/overlay.h"
+#include "tools/javaTools.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -24,6 +30,8 @@
 #include <jni.h>
 #include <pthread.h>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <unistd.h>
 #include <utility>
 
@@ -138,142 +146,49 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 
 JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) { g_javaVM = nullptr; }
 
-jint ex() { return 0; }
+jint ex() { return 12345678; }
 
 extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass, jstring klass_name,
                                                                        jlong method_addr)
 {
-    const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
+    hotspot::runtime::Thread thread{hotspot::runtime::Threads::current()};
+    hotspot::oops::InstanceKlass ik{
+        hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name)).address()};
+    hotspot::oops::OopField field = ik.find_field("instance", "Lnet/endofcosmos/sword/Test;");
+    hotspot::oops::InstanceKlass k{
+        hotspot::classfile::ClassLoaderDataGraph::find("net/endofcosmos/sword/Test").address()};
+    uint64_t addr = thread.tlab().allocate(k.layout_helper());
+    memcpy((void *)addr, (const void *)ik.java_mirror().handle().address(), hotspot::oops::Instance::header_size());
+    hotspot::oops::Instance ins{addr};
+    field.set_value(ik.java_mirror(), ins);
+    //
+    // const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
 
-    hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()};
-    hotspot::oops::Method method{uint64_t(method_addr)};
-    uint8_t *new_method = (uint8_t *)malloc(method.size() + 16);
-    void *a = (void *)ex;
-    memcpy(new_method, (void *)method_addr, method.size());
-    memcpy(new_method + method.size(), &a, 8);
-    ik.methods().set_at(1, (uint64_t)new_method);
+    // hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()};
+    // hotspot::oops::Method method{uint64_t(method_addr)};
+    // uint8_t *new_method = (uint8_t *)malloc(method.size() + 16);
+    // void *a = (void *)ex;
+    // memcpy(new_method, (void *)method_addr, method.size());
+    // memcpy(new_method + method.size(), &a, 8);
+    // hotspot::oops::Method{(uint64_t)new_method}.set_is_native(true);
+    // hotspot::oops::Method{(uint64_t)new_method}.set_from_interpreter_entry(
+    //     hotspot::interpreter::Interpreter::code()
+    //         .find_method_entry_point(hotspot::code::EntryPointKind::native)
+    //         .code_begin());
+    // ik.methods().set_at(1, (uint64_t)new_method);
 
-    jbyte d;
-
-    env->ReleaseStringUTFChars(klass_name, kl_name);
+    // env->ReleaseStringUTFChars(klass_name, kl_name);
     return 0;
 }
-
-struct OopPrinter
-{
-    hotspot::oops::Oop obj_{hotspot::oops::Oop::Kind::non_type, 0};
-
-    OopPrinter() {}
-
-    void set_oop(hotspot::oops::Oop obj) { obj_ = obj; }
-
-    void operator()(hotspot::oops::BooleanField f)
-    {
-        std::cout << "bool    " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
-                  << "\n";
-    }
-
-    void operator()(hotspot::oops::CharField f)
-    {
-        std::cout << "char    " << hotspot::oops::name(f.id()) << " value: " << (char)f.value(obj_) << " @ "
-                  << f.offset() << "\n";
-    }
-
-    void operator()(hotspot::oops::ByteField f)
-    {
-        std::cout << "byte    " << hotspot::oops::name(f.id()) << " value: " << (char)f.value(obj_) << " @ "
-                  << f.offset() << "\n";
-        f.set_value(obj_, 'a');
-    }
-
-    void operator()(hotspot::oops::ShortField f)
-    {
-        std::cout << "short   " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
-                  << "\n";
-    }
-
-    void operator()(hotspot::oops::IntField f)
-    {
-        std::cout << "int     " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
-                  << "\n";
-    }
-
-    void operator()(hotspot::oops::LongField f)
-    {
-        std::cout << "long    " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
-                  << "\n";
-    }
-
-    void operator()(hotspot::oops::FloatField f)
-    {
-        std::cout << "float   " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
-                  << "\n";
-    }
-
-    void operator()(hotspot::oops::DoubleField f)
-    {
-        std::cout << "double  " << hotspot::oops::name(f.id()) << " value: " << f.value(obj_) << " @ " << f.offset()
-                  << "\n";
-    }
-
-    void operator()(hotspot::oops::OopField f)
-    {
-        auto ref = f.value(obj_);
-        std::cout << "oop     " << hotspot::oops::name(f.id()) << " klass: ";
-        if (ref.handle())
-            std::cout << ref.klass().name().as_view();
-        else
-            std::cout << "<null>";
-        std::cout << " @ " << f.offset() << "\n";
-    }
-
-    void operator()(hotspot::oops::NarrowOopField f)
-    {
-        auto ref = f.value(obj_);
-        std::cout << "narrow  " << hotspot::oops::name(f.id()) << " klass: ";
-        if (ref.handle())
-            std::cout << ref.klass().name().as_view();
-        else
-            std::cout << "<null>";
-        std::cout << " @ " << f.offset() << "\n";
-    }
-};
-
-// const char *GetStringUTFChars(jstring string, bool *isCopy) {
-//     hotspot::oops::Instance java_string{*(uint64_t *)string};
-// }
 
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
-    hotspot::oops::Instance oop{*(uint64_t *)klass_name};
-
-    std::cout << "size: " << oop.klass().java_mirror().klass().name().length()
-              << " klass: " << oop.klass().java_mirror().klass().name().as_view() << std::endl;
-    // hotspot::oops::InstanceKlass{oop.klass().address()}.iterate_static_fields(OopPrinter{});
-
-    // oop.iterate_fields(OopPrinter{oop});
-
-    hotspot::oops::NarrowOopField field{oop.klass().address(), 0};
-
-    hotspot::oops::TypeArray array = field.value(oop);
-    uint16_t *cha =
-        (uint16_t *)(array.handle().address() + array.base_offset_in_bytes(hotspot::runtime::BasicType::T_CHAR));
-    for (int i = 0; i < (array.length() / 2); ++i)
-        std::cout << cha[i] << std::endl;
-
-    // std::cout << "is name field: " << field.is_named_field() << " name: " << field.name().as_view()
-    //           << " klass: " << field.value(oop).klass().name().as_view() << std::endl;
-    const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
-    const char *name = env->GetStringUTFChars(method_name, nullptr);
-    const char *sig = env->GetStringUTFChars(method_sign, nullptr);
-
+    std::cout << JavaTools::to_std_string(klass_name) << std::endl;
     hotspot::oops::Method method =
-        hotspot::oops::InstanceKlass(hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address())
-            .find_method(name, sig);
-    env->ReleaseStringUTFChars(klass_name, kl_name);
-    env->ReleaseStringUTFChars(method_name, name);
-    env->ReleaseStringUTFChars(method_sign, sig);
+        hotspot::oops::InstanceKlass(
+            hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name)).address())
+            .find_method(JavaTools::to_std_string(method_name), JavaTools::to_std_string(method_sign));
     pthread_jit_write_protect_np(0);
     if (hotspot::code::nmethod nm(method.native_method()); nm)
         nm.make_not_entrant();
