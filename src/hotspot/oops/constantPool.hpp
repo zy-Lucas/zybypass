@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../utilities/array.hpp"
+#include "utilities/array.hpp"
 #include "constantPoolCache.hpp"
-#include "metaData.hpp"
 #include "symbol.hpp"
 
 namespace hotspot::oops

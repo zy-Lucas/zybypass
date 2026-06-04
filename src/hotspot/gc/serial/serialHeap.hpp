@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../shared/genCollectedHeap.hpp"
+#include "shared/genCollectedHeap.hpp"
 
 namespace hotspot::gc::serial
 {

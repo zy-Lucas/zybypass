@@ -1,6 +1,6 @@
 #include "array.hpp"
-#include "../oops/klass.hpp"
-#include "../oops/method.hpp"
+#include "oops/klass.hpp"
+#include "oops/method.hpp"
 
 namespace hotspot::utilities
 {

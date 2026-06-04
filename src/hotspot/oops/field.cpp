@@ -1,5 +1,5 @@
 #include "field.hpp"
-#include "../memory/universe.hpp"
+#include "memory/universe.hpp"
 #include "symbol.hpp"
 
 namespace hotspot::oops

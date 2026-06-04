@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../runtime/jvmObject.hpp"
+#include "runtime/jvmObject.hpp"
 #include "zAddress.hpp"
 #include "zForwarding.hpp"
 #include "zGranuleMapForForwarding.hpp"

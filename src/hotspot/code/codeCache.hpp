@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../memory/codeHeap.hpp"
-#include "../runtime/jvmObject.hpp"
-#include "../utilities/growableArray.hpp"
+#include "memory/codeHeap.hpp"
+#include "runtime/jvmObject.hpp"
+#include "utilities/growableArray.hpp"
 #include <thread>
 
 namespace hotspot::code

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../shared/collectedHeap.hpp"
+#include "shared/collectedHeap.hpp"
 
 namespace hotspot::gc::parallel
 {

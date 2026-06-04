@@ -3,12 +3,13 @@
 #include "method.hpp"
 #include "symbol.hpp"
 #include "vmSymbols.hpp"
+#include <cstdint>
 
 namespace hotspot::oops
 {
 constexpr std::string_view ClassState::to_string() const noexcept
 {
-    switch (value)
+    switch (value_)
     {
     case Value::allocated:
         return "allocated";
@@ -95,6 +96,25 @@ uint16_t InstanceKlass::all_fields_count() const noexcept
     return all_fields_cunt;
 }
 
+uint16_t InstanceKlass::next_method_idnum() noexcept
+{
+    if (method_idnum() == 0xFFFE)
+        return 0xFFFF;
+    write_field<uint16_t>(idnum_allocated_count_offset_, method_idnum() + 1);
+    return method_idnum();
+}
+
+uint64_t InstanceKlass::jmethod_id_or_null(Method method) const noexcept
+{
+    uint16_t idnum = method.method_idnum();
+    uint64_t *jmeths = methods_jmethod_ids();
+    uint64_t length;
+    uint64_t id = 0;
+    if (jmeths && (length = jmeths[0]) > idnum)
+        id = jmeths[idnum + 1];
+    return id;
+}
+
 utilities::KlassArray InstanceKlass::local_interfaces() const noexcept
 {
     return read_field<uint64_t>(local_interfaces_offset_);
@@ -112,7 +132,14 @@ std::string_view InstanceKlass::source_debug_extension_view() const noexcept
 
 Method InstanceKlass::find_method(std::string_view name, std::string_view sig) const noexcept
 {
-    return find_method(methods(), name, sig);
+    if (int32_t index = linear_search(methods(), name, sig); index != -1)
+        return methods().at(index);
+    return 0;
+}
+
+int32_t InstanceKlass::find_method_index(std::string_view name, std::string_view sig) const noexcept
+{
+    return linear_search(methods(), name, sig);
 }
 
 Field InstanceKlass::find_field(std::string_view name, std::string_view sig) const noexcept
@@ -150,13 +177,13 @@ Field InstanceKlass::find_interface_field(std::string_view name, std::string_vie
     return {0, 0};
 }
 
-Method InstanceKlass::find_method(utilities::MethodArray methods, std::string_view name,
-                                  std::string_view signature) noexcept
+int32_t InstanceKlass::linear_search(utilities::MethodArray methods, std::string_view name,
+                                     std::string_view signature) noexcept
 {
     const int32_t len = methods.length();
     for (uint32_t i = 0; i < len; ++i)
         if (Method m{methods.at(i)}; m.name().equals(name) && m.signature().equals(signature))
-            return m;
+            return i;
     return 0;
 }
 
@@ -175,8 +202,10 @@ void InstanceKlass::initialize()
     static_oop_field_count_offset_ = *type->field_offset("_static_oop_field_count");
     java_fields_count_offset_ = *type->field_offset("_java_fields_count");
     is_marked_dependent_offset_ = *type->field_offset("_is_marked_dependent");
+    idnum_allocated_count_offset_ = *type->field_offset("_idnum_allocated_count");
     init_state_offset_ = *type->field_offset("_init_state");
     misc_flags_offset_ = *type->field_offset("_misc_flags");
+    methods_jmethod_ids_offset_ = *type->field_offset("_methods_jmethod_ids");
     methods_offset_ = *type->field_offset("_methods");
     default_methods_offset_ = *type->field_offset("_default_methods");
     local_interfaces_offset_ = *type->field_offset("_local_interfaces");

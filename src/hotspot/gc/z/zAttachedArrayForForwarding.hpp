@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../runtime/jvmObject.hpp"
+#include "runtime/jvmObject.hpp"
 #include "zForwardingEntry.hpp"
 
 namespace hotspot::gc::z

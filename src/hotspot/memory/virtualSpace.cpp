@@ -4,11 +4,11 @@ namespace hotspot::memory
 {
 void VirtualSpace::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("VirtualSpace");
+    utils::FieldResolver r{"VirtualSpace"};
 
-    low_offset_ = *type->field_offset("_low");
-    high_offset_ = *type->field_offset("_high");
-    low_boundary_offset_ = *type->field_offset("_low_boundary");
-    high_boundary_offset_ = *type->field_offset("_high_boundary");
+    r.field_offset("_low", low_offset_);
+    r.field_offset("_high", high_offset_);
+    r.field_offset("_low_boundary", low_boundary_offset_);
+    r.field_offset("_high_boundary", high_boundary_offset_);
 }
 } // namespace hotspot::memory

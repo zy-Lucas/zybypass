@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../debugger/oopHandle.hpp"
+#include "debugger/oopHandle.hpp"
 #include "oop.hpp"
 
 namespace hotspot::oops

@@ -1,5 +1,5 @@
 #include "vmOopHandle.hpp"
-#include "../memory/universe.hpp"
+#include "memory/universe.hpp"
 #include "objHeap.hpp"
 #include "oop.hpp"
 

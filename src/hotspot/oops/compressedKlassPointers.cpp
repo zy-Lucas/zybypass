@@ -4,9 +4,9 @@ namespace hotspot::oops
 {
 void CompressedKlassPointers::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("CompressedKlassPointers");
+    utils::FieldResolver r{"CompressedKlassPointers"};
 
-    base_offset_ = *type->field_offset("_narrow_klass._base");
-    shift_offset_ = *type->field_offset("_narrow_klass._shift");
+    r.field_offset("_narrow_klass._base", base_offset_);
+    r.field_offset("_narrow_klass._shift", shift_offset_);
 }
 } // namespace hotspot::oops

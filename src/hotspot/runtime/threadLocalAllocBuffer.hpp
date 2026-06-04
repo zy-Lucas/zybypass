@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../oops/oop.hpp"
+#include "oops/oop.hpp"
 
 namespace hotspot::runtime
 {

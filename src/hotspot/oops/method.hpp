@@ -1,9 +1,8 @@
 #pragma once
 
-#include "../runtime/accessFlag.hpp"
 #include "constMethod.hpp"
-#include "metaData.hpp"
 #include "methodCounters.hpp"
+#include "runtime/accessFlag.hpp"
 
 namespace hotspot::code
 {
@@ -24,6 +23,9 @@ class Method : public MetaData
     uint64_t method_data() const noexcept { return read_field<uint64_t>(method_data_offset_); }
     MethodCounter method_counters() const noexcept { return read_field<uint64_t>(method_counters_offset_); }
 
+    uint16_t method_idnum() const noexcept { return constMethod().method_idnum(); }
+    void set_method_idnum(uint16_t idnum) noexcept { constMethod().set_method_idnum(idnum); }
+
     uint16_t max_stack() const noexcept { return constMethod().max_stack(); }
     uint16_t max_locals() const noexcept { return constMethod().max_locals(); }
     uint16_t size_of_parameters() const noexcept { return constMethod().size_of_parameters(); }
@@ -36,8 +38,11 @@ class Method : public MetaData
 
     code::nmethod native_method() const noexcept;
 
+    uint64_t from_compiled_entry() const noexcept { return read_field<uint64_t>(from_compiled_entry_offset_); }
+    void set_from_compiled_entry(uint64_t addr) noexcept { write_field(from_compiled_entry_offset_, addr); }
+
     uint64_t from_interpreter_entry() const noexcept { return read_field<uint64_t>(from_interpreter_entry_offset_); }
-    void set_from_interpreter_entry(uint64_t addr) noexcept;
+    void set_from_interpreter_entry(uint64_t addr) noexcept { write_field(from_interpreter_entry_offset_, addr); }
 
     int32_t access_flags() const noexcept { return read_field<int32_t>(access_flags_offset_); }
     void set_access_flags(int32_t access_flags) noexcept { write_field(access_flags_offset_, access_flags); }
@@ -98,13 +103,23 @@ class Method : public MetaData
     bool is_synthetic() const noexcept { return access_flags_obj().is_synthetic(); }
     void set_is_synthetic(bool value) noexcept { set_flag(runtime::JVM_ACC_SYNTHETIC, value); }
 
+    bool is_old() const noexcept { return access_flags_obj().is_old(); }
+    void set_is_old(bool value) noexcept { set_flag(runtime::JVM_ACC_IS_OLD, value); }
+
     bool is_obsolete() const noexcept { return access_flags_obj().is_obsolete(); }
     void set_is_obsolete(bool value) noexcept { set_flag(runtime::JVM_ACC_IS_OBSOLETE, value); }
+
+    bool is_deleted() const noexcept { return access_flags_obj().is_deleted(); }
+    void set_is_deleted(bool value) noexcept { set_flag(runtime::JVM_ACC_IS_DELETED, value); }
 
     bool is_constructor() const noexcept { return !is_static() && name().equals("<init>"); }
     bool is_static_initializer() const noexcept { return is_static() && name().equals("<clinit>"); }
 
+    uint64_t find_jmethod_id_or_null() const noexcept;
+
     uint64_t size() const noexcept { return type_->size() + (is_native() ? 2 * sizeof(void *) : 0); }
+
+    static void change_method_associated_with_jmethod_id(uint64_t old_jmid_ptr, Method new_method) noexcept;
 
   private:
     DECLARE_STATIC_INIT
@@ -117,6 +132,7 @@ class Method : public MetaData
     static inline uint64_t method_counters_offset_;
     static inline uint64_t access_flags_offset_;
     static inline uint64_t vtable_index_offset_;
+    static inline uint64_t from_compiled_entry_offset_;
     static inline uint64_t code_offset_;
     static inline uint64_t from_interpreter_entry_offset_;
 };

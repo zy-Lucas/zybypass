@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../types/field.hpp"
-#include "../types/type.hpp"
+#include "types/field.hpp"
+#include "types/type.hpp"
 #include <bit>
 #include <vector>
 
@@ -17,64 +17,6 @@ class Jvm
 
     Jvm(Jvm &&) = delete;
     Jvm &operator=(Jvm &&) = delete;
-
-    static void init();
-    static void register_post_init(void (*func)()) { post_init_callbacks().emplace_back(func); }
-
-    static types::Type *lookup_type(std::string_view type_name, bool throw_if_not_found = false);
-    static types::Type *lookup_type_or_null(std::string_view type_name) noexcept;
-
-    static std::optional<int32_t> lookup_int_constant(std::string_view constant_name) noexcept;
-    static std::optional<int64_t> lookup_long_constant(std::string_view constant_name) noexcept;
-
-    static std::optional<uint64_t> vtbl_for_type(types::Type *type);
-
-    static bool address_matches_type(uint64_t addr, types::Type *type);
-    static types::Type *find_dynamic_type_for_address(uint64_t addr, types::Type *base_type);
-
-    static uint64_t deref_symbol(const char *symbol_name);
-
-    static std::string_view read_string_view_indirect_at(uint64_t addr) noexcept;
-    static std::string_view read_string_view_at(uint64_t addr) noexcept;
-
-    template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept;
-    template <typename T> static void write(uint64_t addr, const T &value) noexcept;
-
-    static uint64_t read_compressed_oop_address_value(uint64_t addr) noexcept;
-    static void write_compressed_oop_address_value(uint64_t addr, uint64_t value) noexcept;
-
-    static uint64_t read_compressed_klass_address_value(uint64_t addr) noexcept;
-    static void write_compressed_klass_address_value(uint64_t addr, uint64_t value) noexcept;
-
-    static bool is_client_compiler() noexcept { return using_client_compiler_; }
-    static bool is_server_compiler() noexcept { return using_server_compiler_; }
-
-    static bool is_core() noexcept { return !(using_client_compiler_ || using_server_compiler_); }
-
-    static int32_t bytes_per_word() noexcept { return bytes_per_word_; }
-    static int32_t heap_word_size() noexcept { return heap_word_size_; }
-    static int32_t heap_oop_size() noexcept { return heap_oop_size_; }
-    static int32_t oop_size() noexcept { return oop_size_; }
-
-    static int32_t invocation_entry_bci() noexcept { return invocation_entry_bic_; }
-
-    static int32_t reserve_for_allocation_prefetch() noexcept { return reserve_for_allocation_prefetch_; }
-
-    static bool is_compressed_oops_enabled() noexcept;
-    static bool is_compressed_klass_pointers_enabled() noexcept;
-
-    static int32_t min_obj_alignment_in_bytes() noexcept;
-    static int32_t min_obj_alignment() noexcept { return min_obj_alignment_in_bytes() / heap_word_size(); }
-
-    static int32_t code_entry_alignment() noexcept;
-
-    static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
-    static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
-
-    static constexpr uint32_t build_int_from_shorts(uint16_t low, uint16_t high) noexcept { return (high << 16) | low; }
-    static constexpr uint64_t build_long_from_intsPD(uint32_t one_half, uint32_t other_half) noexcept;
-
-    static constexpr bool is_big_endian() noexcept { return std::endian::native == std::endian::big; }
 
     enum CmdFlagTypes : uint32_t
     {
@@ -131,6 +73,68 @@ class Jvm
         std::string_view as_ccstrlist_view() const noexcept { return read_string_view_indirect_at(addr_); }
         std::string as_ccstrlist() const { return std::string{read_string_view_at(addr_)}; }
     };
+
+    static void init();
+    static void register_post_init(void (*func)()) { post_init_callbacks().emplace_back(func); }
+
+    static types::Type *lookup_type(std::string_view type_name, bool throw_if_not_found = false);
+    static types::Type *lookup_type_or_null(std::string_view type_name) noexcept;
+
+    static std::optional<int32_t> lookup_int_constant(std::string_view constant_name) noexcept;
+    static std::optional<int64_t> lookup_long_constant(std::string_view constant_name) noexcept;
+
+    static std::optional<uint64_t> vtbl_for_type(types::Type *type);
+
+    static bool address_matches_type(uint64_t addr, types::Type *type);
+    static types::Type *find_dynamic_type_for_address(uint64_t addr, types::Type *base_type);
+
+    static uint64_t deref_symbol(const char *symbol_name);
+
+    static std::string_view read_string_view_indirect_at(uint64_t addr) noexcept;
+    static std::string_view read_string_view_at(uint64_t addr) noexcept;
+
+    template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept;
+    template <typename T> static void write(uint64_t addr, const T &value) noexcept;
+
+    static uint64_t read_compressed_oop_address_value(uint64_t addr) noexcept;
+    static void write_compressed_oop_address_value(uint64_t addr, uint64_t value) noexcept;
+
+    static uint64_t read_compressed_klass_address_value(uint64_t addr) noexcept;
+    static void write_compressed_klass_address_value(uint64_t addr, uint64_t value) noexcept;
+
+    static bool is_client_compiler() noexcept { return using_client_compiler_; }
+    static bool is_server_compiler() noexcept { return using_server_compiler_; }
+
+    static bool is_core() noexcept { return !(using_client_compiler_ || using_server_compiler_); }
+
+    static int32_t bytes_per_word() noexcept { return bytes_per_word_; }
+    static int32_t heap_word_size() noexcept { return heap_word_size_; }
+    static int32_t heap_oop_size() noexcept { return heap_oop_size_; }
+    static int32_t oop_size() noexcept { return oop_size_; }
+
+    static int32_t invocation_entry_bci() noexcept { return invocation_entry_bic_; }
+
+    static int32_t reserve_for_allocation_prefetch() noexcept { return reserve_for_allocation_prefetch_; }
+
+    static bool is_compressed_oops_enabled() noexcept;
+    static bool is_compressed_klass_pointers_enabled() noexcept;
+
+    static int32_t min_obj_alignment_in_bytes() noexcept;
+    static int32_t min_obj_alignment() noexcept { return min_obj_alignment_in_bytes() / heap_word_size(); }
+
+    static int32_t use_tlab() noexcept;
+
+    static int32_t use_biased_locking() noexcept;
+
+    static int32_t code_entry_alignment() noexcept;
+
+    static constexpr uint64_t align_up(uint64_t size, uint64_t align) noexcept { return (size + align - 1) & -align; }
+    static constexpr uint64_t align_down(uint64_t size, uint64_t align) noexcept { return size & ~(align - 1); }
+
+    static constexpr uint32_t build_int_from_shorts(uint16_t low, uint16_t high) noexcept { return (high << 16) | low; }
+    static constexpr uint64_t build_long_from_intsPD(uint32_t one_half, uint32_t other_half) noexcept;
+
+    static constexpr bool is_big_endian() noexcept { return std::endian::native == std::endian::big; }
 
     static std::optional<Jvm::Flag> lookup_command_line_flag(std::string_view name) noexcept;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../runtime/jvmObject.hpp"
+#include "runtime/jvmObject.hpp"
 #include "zForwardingTable.hpp"
 #include "zRelocate.hpp"
 
@@ -11,7 +11,7 @@ class ZHeap : public runtime::JvmObject
   public:
     ZHeap(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
-    ZForwardingTable forwardingTable() const noexcept { return address() + forwarding_table_offset_; }
+    ZForwardingTable forwarding_table() const noexcept { return address() + forwarding_table_offset_; }
 
     ZRelocate relocate() const noexcept { return address() + relocate_offset_; }
 

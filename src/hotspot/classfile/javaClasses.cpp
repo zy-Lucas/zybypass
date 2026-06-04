@@ -1,14 +1,13 @@
 #include "javaClasses.hpp"
-#include "../oops/field.hpp"
-#include "../utilities/utf8.hpp"
+#include "oops/field.hpp"
+#include "utilities/utf8.hpp"
 
 namespace hotspot::classfile
 {
 bool java_lang_String::is_latin1(const oops::Instance &java_string) noexcept
 {
-    static uint32_t coder_index{
-        oops::InstanceKlass{java_string.klass().address()}.find_field("coder", "B").field_index()};
-    oops::ByteField field{oops::InstanceKlass{java_string.klass().address()}, coder_index};
+    static uint32_t coder_index{oops::InstanceKlass{java_string.klass()}.find_field("coder", "B").field_index()};
+    oops::ByteField field{java_string.klass(), coder_index};
     return field.value(java_string) == CODER_LATIN1;
 }
 
@@ -46,9 +45,8 @@ int8_t *java_lang_String::as_utf8_string(const oops::Instance &java_string, cons
 
 std::string java_lang_String::to_std_string(const oops::Instance &java_string) noexcept
 {
-    static uint32_t value_index{
-        oops::InstanceKlass{java_string.klass().address()}.find_field("value", "[B").field_index()};
-    oops::OopField field{oops::InstanceKlass{java_string.klass().address()}, value_index};
+    static uint32_t value_index{oops::InstanceKlass{java_string.klass()}.find_field("value", "[B").field_index()};
+    oops::OopField field{java_string.klass(), value_index};
     if (oops::TypeArray value{field.value(java_string)}; value)
     {
         uint32_t len = utf8_length(java_string, value) + 1;

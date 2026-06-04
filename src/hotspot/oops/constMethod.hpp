@@ -16,7 +16,10 @@ class ConstMethod : public MetaData
     uint16_t code_size() const noexcept { return read_field<uint16_t>(code_size_offset_); }
     uint16_t name_index() const noexcept { return read_field<uint16_t>(name_index_offset_); }
     uint16_t signature_index() const noexcept { return read_field<uint16_t>(signature_index_offset_); }
-    uint16_t idnum() const noexcept { return read_field<uint16_t>(idnum_offset_); }
+
+    uint16_t method_idnum() const noexcept { return read_field<uint16_t>(method_idnum_offset_); }
+    void set_method_idnum(uint16_t idnum) noexcept { write_field(method_idnum_offset_, idnum); }
+
     uint16_t max_stack() const noexcept { return read_field<uint16_t>(max_stack_offset_); }
     uint16_t max_locals() const noexcept { return read_field<uint16_t>(max_locals_offset_); }
     uint16_t size_of_parameters() const noexcept { return read_field<uint16_t>(size_of_parameters_offset_); }
@@ -59,7 +62,7 @@ class ConstMethod : public MetaData
     static inline uint64_t code_size_offset_;
     static inline uint64_t name_index_offset_;
     static inline uint64_t signature_index_offset_;
-    static inline uint64_t idnum_offset_;
+    static inline uint64_t method_idnum_offset_;
     static inline uint64_t max_stack_offset_;
     static inline uint64_t max_locals_offset_;
     static inline uint64_t size_of_parameters_offset_;

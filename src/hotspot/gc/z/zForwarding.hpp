@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../runtime/jvmObject.hpp"
+#include "runtime/jvmObject.hpp"
 #include "zAttachedArrayForForwarding.hpp"
 #include "zVirtualMemory.hpp"
 

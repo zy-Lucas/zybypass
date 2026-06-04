@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../runtime/basicType.hpp"
+#include "runtime/basicType.hpp"
 #include "fieldType.hpp"
 #include "instanceKlass.hpp"
 #include "objHeap.hpp"

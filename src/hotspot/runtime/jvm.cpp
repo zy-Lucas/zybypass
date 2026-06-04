@@ -1,9 +1,9 @@
 #include "jvm.hpp"
-#include "../oops/compressedKlassPointers.hpp"
-#include "../oops/compressedOops.hpp"
+#include "oops/compressedKlassPointers.hpp"
+#include "oops/compressedOops.hpp"
 
 #ifndef _WIN32
-#include "../debugger/aarch64/symbol_lookup.h"
+#include "debugger/aarch64/symbol_lookup.h"
 #else
 #include <windows.h>
 #endif
@@ -277,6 +277,21 @@ int32_t Jvm::min_obj_alignment_in_bytes() noexcept
                                                    .transform([](const Flag &f) { return f.as_intx(); })
                                                    .value_or(8);
     return object_alignment_in_bytes;
+}
+
+int32_t Jvm::use_tlab() noexcept
+{
+    static int32_t use_tlab =
+        lookup_command_line_flag("UseTLAB").transform([](const Flag &f) { return f.as_bool(); }).value_or(false);
+    return use_tlab;
+}
+
+int32_t Jvm::use_biased_locking() noexcept
+{
+    static int32_t use_biased_locking = lookup_command_line_flag("UseBiasedLocking")
+                                            .transform([](const Flag &f) { return f.as_bool(); })
+                                            .value_or(false);
+    return use_biased_locking;
 }
 
 int32_t Jvm::code_entry_alignment() noexcept

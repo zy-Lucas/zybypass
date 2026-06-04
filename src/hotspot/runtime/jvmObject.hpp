@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jvm.hpp"
+#include "utilities/fieldResolver.hpp"
 
 #define DECLARE_STATIC_INIT                                                                                            \
     static void initialize();                                                                                          \

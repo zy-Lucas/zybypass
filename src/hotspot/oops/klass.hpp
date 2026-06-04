@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../runtime/accessFlag.hpp"
+#include "oops/mark.hpp"
+#include "runtime/accessFlag.hpp"
 #include "metaData.hpp"
 #include "symbol.hpp"
 
@@ -23,6 +24,7 @@ class Klass : public MetaData
     Klass next_sibling() const noexcept { return read_field<uint64_t>(next_sibling_offset_); }
     Klass next_link() const noexcept { return read_field<uint64_t>(next_link_offset_); }
     uint64_t vtable_len() const noexcept { return read_field<uint64_t>(vtable_len_offset_); }
+    Mark prototype_header() const noexcept { return address() + prototype_header_offset_; }
 
     uint64_t trace_id() const noexcept { return trace_id_offset_ ? read_field<uint64_t>(*trace_id_offset_) : 0; }
 
@@ -60,8 +62,9 @@ class Klass : public MetaData
     static inline uint64_t subklass_offset_;
     static inline uint64_t next_sibling_offset_;
     static inline uint64_t next_link_offset_;
-    static inline uint64_t vtable_len_offset_;
     static inline uint64_t class_loader_data_offset_;
+    static inline uint64_t vtable_len_offset_;
+    static inline uint64_t prototype_header_offset_;
 
     static inline std::optional<uint64_t> trace_id_offset_;
 

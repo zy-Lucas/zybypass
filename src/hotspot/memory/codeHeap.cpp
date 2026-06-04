@@ -37,10 +37,10 @@ uint64_t CodeHeap::next_block(uint64_t p) const noexcept
 
 void CodeHeap::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("CodeHeap");
+    utils::FieldResolver r{"CodeHeap"};
 
-    memory_offset_ = *type->field_offset("_memory");
-    segmap_offset_ = *type->field_offset("_segmap");
-    log2_segment_size_offset_ = *type->field_offset("_log2_segment_size");
+    r.field_offset("_memory", memory_offset_);
+    r.field_offset("_segmap", segmap_offset_);
+    r.field_offset("_log2_segment_size", log2_segment_size_offset_);
 }
 } // namespace hotspot::memory

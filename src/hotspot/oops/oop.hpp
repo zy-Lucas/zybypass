@@ -1,8 +1,10 @@
 #pragma once
 
-#include "../debugger/oopHandle.hpp"
+#include "debugger/oopHandle.hpp"
 #include "instanceKlass.hpp"
 #include "mark.hpp"
+#include "oops/klass.hpp"
+#include "runtime/jvm.hpp"
 
 namespace hotspot::oops
 {
@@ -28,7 +30,10 @@ class Oop
     bool is_obj_array() const noexcept { return kind_ == Kind::obj_array; }
 
     Mark mark() const noexcept { return handle().address(); }
+    void set_mark(uint64_t mark) noexcept { runtime::Jvm::write(handle().address() + mark_offset_, mark); };
+
     Klass klass() const noexcept;
+    void set_klass(uint64_t klass) noexcept;
 
     bool operator==(const Oop &o) const noexcept { return handle_ == o.handle_; }
 
@@ -47,6 +52,10 @@ class Oop
     static uint64_t align_object_size(uint64_t size) noexcept;
 
     static Klass klass_for_oop_handle(debugger::OopHandle handle) noexcept;
+
+    static void set_klass_gap(uint64_t mem, int32_t v) noexcept;
+
+    static int klass_gap_offset_in_bytes() noexcept { return compressed_klass_offset_ + sizeof(int32_t); }
 
   private:
     Kind kind_;

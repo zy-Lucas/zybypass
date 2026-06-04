@@ -1,13 +1,12 @@
 #include "method.hpp"
-#include "../code/nmethod.hpp"
+#include "code/nmethod.hpp"
+#include "instanceKlass.hpp"
 
 namespace hotspot::oops
 {
 ConstMethod Method::constMethod() const noexcept { return read_field<uint64_t>(constMethod_offset_); }
 
 code::nmethod Method::native_method() const noexcept { return read_field<uint64_t>(code_offset_); }
-
-void Method::set_from_interpreter_entry(uint64_t addr) noexcept { write_field(from_interpreter_entry_offset_, addr); }
 
 void Method::set_flag(int32_t flag, bool value) noexcept
 {
@@ -27,6 +26,16 @@ void Method::set_is_package_private(bool value) noexcept
                          ~(runtime::JVM_ACC_PUBLIC | runtime::JVM_ACC_PRIVATE | runtime::JVM_ACC_PROTECTED));
 }
 
+uint64_t Method::find_jmethod_id_or_null() const noexcept
+{
+    return constants().pool_holder().jmethod_id_or_null(*this);
+}
+
+void Method::change_method_associated_with_jmethod_id(uint64_t old_jmid_ptr, Method new_method) noexcept
+{
+    runtime::Jvm::write(old_jmid_ptr, new_method.address());
+}
+
 void Method::initialize()
 {
     type_ = runtime::Jvm::lookup_type("Method");
@@ -36,6 +45,7 @@ void Method::initialize()
     method_counters_offset_ = *type_->field_offset("_method_counters");
     access_flags_offset_ = *type_->field_offset("_access_flags");
     vtable_index_offset_ = *type_->field_offset("_vtable_index");
+    from_compiled_entry_offset_ = *type_->field_offset("_from_compiled_entry");
     code_offset_ = *type_->field_offset("_code");
     from_interpreter_entry_offset_ = *type_->field_offset("_from_interpreted_entry");
 }

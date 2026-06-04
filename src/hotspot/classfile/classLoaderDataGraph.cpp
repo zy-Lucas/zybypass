@@ -12,8 +12,8 @@ oops::Klass ClassLoaderDataGraph::find(std::string_view class_name) noexcept
 
 void ClassLoaderDataGraph::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ClassLoaderDataGraph");
+    utils::FieldResolver r{"ClassLoaderDataGraph"};
 
-    head_offset_ = *type->field_offset("_head");
+    r.field_offset("_head", head_offset_);
 }
 } // namespace hotspot::classfile

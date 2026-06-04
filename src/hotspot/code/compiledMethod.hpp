@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../oops/method.hpp"
+#include "oops/method.hpp"
 #include "codeBlob.hpp"
 
 namespace hotspot::code

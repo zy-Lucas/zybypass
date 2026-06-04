@@ -1,5 +1,5 @@
 #include "metaData.hpp"
-#include "../runtime/virtualBaseConstructor.hpp"
+#include "runtime/virtualBaseConstructor.hpp"
 #include "constMethod.hpp"
 #include "constantPool.hpp"
 #include "constantPoolCache.hpp"

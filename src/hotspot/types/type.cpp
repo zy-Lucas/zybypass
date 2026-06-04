@@ -34,7 +34,7 @@ bool Type::add_field(std::unique_ptr<Field> field)
 {
     if (!field)
         return false;
-    auto [it, inserted] = name_to_field_.try_emplace(field->field_name(), std::move(field));
+    auto [it, inserted]{name_to_field_.try_emplace(field->field_name(), std::move(field))};
     return inserted;
 }
 

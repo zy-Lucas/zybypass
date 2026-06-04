@@ -21,30 +21,30 @@ std::ostream &operator<<(std::ostream &os, const CodeBlob &code_blob)
 
 void CodeBlob::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("CodeBlob");
+    utils::FieldResolver r{"CodeBlob"};
 
-    name_offset_ = *type->field_offset("_name");
-    size_offset_ = *type->field_offset("_size");
-    header_size_offset_ = *type->field_offset("_header_size");
-    frame_complete_offset_offset_ = *type->field_offset("_frame_complete_offset");
-    content_begin_offset_ = *type->field_offset("_content_begin");
-    code_begin_offset_ = *type->field_offset("_code_begin");
-    code_end_offset_ = *type->field_offset("_code_end");
-    data_end_offset_ = *type->field_offset("_data_end");
-    data_offset_offset_ = *type->field_offset("_data_offset");
-    frame_size_offset_ = *type->field_offset("_frame_size");
-    oop_maps_offset_ = *type->field_offset("_oop_maps");
+    r.field_offset("_name", name_offset_);
+    r.field_offset("_size", size_offset_);
+    r.field_offset("_header_size", header_size_offset_);
+    r.field_offset("_frame_complete_offset", frame_complete_offset_offset_);
+    r.field_offset("_content_begin", content_begin_offset_);
+    r.field_offset("_code_begin", code_begin_offset_);
+    r.field_offset("_code_end", code_end_offset_);
+    r.field_offset("_data_end", data_end_offset_);
+    r.field_offset("_data_offset", data_offset_offset_);
+    r.field_offset("_frame_size", frame_size_offset_);
+    r.field_offset("_oop_maps", oop_maps_offset_);
 }
 
 void RuntimeBlob::initialize()
 {
-    // types::Type *type = runtime::Jvm::lookup_type("RuntimeBlob");
+    // utils::FieldResolver r("RuntimeBlob");
 }
 
 void RuntimeStub::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("RuntimeStub");
+    utils::FieldResolver r{"RuntimeStub"};
 
-    caller_must_gc_arguments_offset_ = *type->field_offset("_caller_must_gc_arguments");
+    r.field_offset("_caller_must_gc_arguments", caller_must_gc_arguments_offset_);
 }
 } // namespace hotspot::code

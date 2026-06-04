@@ -12,10 +12,10 @@ bool ArrayKlass::compute_subtype_of(Klass k) const noexcept
 
 void ArrayKlass::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ArrayKlass");
+    utils::FieldResolver r{"ArrayKlass"};
 
-    dimension_offset_ = *type->field_offset("_dimension");
-    higher_dimension_offset_ = *type->field_offset("_higher_dimension");
-    lower_dimension_offset_ = *type->field_offset("_lower_dimension");
+    r.field_offset("_dimension", dimension_offset_);
+    r.field_offset("_higher_dimension", higher_dimension_offset_);
+    r.field_offset("_lower_dimension", lower_dimension_offset_);
 }
 } // namespace hotspot::oops

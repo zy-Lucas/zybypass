@@ -4,17 +4,17 @@ namespace hotspot::code
 {
 void PcDesc::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("PcDesc");
+    utils::FieldResolver r{"PcDesc"};
 
-    pc_offset_offset_ = *type->field_offset("_pc_offset");
-    scope_decode_offset_offset_ = *type->field_offset("_scope_decode_offset");
-    obj_decode_offset_offset_ = *type->field_offset("_obj_decode_offset");
-    flags_offset_ = *type->field_offset("_flags");
+    r.field_offset("_pc_offset", pc_offset_offset_);
+    r.field_offset("_scope_decode_offset", scope_decode_offset_offset_);
+    r.field_offset("_obj_decode_offset", obj_decode_offset_offset_);
+    r.field_offset("_flags", flags_offset_);
 
-    pc_desc_size_ = type->size();
+    r.type_size(pc_desc_size_);
 
-    reexecute_mask_ = *runtime::Jvm::lookup_int_constant("PcDesc::PCDESC_reexecute");
-    is_method_handle_invoke_mask_ = *runtime::Jvm::lookup_int_constant("PcDesc::PCDESC_is_method_handle_invoke");
-    return_oop_mask_ = *runtime::Jvm::lookup_int_constant("PcDesc::PCDESC_return_oop");
+    utils::constants::int_const("PcDesc::PCDESC_reexecute", reexecute_mask_);
+    utils::constants::int_const("PcDesc::PCDESC_is_method_handle_invoke", is_method_handle_invoke_mask_);
+    utils::constants::int_const("PcDesc::PCDESC_return_oop", return_oop_mask_);
 }
 } // namespace hotspot::code

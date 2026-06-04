@@ -24,9 +24,9 @@ MemRegion MemRegion::merge(const MemRegion &mr) const noexcept
 
 void MemRegion::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("MemRegion");
+    utils::FieldResolver r{"MemRegion"};
 
-    start_offset_ = *type->field_offset("_start");
-    word_size_offset_ = *type->field_offset("_word_size");
+    r.field_offset("_start", start_offset_);
+    r.field_offset("_word_size", word_size_offset_);
 }
 } // namespace hotspot::memory

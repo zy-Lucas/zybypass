@@ -39,7 +39,10 @@ class AccessFlags
     constexpr bool has_line_number_table() const noexcept { return flags_ & JVM_ACC_HAS_LINE_NUMBER_TABLE; }
     constexpr bool has_checked_exceptions() const noexcept { return flags_ & JVM_ACC_HAS_CHECKED_EXCEPTIONS; }
     constexpr bool has_jsrs() const noexcept { return flags_ & JVM_ACC_HAS_JSRS; }
+    constexpr bool is_old() const noexcept { return flags_ & JVM_ACC_IS_OLD; }
     constexpr bool is_obsolete() const noexcept { return flags_ & JVM_ACC_IS_OBSOLETE; }
+    constexpr bool is_deleted() const noexcept { return flags_ & JVM_ACC_IS_DELETED; }
+    constexpr bool is_prefixed_native() const noexcept { return flags_ & JVM_ACC_IS_PREFIXED_NATIVE; }
 
     // Klass* flags
     constexpr bool has_miranda_methods() const noexcept { return flags_ & JVM_ACC_HAS_MIRANDA_METHODS; }

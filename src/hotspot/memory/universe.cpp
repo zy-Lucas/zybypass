@@ -1,12 +1,12 @@
 #include "universe.hpp"
-#include "../gc/epsilon/epsilonHeap.hpp"
-#include "../gc/g1/g1CollectedHeap.hpp"
-#include "../gc/parallel/parallelScavengeHeap.hpp"
-#include "../gc/serial/serialHeap.hpp"
-#include "../gc/shenandoah/shenandoahHeap.hpp"
-#include "../gc/z/zCollectedHeap.hpp"
-#include "../runtime/basicType.hpp"
-#include "../runtime/virtualConstructor.hpp"
+#include "gc/epsilon/epsilonHeap.hpp"
+#include "gc/g1/g1CollectedHeap.hpp"
+#include "gc/parallel/parallelScavengeHeap.hpp"
+#include "gc/serial/serialHeap.hpp"
+#include "gc/shenandoah/shenandoahHeap.hpp"
+#include "gc/z/zCollectedHeap.hpp"
+#include "runtime/basicType.hpp"
+#include "runtime/virtualConstructor.hpp"
 
 namespace hotspot::memory
 {
@@ -34,8 +34,8 @@ bool Universe::element_type_should_be_aligned(int32_t type) noexcept
 
 void Universe::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("Universe");
+    utils::FieldResolver r{"Universe"};
 
-    collected_heap_offset_ = *type->field_offset("_collectedHeap");
+    r.field_offset("_collectedHeap", collected_heap_offset_);
 }
 } // namespace hotspot::memory

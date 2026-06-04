@@ -12,8 +12,8 @@ bool CodeCache::contains(uint64_t p) noexcept
 
 void CodeCache::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("CodeCache");
+    utils::FieldResolver r{"CodeCache"};
 
-    heaps_ = runtime::Jvm::read<uint64_t>(*type->field_offset("_heaps"));
+    heaps_ = runtime::Jvm::read<uint64_t>(r.field_offset("_heaps"));
 }
 } // namespace hotspot::code

@@ -1,8 +1,9 @@
 #include "oop.hpp"
-#include "../memory/universe.hpp"
-#include "../runtime/basicType.hpp"
 #include "arrayKlass.hpp"
+#include "memory/universe.hpp"
 #include "objHeap.hpp"
+#include "runtime/basicType.hpp"
+#include "runtime/jvm.hpp"
 
 namespace hotspot::oops
 {
@@ -11,6 +12,13 @@ Klass Oop::klass() const noexcept
     if (runtime::Jvm::is_compressed_klass_pointers_enabled())
         return handle().compressed_klass_address_at(compressed_klass_offset_);
     return runtime::Jvm::read<uint64_t>(handle().address() + klass_offset_);
+}
+
+void Oop::set_klass(uint64_t klass) noexcept
+{
+    if (runtime::Jvm::is_compressed_klass_pointers_enabled())
+        handle().write_compressed_klass_address_at(compressed_klass_offset_, klass);
+    runtime::Jvm::write(handle().address() + klass_offset_, klass);
 }
 
 uint64_t Oop::align_object_size(uint64_t size) noexcept
@@ -25,6 +33,12 @@ Klass Oop::klass_for_oop_handle(debugger::OopHandle handle) noexcept
     if (runtime::Jvm::is_compressed_klass_pointers_enabled())
         return handle.compressed_klass_address_at(compressed_klass_offset_);
     return runtime::Jvm::read<uint64_t>(handle.address() + klass_offset_);
+}
+
+void Oop::set_klass_gap(uint64_t mem, int32_t v) noexcept
+{
+    if (runtime::Jvm::is_compressed_klass_pointers_enabled())
+        *(int32_t *)(mem + klass_gap_offset_in_bytes()) = v;
 }
 
 void Oop::initialize()

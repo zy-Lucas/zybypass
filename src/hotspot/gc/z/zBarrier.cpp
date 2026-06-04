@@ -1,5 +1,5 @@
 #include "zBarrier.hpp"
-#include "../../memory/universe.hpp"
+#include "memory/universe.hpp"
 #include "zCollectedHeap.hpp"
 
 namespace hotspot::gc::z

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../code/stubQueue.hpp"
-#include "../runtime/jvmObject.hpp"
+#include "code/stubQueue.hpp"
+#include "runtime/jvmObject.hpp"
 
 namespace hotspot::interpreter
 {

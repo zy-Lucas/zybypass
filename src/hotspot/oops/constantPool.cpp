@@ -34,24 +34,24 @@ int64_t ConstantPool::long_at(uint32_t index) const noexcept
 
 void ConstantPool::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ConstantPool");
+    utils::FieldResolver r{"ConstantPool"};
 
-    tags_offset_ = *type->field_offset("_tags");
-    cache_offset_ = *type->field_offset("_cache");
-    operands_offset_ = *type->field_offset("_operands");
-    pool_holder_offset_ = *type->field_offset("_pool_holder");
-    resolved_klasses_offset_ = *type->field_offset("_resolved_klasses");
-    major_version_offset_ = *type->field_offset("_major_version");
-    minor_version_offset_ = *type->field_offset("_minor_version");
-    generic_signature_index_offset_ = *type->field_offset("_generic_signature_index");
-    source_file_name_index_offset_ = *type->field_offset("_source_file_name_index");
-    length_offset_ = *type->field_offset("_length");
+    r.field_offset("_tags", tags_offset_);
+    r.field_offset("_cache", cache_offset_);
+    r.field_offset("_operands", operands_offset_);
+    r.field_offset("_pool_holder", pool_holder_offset_);
+    r.field_offset("_resolved_klasses", resolved_klasses_offset_);
+    r.field_offset("_major_version", major_version_offset_);
+    r.field_offset("_minor_version", minor_version_offset_);
+    r.field_offset("_generic_signature_index", generic_signature_index_offset_);
+    r.field_offset("_source_file_name_index", source_file_name_index_offset_);
+    r.field_offset("_length", length_offset_);
 
-    header_size_ = type->size();
+    r.type_size(header_size_);
     element_size_ = runtime::Jvm::oop_size();
 
-    indy_bsm_offset_ = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_bsm_offset");
-    indy_argc_offset_ = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_argc_offset");
-    indy_argv_offset_ = *runtime::Jvm::lookup_int_constant("ConstantPool::_indy_argv_offset");
+    utils::constants::int_const("ConstantPool::_indy_bsm_offset", indy_bsm_offset_);
+    utils::constants::int_const("ConstantPool::_indy_argc_offset", indy_argc_offset_);
+    utils::constants::int_const("ConstantPool::_indy_argv_offset", indy_argv_offset_);
 }
 } // namespace hotspot::oops

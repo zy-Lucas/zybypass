@@ -19,7 +19,7 @@ uint64_t nmethod::metadata_at(uint32_t index) const noexcept
 
 oops::Method nmethod::get_method(uint32_t index) const noexcept
 {
-    // auto [name, base] = oops::MetaData::instantiate_wrapper_for(get_metadata_at(index));
+    // auto [name, base]{oops::MetaData::instantiate_wrapper_for(get_metadata_at(index))};
     // if (name != "Method")
     //     throw std::bad_cast();
     return metadata_at(index);
@@ -83,28 +83,28 @@ __attribute__((naked)) bool nmethod::make_not_entrant()
 
 void nmethod::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("nmethod");
+    utils::FieldResolver r{"nmethod"};
 
-    entry_bci_offset_ = *type->field_offset("_entry_bci");
-    osr_link_offset_ = *type->field_offset("_osr_link");
-    state_offset_ = *type->field_offset("_state");
-    exception_offset_offset_ = *type->field_offset("_exception_offset");
-    orig_pc_offset_offset_ = *type->field_offset("_orig_pc_offset");
-    stub_offset_offset_ = *type->field_offset("_stub_offset");
-    oops_offset_offset_ = *type->field_offset("_oops_offset");
-    metadata_offset_offset_ = *type->field_offset("_metadata_offset");
-    scopes_pcs_offset_offset_ = *type->field_offset("_scopes_pcs_offset");
-    dependencies_offset_offset_ = *type->field_offset("_dependencies_offset");
-    handler_table_offset_offset_ = *type->field_offset("_handler_table_offset");
-    nul_chk_table_offset_offset_ = *type->field_offset("_nul_chk_table_offset");
-    nmethod_end_offset_offset_ = *type->field_offset("_nmethod_end_offset");
-    entry_point_offset_ = *type->field_offset("_entry_point");
-    verified_entry_point_offset_ = *type->field_offset("_verified_entry_point");
-    osr_entry_point_offset_ = *type->field_offset("_osr_entry_point");
-    lock_count_offset_ = *type->field_offset("_lock_count");
-    stack_traversal_mark_offset_ = *type->field_offset("_stack_traversal_mark");
-    comp_level_offset_ = *type->field_offset("_comp_level");
+    r.field_offset("_entry_bci", entry_bci_offset_);
+    r.field_offset("_osr_link", osr_link_offset_);
+    r.field_offset("_state", state_offset_);
+    r.field_offset("_exception_offset", exception_offset_offset_);
+    r.field_offset("_orig_pc_offset", orig_pc_offset_offset_);
+    r.field_offset("_stub_offset", stub_offset_offset_);
+    r.field_offset("_oops_offset", oops_offset_offset_);
+    r.field_offset("_metadata_offset", metadata_offset_offset_);
+    r.field_offset("_scopes_pcs_offset", scopes_pcs_offset_offset_);
+    r.field_offset("_dependencies_offset", dependencies_offset_offset_);
+    r.field_offset("_handler_table_offset", handler_table_offset_offset_);
+    r.field_offset("_nul_chk_table_offset", nul_chk_table_offset_offset_);
+    r.field_offset("_nmethod_end_offset", nmethod_end_offset_offset_);
+    r.field_offset("_entry_point", entry_point_offset_);
+    r.field_offset("_verified_entry_point", verified_entry_point_offset_);
+    r.field_offset("_osr_entry_point", osr_entry_point_offset_);
+    r.field_offset("_lock_count", lock_count_offset_);
+    r.field_offset("_stack_traversal_mark", stack_traversal_mark_offset_);
+    r.field_offset("_comp_level", comp_level_offset_);
 
-    nmethod_vptr_ = (uint8_t *)*runtime::Jvm::vtbl_for_type(type);
+    nmethod_vptr_ = (uint8_t *)*runtime::Jvm::vtbl_for_type(r.type());
 }
 } // namespace hotspot::code

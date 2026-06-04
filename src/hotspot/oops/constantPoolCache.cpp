@@ -1,21 +1,34 @@
 #include "constantPoolCache.hpp"
-#include "constantPool.hpp"
+#include "constantPoolCacheEntry.hpp"
 
 namespace hotspot::oops
 {
 ConstantPool ConstantPoolCache::constants() const noexcept { return read_field<uint64_t>(constants_offset_); }
 
+ConstantPoolCacheEntry ConstantPoolCache::entry_at(uint32_t index) const noexcept { return {*this, index}; }
+
+void ConstantPoolCache::adjust_method_entries(Method old_method, Method new_method)
+{
+    int32_t len = length();
+    for (uint32_t i = 0; i < len; i++)
+    {
+        ConstantPoolCacheEntry entry{entry_at(i)};
+        if (Method m{entry.interesting_method_entry()}; m == old_method)
+            entry.adjust_method_entry(old_method, new_method);
+    }
+}
+
 void ConstantPoolCache::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ConstantPoolCache");
+    utils::FieldResolver r{"ConstantPoolCache"};
 
-    length_offset_ = *type->field_offset("_length");
-    constants_offset_ = *type->field_offset("_constant_pool");
-    resolved_references_offset_ = *type->field_offset("_resolved_references");
-    reference_map_offset_ = *type->field_offset("_reference_map");
+    r.field_offset("_length", length_offset_);
+    r.field_offset("_constant_pool", constants_offset_);
+    r.field_offset("_resolved_references", resolved_references_offset_);
+    r.field_offset("_reference_map", reference_map_offset_);
 
-    base_offset_ = type->size();
+    r.type_size(base_offset_);
 
-    element_size_ = runtime::Jvm::lookup_type("ConstantPoolCacheEntry")->size();
+    utils::FieldResolver{"ConstantPoolCacheEntry"}.type_size(element_size_);
 }
 } // namespace hotspot::oops

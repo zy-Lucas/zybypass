@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../gc/shared/collectedHeap.hpp"
-#include "../runtime/jvmObject.hpp"
+#include "gc/shared/collectedHeap.hpp"
+#include "runtime/jvmObject.hpp"
 
 namespace hotspot::memory
 {

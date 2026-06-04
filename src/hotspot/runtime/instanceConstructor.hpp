@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../types/wrongTypeException.h"
+#include "types/wrongTypeException.h"
 #include "jvmObject.hpp"
 
 namespace hotspot::runtime

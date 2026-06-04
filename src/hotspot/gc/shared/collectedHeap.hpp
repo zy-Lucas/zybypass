@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../debugger/oopHandle.hpp"
-#include "../../memory/memRegion.hpp"
-#include "../../runtime/jvmObject.hpp"
+#include "debugger/oopHandle.hpp"
+#include "memory/memRegion.hpp"
+#include "runtime/jvmObject.hpp"
 #include "collectedHeapName.hpp"
 
 namespace hotspot::gc::shared

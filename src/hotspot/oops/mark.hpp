@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../runtime/jvmObject.hpp"
+#include "runtime/jvmObject.hpp"
 #include <cstdint>
 
 namespace hotspot::oops
@@ -34,6 +34,7 @@ class Mark : public runtime::JvmObject
 
     static inline uint64_t mark_offset_;
 
+  public:
     static inline int64_t age_bits_;
     static inline int64_t lock_bits_;
     static inline int64_t biased_lock_bits_;

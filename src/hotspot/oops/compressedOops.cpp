@@ -4,9 +4,9 @@ namespace hotspot::oops
 {
 void CompressedOops::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("CompressedOops");
+    utils::FieldResolver r{"CompressedOops"};
 
-    base_offset_ = *type->field_offset("_narrow_oop._base");
-    shift_offset_ = *type->field_offset("_narrow_oop._shift");
+    r.field_offset("_narrow_oop._base", base_offset_);
+    r.field_offset("_narrow_oop._shift", shift_offset_);
 }
 } // namespace hotspot::oops

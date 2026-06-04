@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../oops/oop.hpp"
-#include "../oops/vmOopHandle.hpp"
+#include "oops/oop.hpp"
+#include "oops/vmOopHandle.hpp"
 #include "osThread.hpp"
 #include "thread.hpp"
 

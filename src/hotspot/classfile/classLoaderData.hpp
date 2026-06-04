@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../oops/klass.hpp"
+#include "oops/klass.hpp"
 
 namespace hotspot::classfile
 {
@@ -17,6 +17,8 @@ class ClassLoaderData : public runtime::JvmObject
 
     oops::Klass find(std::string_view class_name) const noexcept;
 
+    void classes_do(auto &&visitor);
+
   private:
     DECLARE_STATIC_INIT
 
@@ -26,4 +28,10 @@ class ClassLoaderData : public runtime::JvmObject
     static inline uint64_t dictionary_offset_;
     static inline uint64_t next_offset_;
 };
+
+void ClassLoaderData::classes_do(auto &&visitor)
+{
+    for (oops::Klass k{klasses()}; k; k = k.next_link())
+        visitor(k);
+}
 } // namespace hotspot::classfile

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../code/codeBlob.hpp"
-#include "../runtime/jvmObject.hpp"
+#include "code/codeBlob.hpp"
+#include "runtime/jvmObject.hpp"
 #include "heapBlock.hpp"
 #include "virtualSpace.hpp"
 
@@ -45,7 +45,7 @@ class CodeHeap : public runtime::JvmObject
     static inline uint64_t log2_segment_size_offset_;
 };
 
-inline void CodeHeap::iterate(auto &&visitor) const
+void CodeHeap::iterate(auto &&visitor) const
 {
     code::CodeBlob last_blob{0};
     uint64_t ptr = begin();

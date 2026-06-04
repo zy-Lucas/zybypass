@@ -1,5 +1,5 @@
 #include "fieldType.hpp"
-#include "../runtime/basicType.hpp"
+#include "runtime/basicType.hpp"
 
 namespace hotspot::oops
 {

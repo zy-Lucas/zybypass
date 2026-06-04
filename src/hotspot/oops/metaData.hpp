@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../runtime/instanceConstructor.hpp"
-#include "../runtime/jvmObject.hpp"
+#include "runtime/instanceConstructor.hpp"
+#include "runtime/jvmObject.hpp"
 
 namespace hotspot::oops
 {

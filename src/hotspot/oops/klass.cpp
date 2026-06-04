@@ -26,8 +26,9 @@ void Klass::initialize()
     subklass_offset_ = *type->field_offset("_subklass");
     next_sibling_offset_ = *type->field_offset("_next_sibling");
     next_link_offset_ = *type->field_offset("_next_link");
-    vtable_len_offset_ = *type->field_offset("_vtable_len");
     class_loader_data_offset_ = *type->field_offset("_class_loader_data");
+    vtable_len_offset_ = *type->field_offset("_vtable_len");
+    prototype_header_offset_ = *type->field_offset("_prototype_header");
 
     trace_id_offset_ = type->field_offset("_trace_id");
 

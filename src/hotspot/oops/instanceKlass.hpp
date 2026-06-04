@@ -21,45 +21,30 @@ struct ClassState
         initialization_error
     };
 
-    Value value;
+    Value value_;
 
-    constexpr ClassState(Value v) noexcept : value(v) {}
-    constexpr ClassState(uint8_t v) noexcept : value(Value(v)) {}
+    constexpr ClassState(Value v) noexcept : value_(v) {}
+    constexpr ClassState(uint8_t v) noexcept : value_(Value(v)) {}
 
-    constexpr uint8_t raw() const noexcept { return value; }
+    constexpr uint8_t raw() const noexcept { return value_; }
     constexpr std::string_view to_string() const noexcept;
 
-    constexpr bool is_loaded() const noexcept { return value >= Value::loaded; }
-    constexpr bool is_linked() const noexcept { return value >= Value::linked; }
-    constexpr bool is_initialized() const noexcept { return value == Value::fully_initialized; }
-    constexpr bool is_not_initialized() const noexcept { return value < Value::being_initialized; }
-    constexpr bool is_being_initialized() const noexcept { return value == Value::being_initialized; }
-    constexpr bool is_in_error_state() const noexcept { return value == Value::initialization_error; }
+    constexpr bool is_loaded() const noexcept { return value_ >= Value::loaded; }
+    constexpr bool is_linked() const noexcept { return value_ >= Value::linked; }
+    constexpr bool is_initialized() const noexcept { return value_ == Value::fully_initialized; }
+    constexpr bool is_not_initialized() const noexcept { return value_ < Value::being_initialized; }
+    constexpr bool is_being_initialized() const noexcept { return value_ == Value::being_initialized; }
+    constexpr bool is_in_error_state() const noexcept { return value_ == Value::initialization_error; }
 
     constexpr bool operator==(const ClassState &) const noexcept = default;
     constexpr auto operator<=>(const ClassState &) const noexcept = default;
-
-    static constexpr Value ALLOCATED = Value::allocated;
-    static constexpr Value LOADED = Value::loaded;
-    static constexpr Value LINKED = Value::linked;
-    static constexpr Value BEING_INITIALIZED = Value::being_initialized;
-    static constexpr Value FULLY_INITIALIZED = Value::fully_initialized;
-    static constexpr Value INITIALIZATION_ERROR = Value::initialization_error;
 };
 
 class InstanceKlass : public Klass
 {
   public:
     InstanceKlass(uint64_t addr) noexcept : Klass(addr) {}
-
-    ClassState init_state() const noexcept { return read_field<uint8_t>(init_state_offset_); }
-
-    bool is_loaded() const noexcept { return init_state().is_loaded(); }
-    bool is_linked() const noexcept { return init_state().is_linked(); }
-    bool is_initialized() const noexcept { return init_state().is_initialized(); }
-    bool is_not_initialized() const noexcept { return init_state().is_not_initialized(); }
-    bool is_being_initialized() const noexcept { return init_state().is_being_initialized(); }
-    bool is_in_error_state() const noexcept { return init_state().is_in_error_state(); }
+    InstanceKlass(Klass klass) noexcept : Klass(klass) {}
 
     uint64_t size() const noexcept;
 
@@ -72,7 +57,7 @@ class InstanceKlass : public Klass
     uint32_t field_offset(uint32_t index) const noexcept;
 
     ConstantPool constants() const noexcept { return read_field<uint64_t>(constants_offset_); }
-    
+
     uint16_t major_version() const noexcept { return constants().major(); }
     uint16_t minor_version() const noexcept { return constants().minor(); }
     Symbol source_file_name() const noexcept { return constants().source_file_name(); }
@@ -88,6 +73,22 @@ class InstanceKlass : public Klass
     uint16_t all_fields_count() const noexcept;
     bool is_marked_dependent() const noexcept { return read_field<bool>(is_marked_dependent_offset_); }
 
+    uint16_t method_idnum() const noexcept { return read_field<uint16_t>(idnum_allocated_count_offset_); }
+    uint16_t next_method_idnum() noexcept;
+
+    ClassState init_state() const noexcept { return read_field<uint8_t>(init_state_offset_); }
+
+    bool is_loaded() const noexcept { return init_state().is_loaded(); }
+    bool is_linked() const noexcept { return init_state().is_linked(); }
+    bool is_initialized() const noexcept { return init_state().is_initialized(); }
+    bool is_not_initialized() const noexcept { return init_state().is_not_initialized(); }
+    bool is_being_initialized() const noexcept { return init_state().is_being_initialized(); }
+    bool is_in_error_state() const noexcept { return init_state().is_in_error_state(); }
+
+    uint64_t *methods_jmethod_ids() const noexcept { return read_field<uint64_t *>(methods_jmethod_ids_offset_); }
+
+    uint64_t jmethod_id_or_null(Method method) const noexcept;
+
     utilities::MethodArray methods() const noexcept { return read_field<uint64_t>(methods_offset_); }
     utilities::MethodArray default_methods() const noexcept { return read_field<uint64_t>(default_methods_offset_); }
 
@@ -97,6 +98,7 @@ class InstanceKlass : public Klass
     int32_t size_helper() const noexcept { return layout_helper() / sizeof(void *); }
 
     Method find_method(std::string_view name, std::string_view sig) const noexcept;
+    int32_t find_method_index(std::string_view name, std::string_view sig) const noexcept;
 
     utilities::U2Array inner_classes() const noexcept { return read_field<uint64_t>(inner_classes_offset_); }
     utilities::IntArray method_ordering() const noexcept { return read_field<uint64_t>(method_ordering_offset_); }
@@ -114,8 +116,8 @@ class InstanceKlass : public Klass
   private:
     template <typename Visitor> void visit_field(Visitor &&visitor, FieldType type, uint32_t index);
 
-    static Method find_method(utilities::MethodArray methods, std::string_view name,
-                              std::string_view signature) noexcept;
+    static int32_t linear_search(utilities::MethodArray methods, std::string_view name,
+                                 std::string_view signature) noexcept;
 
     DECLARE_STATIC_INIT
 
@@ -130,8 +132,10 @@ class InstanceKlass : public Klass
     static inline uint64_t static_oop_field_count_offset_;
     static inline uint64_t java_fields_count_offset_;
     static inline uint64_t is_marked_dependent_offset_;
+    static inline uint64_t idnum_allocated_count_offset_;
     static inline uint64_t init_state_offset_;
     static inline uint64_t misc_flags_offset_;
+    static inline uint64_t methods_jmethod_ids_offset_;
     static inline uint64_t methods_offset_;
     static inline uint64_t default_methods_offset_;
     static inline uint64_t local_interfaces_offset_;

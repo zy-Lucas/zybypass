@@ -99,7 +99,7 @@ class nmethod : public CompiledMethod
 
     bool make_not_entrant();
 
-  private:
+  //private:
     int32_t entry_bci() const noexcept { return read_field<int32_t>(entry_bci_offset_); }
     int32_t exception_offset() const noexcept { return read_field<int32_t>(exception_offset_offset_); }
     int32_t stub_offset() const noexcept { return read_field<int32_t>(stub_offset_offset_); }

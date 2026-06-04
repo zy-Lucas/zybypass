@@ -4,14 +4,15 @@ namespace hotspot::memory
 {
 void HeapBlock::initialize()
 {
-    types::Type *type_heap_block = runtime::Jvm::lookup_type("HeapBlock");
-    types::Type *type_header = runtime::Jvm::lookup_type("HeapBlock::Header");
+    utils::FieldResolver r{"HeapBlock"};
 
-    header_offset_ = *type_heap_block->field_offset("_header");
+    r.field_offset("_header", header_offset_);
+    
+    r.type_size(heap_block_size_);
 
-    heap_block_size_ = type_heap_block->size();
+    utils::FieldResolver r_h{"HeapBlock::Header"};
 
-    length_offset_ = *type_header->field_offset("_length");
-    used_offset_ = *type_header->field_offset("_used");
+    r_h.field_offset("_length", length_offset_);
+    r_h.field_offset("_used", used_offset_);
 }
 } // namespace hotspot::memory

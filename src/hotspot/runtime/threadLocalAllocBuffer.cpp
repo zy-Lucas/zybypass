@@ -1,5 +1,5 @@
 #include "threadLocalAllocBuffer.hpp"
-#include "../gc/shared/collectedHeap.hpp"
+#include "gc/shared/collectedHeap.hpp"
 
 namespace hotspot::runtime
 {

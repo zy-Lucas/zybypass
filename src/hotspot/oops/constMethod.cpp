@@ -6,7 +6,7 @@ namespace hotspot::oops
 {
 Method ConstMethod::method() const noexcept
 {
-    return constants().pool_holder().methods().at(idnum());
+    return constants().pool_holder().methods().at(method_idnum());
 }
 
 uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
@@ -27,7 +27,7 @@ void ConstMethod::initialize()
     code_size_offset_ = *type->field_offset("_code_size");
     name_index_offset_ = *type->field_offset("_name_index");
     signature_index_offset_ = *type->field_offset("_signature_index");
-    idnum_offset_ = *type->field_offset("_method_idnum");
+    method_idnum_offset_ = *type->field_offset("_method_idnum");
     max_stack_offset_ = *type->field_offset("_max_stack");
     max_locals_offset_ = *type->field_offset("_max_locals");
     size_of_parameters_offset_ = *type->field_offset("_size_of_parameters");

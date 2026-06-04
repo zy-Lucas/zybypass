@@ -1,3 +1,6 @@
+#include "code/debugInformationRecorder.h"
+#include "code/pcDesc.hpp"
+#include "code/scopeDesc.hpp"
 #include "hotspot/classfile/classLoaderDataGraph.hpp"
 #include "hotspot/code/codeBlob.hpp"
 #include "hotspot/code/codeCache.hpp"
@@ -28,6 +31,7 @@
 #include <dlfcn.h>
 #include <iostream>
 #include <jni.h>
+#include <ostream>
 #include <pthread.h>
 #include <string>
 #include <string_view>
@@ -149,22 +153,25 @@ JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) { g_javaVM = nullptr; }
 jint ex() { return 12345678; }
 
 extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass, jstring klass_name,
-                                                                       jlong method_addr)
+                                                                       jstring method_name, jstring method_sign)
 {
-    hotspot::runtime::Thread thread{hotspot::runtime::Threads::current()};
-    hotspot::oops::InstanceKlass ik{
-        hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name)).address()};
-    hotspot::oops::OopField field = ik.find_field("instance", "Lnet/endofcosmos/sword/Test;");
-    hotspot::oops::InstanceKlass k{
-        hotspot::classfile::ClassLoaderDataGraph::find("net/endofcosmos/sword/Test").address()};
-    uint64_t addr = thread.tlab().allocate(k.layout_helper());
-    memcpy((void *)addr, (const void *)ik.java_mirror().handle().address(), hotspot::oops::Instance::header_size());
-    hotspot::oops::Instance ins{addr};
-    field.set_value(ik.java_mirror(), ins);
-    //
+    JavaTools::set_method_to_native(klass_name, method_name, method_sign, (uint64_t)ex);
+    // hotspot::oops::InstanceKlass ik{
+    //     hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name)).address()};
+    // hotspot::oops::OopField field = ik.find_field("instance", "Lnet/endofcosmos/sword/Test;");
+    // hotspot::oops::InstanceKlass k{
+    //     hotspot::classfile::ClassLoaderDataGraph::find("net/endofcosmos/sword/Test").address()};
+    // hotspot::gc::shared::ObjAllocator allocate{k, uint64_t(k.layout_helper())};
+    // hotspot::oops::Instance ins{allocate.allocate()};
+    // field.set_value(ik.java_mirror(), ins);
+    // jclass sys = env->FindClass("java/lang/System");
+    // jmethodID gc = env->GetStaticMethodID(sys, "gc", "()V");
+    // env->CallStaticVoidMethod(sys, gc);
+    // env->DeleteLocalRef(sys);
+
     // const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
 
-    // hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name).address()};
+    // hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name)};
     // hotspot::oops::Method method{uint64_t(method_addr)};
     // uint8_t *new_method = (uint8_t *)malloc(method.size() + 16);
     // void *a = (void *)ex;
@@ -173,7 +180,7 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
     // hotspot::oops::Method{(uint64_t)new_method}.set_is_native(true);
     // hotspot::oops::Method{(uint64_t)new_method}.set_from_interpreter_entry(
     //     hotspot::interpreter::Interpreter::code()
-    //         .find_method_entry_point(hotspot::code::EntryPointKind::native)
+    //         .find_method_entry_point(hotspot::code::EntryPoint::native)
     //         .code_begin());
     // ik.methods().set_at(1, (uint64_t)new_method);
 
@@ -184,19 +191,24 @@ extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *e
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
                                                                          jstring method_name, jstring method_sign)
 {
-    std::cout << JavaTools::to_std_string(klass_name) << std::endl;
     hotspot::oops::Method method =
-        hotspot::oops::InstanceKlass(
-            hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name)).address())
+        hotspot::oops::InstanceKlass{
+            hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name))}
             .find_method(JavaTools::to_std_string(method_name), JavaTools::to_std_string(method_sign));
     pthread_jit_write_protect_np(0);
     if (hotspot::code::nmethod nm(method.native_method()); nm)
+    {
         nm.make_not_entrant();
+        //memset((void *)nm.verified_entry_point(), 0, 16);
+    }
     pthread_jit_write_protect_np(1);
 
     auto f = [method](hotspot::code::CodeBlob cb) {
         pthread_jit_write_protect_np(0);
         hotspot::code::nmethod nm{cb.address()};
+        if (nm.method().name().equals("callFoo"))
+        {
+        }
         if (nm.is_alive() && nm.contains_method(method))
             nm.make_not_entrant();
         pthread_jit_write_protect_np(1);
