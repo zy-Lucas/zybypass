@@ -1,5 +1,6 @@
 #pragma once
 
+#include "memory/metaspace/counters.hpp"
 #include "runtime/jvmObject.hpp"
 
 namespace hotspot::memory::metaspace
@@ -7,7 +8,9 @@ namespace hotspot::memory::metaspace
 class MetachunkList : runtime::JvmObject
 {
   public:
-    MetachunkList(uint64_t addr) : runtime::JvmObject(addr) {}
+    MetachunkList(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
+
+    IntCounter *num_chunks() const noexcept { return (IntCounter *)(address() + num_chunks_offset_); }
 
   private:
     DECLARE_STATIC_INIT
