@@ -4,8 +4,8 @@ namespace hotspot::gc::z
 {
 void ZForwardingTable::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZForwardingTable");
+    utils::FieldResolver r{"ZForwardingTable"};
 
-    map_offset_ = *type->field_offset("_map");
+    r.field_offset("_map", map_offset_);
 }
 } // namespace hotspot::gc::z

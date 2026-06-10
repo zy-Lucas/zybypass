@@ -26,7 +26,7 @@ class CompressedStream
     uint32_t encode_sign(uint32_t value) const noexcept { return (value << 1) ^ (value >> 31); }
     uint32_t decode_sign(uint32_t value) const noexcept { return (value >> 1u) ^ -(value & 1); }
 
-    uint32_t reverse_int(uint32_t i) const noexcept;
+    uint32_t reverse_int(uint32_t index) const noexcept;
 
   protected:
     const uint8_t *buffer_;

@@ -21,12 +21,13 @@ uint64_t ThreadLocalAllocBuffer::end_reserve() noexcept
 
 void ThreadLocalAllocBuffer::initialize()
 {
-    types::Type *type = Jvm::lookup_type("ThreadLocalAllocBuffer");
+    utils::FieldResolver r{"ThreadLocalAllocBuffer"};
 
-    start_offset_ = *type->field_offset("_start");
-    top_offset_ = *type->field_offset("_top");
-    end_offset_ = *type->field_offset("_end");
+    r.field_offset("_start", start_offset_);
+    r.field_offset("_top", top_offset_);
+    r.field_offset("_end", end_offset_);
+    r.field_offset("_desired_size", desired_size_offset_);
+
     allocation_end_offset_ = end_offset_ + sizeof(void *);
-    desired_size_offset_ = *type->field_offset("_desired_size");
 }
 } // namespace hotspot::runtime

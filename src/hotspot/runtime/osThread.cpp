@@ -4,19 +4,19 @@ namespace hotspot::runtime
 {
 void OSThread::initialize()
 {
-    types::Type *type = Jvm::lookup_type("OSThread");
+    utils::FieldResolver r{"OSThread"};
 
-    thread_id_offset_ = *type->field_offset("_thread_id");
-    state_offset_ = *type->field_offset("_state");
+    r.field_offset("_thread_id", thread_id_offset_);
+    r.field_offset("_state", state_offset_);
 
-    allocated_ = *Jvm::lookup_int_constant("ALLOCATED");
-    initialized_ = *Jvm::lookup_int_constant("INITIALIZED");
-    runnable_ = *Jvm::lookup_int_constant("RUNNABLE");
-    monitor_wait_ = *Jvm::lookup_int_constant("MONITOR_WAIT");
-    condvar_wait_ = *Jvm::lookup_int_constant("CONDVAR_WAIT");
-    object_wait_ = *Jvm::lookup_int_constant("OBJECT_WAIT");
-    breakpointed_ = *Jvm::lookup_int_constant("BREAKPOINTED");
-    sleeping_ = *Jvm::lookup_int_constant("SLEEPING");
-    zombie_ = *Jvm::lookup_int_constant("ZOMBIE");
+    utils::constants::int_const("ALLOCATED", allocated_);
+    utils::constants::int_const("INITIALIZED", initialized_);
+    utils::constants::int_const("RUNNABLE", runnable_);
+    utils::constants::int_const("MONITOR_WAIT", monitor_wait_);
+    utils::constants::int_const("CONDVAR_WAIT", condvar_wait_);
+    utils::constants::int_const("OBJECT_WAIT", object_wait_);
+    utils::constants::int_const("BREAKPOINTED", breakpointed_);
+    utils::constants::int_const("SLEEPING", sleeping_);
+    utils::constants::int_const("ZOMBIE", zombie_);
 }
 } // namespace hotspot::runtime

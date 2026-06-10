@@ -14,11 +14,11 @@ Klass Oop::klass() const noexcept
     return runtime::Jvm::read<uint64_t>(handle().address() + klass_offset_);
 }
 
-void Oop::set_klass(uint64_t klass) noexcept
+void Oop::set_klass(Klass klass) noexcept
 {
     if (runtime::Jvm::is_compressed_klass_pointers_enabled())
-        handle().write_compressed_klass_address_at(compressed_klass_offset_, klass);
-    runtime::Jvm::write(handle().address() + klass_offset_, klass);
+        handle().write_compressed_klass_address_at(compressed_klass_offset_, klass.address());
+    runtime::Jvm::write(handle().address() + klass_offset_, klass.address());
 }
 
 uint64_t Oop::align_object_size(uint64_t size) noexcept
@@ -43,13 +43,13 @@ void Oop::set_klass_gap(uint64_t mem, int32_t v) noexcept
 
 void Oop::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("oopDesc");
+    utils::FieldResolver r{"oopDesc"};
 
-    mark_offset_ = *type->field_offset("_mark");
-    klass_offset_ = *type->field_offset("_metadata._klass");
-    compressed_klass_offset_ = *type->field_offset("_metadata._compressed_klass");
+    r.field_offset("_mark", mark_offset_);
+    r.field_offset("_metadata._klass", klass_offset_);
+    r.field_offset("_metadata._compressed_klass", compressed_klass_offset_);
 
-    header_size_ = type->size();
+    r.type_size(header_size_);
 }
 
 uint32_t Array::length() const noexcept
@@ -93,9 +93,9 @@ uint64_t Array::length_offset_in_bytes() noexcept
 
 void Array::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("arrayOopDesc");
+    utils::FieldResolver r{"arrayOopDesc"};
 
-    type_size_ = type->size();
+    r.type_size(type_size_);
 }
 
 uint64_t Instance::header_size() noexcept
@@ -107,9 +107,9 @@ uint64_t Instance::header_size() noexcept
 
 void Instance::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("instanceOopDesc");
+    utils::FieldResolver r{"instanceOopDesc"};
 
-    type_size_ = type->size();
+    r.type_size(type_size_);
 }
 
 int8_t *TypeArray::byte_base() const noexcept

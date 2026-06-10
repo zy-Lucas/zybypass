@@ -17,18 +17,18 @@ uint64_t ThreadsList::java_thread_address_at(uint32_t i) const noexcept
 
 void ThreadsList::initialize()
 {
-    types::Type *type = Jvm::lookup_type("ThreadsList");
+    utils::FieldResolver r{"ThreadsList"};
 
-    length_offset_ = *type->field_offset("_length");
-    threads_offset_ = *type->field_offset("_threads");
+    r.field_offset("_length", length_offset_);
+    r.field_offset("_threads", threads_offset_);
 }
 
 JavaThread Threads::current() noexcept
 {
     list_ = Jvm::read<uint64_t>(thread_list_offset_);
-    for (uint32_t i = 0; i < list_.length(); ++i)
+    for (uint32_t index = 0; index < list_.length(); ++index)
     {
-        JavaThread thread{list_.java_thread_address_at(i)};
+        JavaThread thread{list_.java_thread_address_at(index)};
         if (!thread)
             continue;
 #ifdef _WIN32
@@ -44,8 +44,8 @@ JavaThread Threads::current() noexcept
 
 void Threads::initialize()
 {
-    types::Type *type = Jvm::lookup_type("ThreadsSMRSupport");
+    utils::FieldResolver r{"ThreadsSMRSupport"};
 
-    thread_list_offset_ = *type->field_offset("_java_thread_list");
+    r.field_offset("_java_thread_list", thread_list_offset_);
 }
 } // namespace hotspot::runtime

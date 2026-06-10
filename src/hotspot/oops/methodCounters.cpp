@@ -25,14 +25,14 @@ uint32_t MethodCounter::backedge_counter() const noexcept
 
 void MethodCounter::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("MethodCounters");
-
+    utils::FieldResolver r{"MethodCounters"};
+    
     if (runtime::Jvm::is_server_compiler())
-        interpreter_throwout_count_offset_ = type->field_offset("_interpreter_throwout_count");
+        r.field_offset("_interpreter_throwout_count", interpreter_throwout_count_offset_);
     if (!runtime::Jvm::is_core())
     {
-        invocation_counter_offset_ = type->field_offset("_invocation_counter");
-        backedge_counter_offset_ = type->field_offset("_backedge_counter");
+        r.field_offset("_invocation_counter", invocation_counter_offset_);
+        r.field_offset("_backedge_counter", backedge_counter_offset_);
     }
 }
 } // namespace hotspot::oops

@@ -4,8 +4,8 @@ namespace hotspot::interpreter
 {
 void Interpreter::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("AbstractInterpreter");
+    utils::FieldResolver r{"AbstractInterpreter"};
 
-    code_offset_ = *type->field_offset("_code");
+    r.field_offset("_code", code_offset_);
 }
 } // namespace hotspot::interpreter

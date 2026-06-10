@@ -31,8 +31,8 @@ uint64_t CollectedHeap::tlab_alloc_reserve() noexcept
 
 void CollectedHeap::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("CollectedHeap");
-
-    reserved_offset_ = *type->field_offset("_reserved");
+    utils::FieldResolver r{"CollectedHeap"};
+    
+    r.field_offset("_reserved", reserved_offset_);
 }
 } // namespace hotspot::gc::shared

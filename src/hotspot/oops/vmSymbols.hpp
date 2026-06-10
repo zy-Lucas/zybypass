@@ -1,6 +1,5 @@
 #pragma once
 
-#include "runtime/jvmObject.hpp"
 #include "symbol.hpp"
 
 namespace hotspot::oops

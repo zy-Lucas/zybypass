@@ -21,8 +21,8 @@ uint64_t ZAttachedArrayForForwarding::align_up(uint64_t size, uint64_t alignment
 
 void ZAttachedArrayForForwarding::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZAttachedArrayForForwarding");
+    utils::FieldResolver r{"ZAttachedArrayForForwarding"};
 
-    length_offset_ = *type->field_offset("_length");
+    r.field_offset("_length", length_offset_);
 }
 } // namespace hotspot::gc::z

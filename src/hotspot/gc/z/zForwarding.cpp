@@ -43,11 +43,13 @@ uint32_t ZForwarding::uint32_to_uint32(uint32_t key) noexcept
 
 void ZForwarding::initialize()
 {
-    type_ = runtime::Jvm::lookup_type("ZForwarding");
+    utils::FieldResolver r{"ZForwarding"};
+    
+    r.field_offset("_virtual", virtual_offset_);
+    r.field_offset("_entries", entries_offset_);
+    r.field_offset("_object_alignment_shift", object_alignment_shift_offset_);
+    r.field_offset("_ref_count", ref_count_offset_);
 
-    virtual_offset_ = *type_->field_offset("_virtual");
-    entries_offset_ = *type_->field_offset("_entries");
-    object_alignment_shift_offset_ = *type_->field_offset("_object_alignment_shift");
-    ref_count_offset_ = *type_->field_offset("_ref_count");
+    type_ = r.type();
 }
 } // namespace hotspot::gc::z

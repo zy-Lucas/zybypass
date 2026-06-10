@@ -7,7 +7,7 @@ namespace hotspot::classfile
 class ClassLoaderDataGraph
 {
   public:
-    static ClassLoaderData head() noexcept { return runtime::Jvm::read<uint64_t>(head_offset_); }
+    static ClassLoaderData head() noexcept { return runtime::Jvm::atomic_load<uint64_t>(head_offset_); }
 
     static oops::Klass find(std::string_view class_name) noexcept;
 

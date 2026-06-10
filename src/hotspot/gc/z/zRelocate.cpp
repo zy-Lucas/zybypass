@@ -24,6 +24,6 @@ uint64_t ZRelocate::forwarding_index(ZForwarding forwarding, uint64_t from) noex
 
 void ZRelocate::initialize()
 {
-    // types::Type *type = runtime::Jvm::lookup_type("ZRelocate");
+    // utils::FieldResolver r{"ZRelocate"};
 }
 } // namespace hotspot::gc::z

@@ -3,6 +3,7 @@
 #include "jvm.hpp"
 #include "utilities/fieldResolver.hpp"
 
+
 #define DECLARE_STATIC_INIT                                                                                            \
     static void initialize();                                                                                          \
     static inline auto static_init_ = [] {                                                                             \
@@ -45,6 +46,23 @@ class JvmObject
         if (!addr)
             return;
         Jvm::write<T>(address() + offset, value);
+    }
+
+    template <typename T>
+    T atomic_load_field(uint64_t offset, std::memory_order order = std::memory_order_acquire) const noexcept
+    {
+        if (!addr)
+            return {};
+        return Jvm::atomic_load<T>(address() + offset, order);
+    }
+
+    template <typename T>
+    void atomic_store_field(uint64_t offset, const T &value,
+                            std::memory_order order = std::memory_order_release) noexcept
+    {
+        if (!addr)
+            return;
+        Jvm::atomic_store<T>(address() + offset, value, order);
     }
 
     uint64_t read_compressed_klass_address_at(uint64_t addr) const noexcept

@@ -4,10 +4,10 @@ namespace hotspot::oops
 {
 void Symbol::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("Symbol");
+    utils::FieldResolver r{"Symbol"};
 
-    length_offset_ = *type->field_offset("_length");
-    base_offset_ = *type->field_offset("_body");
-    id_hash_and_refcount_offset_ = *type->field_offset("_hash_and_refcount");
+    r.field_offset("_length", length_offset_);
+    r.field_offset("_body", base_offset_);
+    r.field_offset("_hash_and_refcount", id_hash_and_refcount_offset_);
 }
 } // namespace hotspot::oops

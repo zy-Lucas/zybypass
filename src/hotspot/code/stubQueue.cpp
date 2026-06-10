@@ -100,12 +100,12 @@ bool StubQueue::stub_contains(interpreter::InterpreterCodelet s, uint64_t pc) co
 
 void StubQueue::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("StubQueue");
+    utils::FieldResolver r{"StubQueue"};
 
-    stub_buffer_offset_ = *type->field_offset("_stub_buffer");
-    buffer_limit_offset_ = *type->field_offset("_buffer_limit");
-    queue_begin_offset_ = *type->field_offset("_queue_begin");
-    queue_end_offset_ = *type->field_offset("_queue_end");
-    number_of_stubs_offset_ = *type->field_offset("_number_of_stubs");
+    r.field_offset("_stub_buffer", stub_buffer_offset_);
+    r.field_offset("_buffer_limit", buffer_limit_offset_);
+    r.field_offset("_queue_begin", queue_begin_offset_);
+    r.field_offset("_queue_end", queue_end_offset_);
+    r.field_offset("_number_of_stubs", number_of_stubs_offset_);
 }
 } // namespace hotspot::code

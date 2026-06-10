@@ -12,11 +12,11 @@ Symbol vmSymbols::symbol_at(uint32_t id) noexcept
 
 void vmSymbols::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("Symbol");
+    utils::FieldResolver r{"Symbol"};
 
-    symbols_address_ = *type->field_offset("_vm_symbols[0]");
+    r.field_offset("_vm_symbols[0]", symbols_address_);
 
-    first_sid_ = *runtime::Jvm::lookup_int_constant("vmSymbols::FIRST_SID");
-    sid_limit_ = *runtime::Jvm::lookup_int_constant("vmSymbols::SID_LIMIT");
+    utils::constants::int_const("vmSymbols::FIRST_SID", first_sid_);
+    utils::constants::int_const("vmSymbols::SID_LIMIT", sid_limit_);
 }
 } // namespace hotspot::oops

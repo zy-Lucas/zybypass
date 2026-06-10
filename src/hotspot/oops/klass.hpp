@@ -7,6 +7,7 @@
 
 namespace hotspot::oops
 {
+class klassVtable;
 class Instance;
 
 class Klass : public MetaData
@@ -23,7 +24,7 @@ class Klass : public MetaData
     Klass subklass() const noexcept { return read_field<uint64_t>(subklass_offset_); }
     Klass next_sibling() const noexcept { return read_field<uint64_t>(next_sibling_offset_); }
     Klass next_link() const noexcept { return read_field<uint64_t>(next_link_offset_); }
-    uint64_t vtable_len() const noexcept { return read_field<uint64_t>(vtable_len_offset_); }
+    int32_t vtable_length() const noexcept { return read_field<int32_t>(vtable_len_offset_); }
     Mark prototype_header() const noexcept { return address() + prototype_header_offset_; }
 
     uint64_t trace_id() const noexcept { return trace_id_offset_ ? read_field<uint64_t>(*trace_id_offset_) : 0; }
@@ -45,6 +46,10 @@ class Klass : public MetaData
     bool is_cloneable() const noexcept { return access_flags_obj().is_cloneable(); }
     bool has_vanilla_constructor() const noexcept { return access_flags_obj().has_vanilla_constructor(); }
     bool has_miranda_methods() const noexcept { return access_flags_obj().has_miranda_methods(); }
+
+    uint64_t start_of_vtable() const noexcept;
+
+    klassVtable vtable() const noexcept;
 
     static bool is_instance(int32_t lh) noexcept { return lh > lh_neutral_value_; }
     static bool is_array(int32_t lh) noexcept { return lh < lh_neutral_value_; }

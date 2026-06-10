@@ -4,9 +4,9 @@ namespace hotspot::gc::z
 {
 void ZVirtualMemory::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZVirtualMemory");
-
-    start_offset_ = *type->field_offset("_start");
-    end_offset_ = *type->field_offset("_end");
+    utils::FieldResolver r{"ZVirtualMemory"};
+    
+    r.field_offset("_start", start_offset_);
+    r.field_offset("_end", end_offset_);
 }
 } // namespace hotspot::gc::z

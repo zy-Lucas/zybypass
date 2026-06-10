@@ -2,6 +2,7 @@
 
 #include "types/field.hpp"
 #include "types/type.hpp"
+#include <atomic>
 #include <bit>
 #include <vector>
 
@@ -95,6 +96,14 @@ class Jvm
 
     template <typename T> static T read(uint64_t addr, size_t size = sizeof(T)) noexcept;
     template <typename T> static void write(uint64_t addr, const T &value) noexcept;
+
+    template <typename T> static bool is_aligned(uint64_t addr) noexcept { return !(addr & (alignof(T) - 1)); }
+
+    template <typename T>
+    static T atomic_load(uint64_t addr, std::memory_order order = std::memory_order_acquire) noexcept;
+    template <typename T>
+    static void atomic_store(uint64_t addr, const T &value,
+                             std::memory_order order = std::memory_order_release) noexcept;
 
     static uint64_t read_compressed_oop_address_value(uint64_t addr) noexcept;
     static void write_compressed_oop_address_value(uint64_t addr, uint64_t value) noexcept;
@@ -230,6 +239,20 @@ template <typename T> void Jvm::write(uint64_t addr, const T &value) noexcept
     if (!addr)
         return;
     std::memcpy((void *)addr, &value, sizeof(T));
+}
+
+template <typename T> T Jvm::atomic_load(uint64_t addr, std::memory_order order) noexcept
+{
+    if (!addr || !is_aligned<T>(addr))
+        return {};
+    return std::atomic_ref<T>(*(T *)addr).load(order);
+}
+
+template <typename T> void Jvm::atomic_store(uint64_t addr, const T &value, std::memory_order order) noexcept
+{
+    if (!addr || !is_aligned<T>(addr))
+        return;
+    std::atomic_ref<T>(*(T *)addr).store(value, order);
 }
 
 constexpr uint64_t Jvm::build_long_from_intsPD(uint32_t one_half, uint32_t other_half) noexcept

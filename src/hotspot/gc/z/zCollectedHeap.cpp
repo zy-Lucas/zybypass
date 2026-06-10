@@ -14,8 +14,8 @@ debugger::OopHandle ZCollectedHeap::oop_load_in_native(uint64_t addr) const
 
 void ZCollectedHeap::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZCollectedHeap");
+    utils::FieldResolver r{"ZCollectedHeap"};
 
-    heap_offset_ = *type->field_offset("_heap");
+    r.field_offset("_heap", heap_offset_);
 }
 } // namespace hotspot::gc::z

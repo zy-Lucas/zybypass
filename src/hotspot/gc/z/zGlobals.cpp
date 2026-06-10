@@ -4,27 +4,27 @@ namespace hotspot::gc::z
 {
 void ZGlobals::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZGlobalsForVMStructs");
+    utils::FieldResolver r{"ZGlobalsForVMStructs"};
 
-    instance_offset = *type->field_offset("_instance_p");
+    r.field_offset("_instance_p", instance_offset);
 
-    z_phase_relocate_ = *runtime::Jvm::lookup_int_constant("ZPhaseRelocate");
+    utils::constants::int_const("ZPhaseRelocate", z_phase_relocate_);
 
-    z_page_type_small_ = *runtime::Jvm::lookup_int_constant("ZPageTypeSmall");
-    z_page_type_medium_ = *runtime::Jvm::lookup_int_constant("ZPageTypeMedium");
-    z_page_type_large_ = *runtime::Jvm::lookup_int_constant("ZPageTypeLarge");
+    utils::constants::int_const("ZPageTypeSmall", z_page_type_small_);
+    utils::constants::int_const("ZPageTypeMedium", z_page_type_medium_);
+    utils::constants::int_const("ZPageTypeLarge", z_page_type_large_);
 
-    z_granule_size_shift_ = *runtime::Jvm::lookup_long_constant("ZGranuleSizeShift");
+    utils::constants::long_const("ZGranuleSizeShift", z_granule_size_shift_);
+    
+    utils::constants::long_const("ZPageSizeSmallShift", z_page_size_small_shift_);
+    utils::constants::long_const("ZPageSizeMediumShift", z_page_size_medium_shift_);
 
-    z_page_size_small_shift_ = *runtime::Jvm::lookup_long_constant("ZPageSizeSmallShift");
-    z_page_size_medium_shift_ = *runtime::Jvm::lookup_long_constant("ZPageSizeMediumShift");
+    utils::constants::int_const("ZObjectAlignmentMediumShift", z_object_alignment_medium_shift_);
+    utils::constants::int_const("ZObjectAlignmentLargeShift", z_object_alignment_large_shift_);
 
-    z_object_alignment_medium_shift_ = *runtime::Jvm::lookup_int_constant("ZObjectAlignmentMediumShift");
-    z_object_alignment_large_shift_ = *runtime::Jvm::lookup_int_constant("ZObjectAlignmentLargeShift");
+    utils::constants::long_const("ZAddressOffsetShift", z_address_offset_shift_);
 
-    z_address_offset_shift_ = *runtime::Jvm::lookup_long_constant("ZAddressOffsetShift");
-
-    z_address_offset_bits_ = *runtime::Jvm::lookup_long_constant("ZAddressOffsetBits");
-    z_address_offset_max_ = *runtime::Jvm::lookup_long_constant("ZAddressOffsetMax");
+    utils::constants::long_const("ZAddressOffsetBits", z_address_offset_bits_);
+    utils::constants::long_const("ZAddressOffsetMax", z_address_offset_max_);
 }
 } // namespace hotspot::gc::z

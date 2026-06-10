@@ -4,12 +4,13 @@ namespace hotspot::utilities
 {
 void GenericGrowableArray::initialize()
 {
-    types::Type *type_base = runtime::Jvm::lookup_type("GrowableArrayBase");
-    types::Type *type_array = runtime::Jvm::lookup_type("GrowableArray<int>");
+    utils::FieldResolver r{"GrowableArrayBase"};
 
-    len_offset_ = *type_base->field_offset("_len");
-    max_offset_ = *type_base->field_offset("_max");
+    r.field_offset("_len", len_offset_);
+    r.field_offset("_max", max_offset_);
 
-    data_offset_ = *type_array->field_offset("_data");
+    utils::FieldResolver r_arr{"GrowableArray<int>"};
+
+    r_arr.field_offset("_data", data_offset_);
 }
 } // namespace hotspot::utilities

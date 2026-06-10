@@ -38,15 +38,17 @@ void Method::change_method_associated_with_jmethod_id(uint64_t old_jmid_ptr, Met
 
 void Method::initialize()
 {
-    type_ = runtime::Jvm::lookup_type("Method");
+    utils::FieldResolver r{"Method"};
 
-    constMethod_offset_ = *type_->field_offset("_constMethod");
-    method_data_offset_ = *type_->field_offset("_method_data");
-    method_counters_offset_ = *type_->field_offset("_method_counters");
-    access_flags_offset_ = *type_->field_offset("_access_flags");
-    vtable_index_offset_ = *type_->field_offset("_vtable_index");
-    from_compiled_entry_offset_ = *type_->field_offset("_from_compiled_entry");
-    code_offset_ = *type_->field_offset("_code");
-    from_interpreter_entry_offset_ = *type_->field_offset("_from_interpreted_entry");
+    r.field_offset("_constMethod", constMethod_offset_);
+    r.field_offset("_method_data", method_data_offset_);
+    r.field_offset("_method_counters", method_counters_offset_);
+    r.field_offset("_access_flags", access_flags_offset_);
+    r.field_offset("_vtable_index", vtable_index_offset_);
+    r.field_offset("_from_compiled_entry", from_compiled_entry_offset_);
+    r.field_offset("_code", code_offset_);
+    r.field_offset("_from_interpreted_entry", from_interpreter_entry_offset_);
+
+    type_ = r.type();
 }
 } // namespace hotspot::oops

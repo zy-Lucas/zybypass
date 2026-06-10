@@ -18,11 +18,11 @@ uint64_t ZHeap::remap_object(uint64_t o) const noexcept
 
 void ZHeap::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZHeap");
-
-    page_allocator_offset_ = *type->field_offset("_page_allocator");
-    page_table_offset_ = *type->field_offset("_page_table");
-    forwarding_table_offset_ = *type->field_offset("_forwarding_table");
-    relocate_offset_ = *type->field_offset("_relocate");
+    utils::FieldResolver r{"ZHeap"};
+    
+    r.field_offset("_page_allocator", page_allocator_offset_);
+    r.field_offset("_page_table", page_table_offset_);
+    r.field_offset("_forwarding_table", forwarding_table_offset_);
+    r.field_offset("_relocate", relocate_offset_);
 }
 } // namespace hotspot::gc::z

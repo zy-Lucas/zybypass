@@ -22,8 +22,10 @@ uint64_t ZForwardingEntry::field_from_index_decode(uint64_t value) noexcept
 
 void ZForwardingEntry::initialize()
 {
-    type_ = runtime::Jvm::lookup_type("ZForwardingEntry");
+    utils::FieldResolver r{"ZForwardingEntry"};
 
-    entry_offset_ = *type_->field_offset("_entry");
+    r.field_offset("_entry", entry_offset_);
+
+    type_ = r.type();
 }
 } // namespace hotspot::gc::z

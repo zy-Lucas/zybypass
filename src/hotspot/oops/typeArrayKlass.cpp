@@ -21,8 +21,8 @@ std::string_view TypeArrayKlass::element_eype_name() const noexcept
 
 void TypeArrayKlass::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("TypeArrayKlass");
+    utils::FieldResolver r{"TypeArrayKlass"};
 
-    max_length_offset_ = *type->field_offset("_max_length");
+    r.field_offset("_max_length", max_length_offset_);
 }
 } // namespace hotspot::oops

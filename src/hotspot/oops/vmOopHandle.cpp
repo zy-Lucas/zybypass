@@ -14,8 +14,8 @@ Instance VMOopHandle::resolve() const
 
 void VMOopHandle::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("OopHandle");
+    utils::FieldResolver r{"OopHandle"};
 
-    obj_offset = *type->field_offset("_obj");
+    r.field_offset("_obj", obj_offset);
 }
 } // namespace hotspot::oops

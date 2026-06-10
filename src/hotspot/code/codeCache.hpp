@@ -37,9 +37,9 @@ void CodeCache::iterator_nmethods(auto &&visitor)
     static bool segmented_mode = heap_length != 1;
 
     if (std::thread::hardware_concurrency() <= heap_length || !segmented_mode)
-        for (uint32_t i = 0; i < heap_length; ++i)
+        for (uint32_t index = 0; index < heap_length; ++index)
         {
-            memory::CodeHeap h{heaps_.at(i)};
+            memory::CodeHeap h{heaps_.at(index)};
             int32_t type = h.code_blob_type();
 
             if (segmented_mode)
@@ -58,8 +58,8 @@ void CodeCache::iterator_nmethods(auto &&visitor)
         std::vector<std::thread> threads;
         threads.reserve(heap_length);
 
-        for (uint32_t i = 0; i < heap_length; ++i)
-            if (memory::CodeHeap h{heaps_.at(i)}; h.code_blob_type() < NonNMethod)
+        for (uint32_t index = 0; index < heap_length; ++index)
+            if (memory::CodeHeap h{heaps_.at(index)}; h.code_blob_type() < NonNMethod)
                 threads.emplace_back([&, h]() mutable { h.iterate(visitor); });
         for (auto &t : threads)
             t.join();

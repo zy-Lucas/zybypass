@@ -27,11 +27,11 @@ template <typename T> class GrowableArray : public GenericGrowableArray
   public:
     GrowableArray(uint64_t addr) noexcept : GenericGrowableArray(addr) {}
 
-    T at(uint32_t i) const noexcept
+    T at(uint32_t index) const noexcept
     {
-        if (i >= length())
+        if (index >= length())
             return {0};
-        return T{runtime::Jvm::read<uint64_t>(data() + i * sizeof(void *))};
+        return T{runtime::Jvm::read<uint64_t>(data() + index * sizeof(void *))};
     }
 
     uint64_t data() const noexcept { return read_field<uint64_t>(data_offset_); }

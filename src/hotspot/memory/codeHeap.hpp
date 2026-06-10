@@ -1,7 +1,6 @@
 #pragma once
 
 #include "code/codeBlob.hpp"
-#include "runtime/jvmObject.hpp"
 #include "heapBlock.hpp"
 #include "virtualSpace.hpp"
 

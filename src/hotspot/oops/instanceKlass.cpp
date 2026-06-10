@@ -1,9 +1,8 @@
 #include "instanceKlass.hpp"
 #include "field.hpp"
-#include "method.hpp"
-#include "symbol.hpp"
+#include "klassVtable.hpp"
+#include "oops/method.hpp"
 #include "vmSymbols.hpp"
-#include <cstdint>
 
 namespace hotspot::oops
 {
@@ -30,7 +29,7 @@ constexpr std::string_view ClassState::to_string() const noexcept
 uint64_t InstanceKlass::size() const noexcept
 {
     int32_t word_length = runtime::Jvm::bytes_per_word();
-    uint64_t size = header_size() + (vtable_len() + itable_len() + nonstatic_oop_map_size()) * word_length;
+    uint64_t size = header_size() + (vtable_length() + itable_length() + nonstatic_oop_map_size()) * word_length;
     if (is_interface())
         size += word_length;
     return align_size(size);
@@ -115,6 +114,14 @@ uint64_t InstanceKlass::jmethod_id_or_null(Method method) const noexcept
     return id;
 }
 
+void InstanceKlass::adjust_default_methods(Method old_method, Method new_method) noexcept
+{
+    if (default_methods())
+        for (uint32_t index = 0; index < default_methods().length(); ++index)
+            if (default_methods().at(index) == old_method)
+                default_methods().set_at(index, new_method.address());
+}
+
 utilities::KlassArray InstanceKlass::local_interfaces() const noexcept
 {
     return read_field<uint64_t>(local_interfaces_offset_);
@@ -125,6 +132,8 @@ utilities::KlassArray InstanceKlass::transitive_interfaces() const noexcept
     return read_field<uint64_t>(transitive_interfaces_offset_);
 }
 
+klassItable InstanceKlass::itable() const noexcept { return klassItable(*this); }
+
 std::string_view InstanceKlass::source_debug_extension_view() const noexcept
 {
     return read_string_field(source_debug_extension_offset_);
@@ -132,9 +141,9 @@ std::string_view InstanceKlass::source_debug_extension_view() const noexcept
 
 Method InstanceKlass::find_method(std::string_view name, std::string_view sig) const noexcept
 {
-    if (int32_t index = linear_search(methods(), name, sig); index != -1)
-        return methods().at(index);
-    return 0;
+
+    int32_t hit = find_method_index(name, sig);
+    return hit >= 0 ? methods().at(hit) : 0;
 }
 
 int32_t InstanceKlass::find_method_index(std::string_view name, std::string_view sig) const noexcept
@@ -156,9 +165,9 @@ Field InstanceKlass::find_field(std::string_view name, std::string_view sig) con
 Field InstanceKlass::find_local_field(std::string_view name, std::string_view sig) const noexcept
 {
     uint16_t length = all_fields_count();
-    for (uint32_t i = 0; i < length; ++i)
-        if (field_name(i).equals(name) && field_signature(i).equals(sig))
-            return Field{*this, i};
+    for (uint32_t index = 0; index < length; ++index)
+        if (field_name(index).equals(name) && field_signature(index).equals(sig))
+            return Field{*this, index};
     return {0, 0};
 }
 
@@ -166,9 +175,9 @@ Field InstanceKlass::find_interface_field(std::string_view name, std::string_vie
 {
     utilities::KlassArray interfaces{local_interfaces()};
     int32_t length = interfaces.length();
-    for (uint32_t i = 0; i < length; ++i)
+    for (uint32_t index = 0; index < length; ++index)
     {
-        InstanceKlass intf{interfaces.at(i).address()};
+        InstanceKlass intf{interfaces.at(index).address()};
         if (Field f{intf.find_local_field(name, sig)}; f)
             return f;
         if (Field f{intf.find_interface_field(name, sig)}; f)
@@ -181,72 +190,71 @@ int32_t InstanceKlass::linear_search(utilities::MethodArray methods, std::string
                                      std::string_view signature) noexcept
 {
     const int32_t len = methods.length();
-    for (uint32_t i = 0; i < len; ++i)
-        if (Method m{methods.at(i)}; m.name().equals(name) && m.signature().equals(signature))
-            return i;
-    return 0;
+    for (uint32_t index = 0; index < len; ++index)
+        if (Method m{methods.at(index)}; m.name().equals(name) && m.signature().equals(signature))
+            return index;
+    return -1;
 }
 
 void InstanceKlass::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("InstanceKlass");
+    utils::FieldResolver r{"InstanceKlass"};
 
-    array_klasses_offset_ = *type->field_offset("_array_klasses");
-    constants_offset_ = *type->field_offset("_constants");
-    inner_classes_offset_ = *type->field_offset("_inner_classes");
-    source_debug_extension_offset_ = *type->field_offset("_source_debug_extension");
-    nonstatic_field_size_offset_ = *type->field_offset("_nonstatic_field_size");
-    static_field_size_offset_ = *type->field_offset("_static_field_size");
-    nonstatic_oop_map_size_offset_ = *type->field_offset("_nonstatic_oop_map_size");
-    itable_len_offset_ = *type->field_offset("_itable_len");
-    static_oop_field_count_offset_ = *type->field_offset("_static_oop_field_count");
-    java_fields_count_offset_ = *type->field_offset("_java_fields_count");
-    is_marked_dependent_offset_ = *type->field_offset("_is_marked_dependent");
-    idnum_allocated_count_offset_ = *type->field_offset("_idnum_allocated_count");
-    init_state_offset_ = *type->field_offset("_init_state");
-    misc_flags_offset_ = *type->field_offset("_misc_flags");
-    methods_jmethod_ids_offset_ = *type->field_offset("_methods_jmethod_ids");
-    methods_offset_ = *type->field_offset("_methods");
-    default_methods_offset_ = *type->field_offset("_default_methods");
-    local_interfaces_offset_ = *type->field_offset("_local_interfaces");
-    transitive_interfaces_offset_ = *type->field_offset("_transitive_interfaces");
-    method_ordering_offset_ = *type->field_offset("_method_ordering");
-    fields_offset_ = *type->field_offset("_fields");
+    r.field_offset("_array_klasses", array_klasses_offset_);
+    r.field_offset("_constants", constants_offset_);
+    r.field_offset("_inner_classes", inner_classes_offset_);
+    r.field_offset("_source_debug_extension", source_debug_extension_offset_);
+    r.field_offset("_nonstatic_field_size", nonstatic_field_size_offset_);
+    r.field_offset("_static_field_size", static_field_size_offset_);
+    r.field_offset("_nonstatic_oop_map_size", nonstatic_oop_map_size_offset_);
+    r.field_offset("_itable_len", itable_len_offset_);
+    r.field_offset("_static_oop_field_count", static_oop_field_count_offset_);
+    r.field_offset("_java_fields_count", java_fields_count_offset_);
+    r.field_offset("_is_marked_dependent", is_marked_dependent_offset_);
+    r.field_offset("_idnum_allocated_count", idnum_allocated_count_offset_);
+    r.field_offset("_init_state", init_state_offset_);
+    r.field_offset("_misc_flags", misc_flags_offset_);
+    r.field_offset("_methods_jmethod_ids", methods_jmethod_ids_offset_);
+    r.field_offset("_methods", methods_offset_);
+    r.field_offset("_default_methods", default_methods_offset_);
+    r.field_offset("_local_interfaces", local_interfaces_offset_);
+    r.field_offset("_transitive_interfaces", transitive_interfaces_offset_);
+    r.field_offset("_method_ordering", method_ordering_offset_);
+    r.field_offset("_fields", fields_offset_);
 
-    breakpoints_offset_ = type->field_offset("_breakpoints");
+    r.field_offset("_breakpoints", breakpoints_offset_);
 
-    header_size_ = type->size();
+    r.type_size(header_size_);
 
-    access_flags_offset_ = *runtime::Jvm::lookup_int_constant("FieldInfo::access_flags_offset");
-    name_index_offset_ = *runtime::Jvm::lookup_int_constant("FieldInfo::name_index_offset");
-    signature_index_offset_ = *runtime::Jvm::lookup_int_constant("FieldInfo::signature_index_offset");
-    initval_index_offset_ = *runtime::Jvm::lookup_int_constant("FieldInfo::initval_index_offset");
-    low_offset_ = *runtime::Jvm::lookup_int_constant("FieldInfo::low_packed_offset");
-    high_offset_ = *runtime::Jvm::lookup_int_constant("FieldInfo::high_packed_offset");
-    field_slots_ = *runtime::Jvm::lookup_int_constant("FieldInfo::field_slots");
-    field_info_tag_size_ = *runtime::Jvm::lookup_int_constant("FIELDINFO_TAG_SIZE");
-    field_info_tag_offset_ = *runtime::Jvm::lookup_int_constant("FIELDINFO_TAG_OFFSET");
+    utils::constants::int_const("FieldInfo::access_flags_offset", access_flags_offset_);
+    utils::constants::int_const("FieldInfo::name_index_offset", name_index_offset_);
+    utils::constants::int_const("FieldInfo::signature_index_offset", signature_index_offset_);
+    utils::constants::int_const("FieldInfo::initval_index_offset", initval_index_offset_);
+    utils::constants::int_const("FieldInfo::low_packed_offset", low_offset_);
+    utils::constants::int_const("FieldInfo::high_packed_offset", high_offset_);
+    utils::constants::int_const("FieldInfo::field_slots", field_slots_);
+    utils::constants::int_const("FIELDINFO_TAG_SIZE", field_info_tag_size_);
+    utils::constants::int_const("FIELDINFO_TAG_OFFSET", field_info_tag_offset_);
 
-    class_state_allocated_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::allocated");
-    class_state_loaded_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::loaded");
-    class_state_linked_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::linked");
-    class_state_being_initialized_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::being_initialized");
-    class_state_fully_initialized_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::fully_initialized");
-    class_state_initialization_error_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::initialization_error");
+    utils::constants::int_const("InstanceKlass::allocated", class_state_allocated_);
+    utils::constants::int_const("InstanceKlass::loaded", class_state_loaded_);
+    utils::constants::int_const("InstanceKlass::linked", class_state_linked_);
+    utils::constants::int_const("InstanceKlass::being_initialized", class_state_being_initialized_);
+    utils::constants::int_const("InstanceKlass::fully_initialized", class_state_fully_initialized_);
+    utils::constants::int_const("InstanceKlass::initialization_error", class_state_initialization_error_);
 
-    misc_rewritten_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_rewritten");
-    misc_has_nonstatic_fields_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_has_nonstatic_fields");
-    misc_should_verify_class_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_should_verify_class");
-    misc_is_contended_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_is_contended");
-    misc_has_nonstatic_concrete_methods_ =
-        *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_has_nonstatic_concrete_methods");
-    misc_declares_nonstatic_concrete_methods_ =
-        *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_declares_nonstatic_concrete_methods");
-    misc_has_beed_redefined_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_has_been_redefined");
-    misc_is_scratch_class_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_is_scratch_class");
-    misc_is_shared_boot_class_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_is_shared_boot_class");
-    misc_is_shared_platform_class_ =
-        *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_is_shared_platform_class");
-    misc_is_shared_app_class_ = *runtime::Jvm::lookup_int_constant("InstanceKlass::_misc_is_shared_app_class");
+    utils::constants::int_const("InstanceKlass::_misc_rewritten", misc_rewritten_);
+    utils::constants::int_const("InstanceKlass::_misc_has_nonstatic_fields", misc_has_nonstatic_fields_);
+    utils::constants::int_const("InstanceKlass::_misc_should_verify_class", misc_should_verify_class_);
+    utils::constants::int_const("InstanceKlass::_misc_is_contended", misc_is_contended_);
+    utils::constants::int_const("InstanceKlass::_misc_has_nonstatic_concrete_methods",
+                                misc_has_nonstatic_concrete_methods_);
+    utils::constants::int_const("InstanceKlass::_misc_declares_nonstatic_concrete_methods",
+                                misc_declares_nonstatic_concrete_methods_);
+    utils::constants::int_const("InstanceKlass::_misc_has_been_redefined", misc_has_beed_redefined_);
+    utils::constants::int_const("InstanceKlass::_misc_is_scratch_class", misc_is_scratch_class_);
+    utils::constants::int_const("InstanceKlass::_misc_is_shared_boot_class", misc_is_shared_boot_class_);
+    utils::constants::int_const("InstanceKlass::_misc_is_shared_platform_class", misc_is_shared_platform_class_);
+    utils::constants::int_const("InstanceKlass::_misc_is_shared_app_class", misc_is_shared_app_class_);
 }
 } // namespace hotspot::oops

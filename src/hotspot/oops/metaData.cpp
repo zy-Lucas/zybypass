@@ -1,12 +1,9 @@
 #include "metaData.hpp"
-#include "runtime/virtualBaseConstructor.hpp"
-#include "constMethod.hpp"
 #include "constantPool.hpp"
-#include "constantPoolCache.hpp"
 #include "instanceKlass.hpp"
-#include "klass.hpp"
 #include "method.hpp"
 #include "objArrayKlass.hpp"
+#include "runtime/virtualBaseConstructor.hpp"
 #include "typeArrayKlass.hpp"
 
 namespace hotspot::oops
@@ -22,7 +19,7 @@ void MetaData::initialize() {}
 
 std::pair<std::string_view, runtime::JvmObjectPtr> MetaData::instantiate_wrapper_for(uint64_t addr)
 {
-    static MetaDataConstructor ctor{runtime::Jvm::lookup_type("Metadata")};
+    static MetaDataConstructor ctor{utils::FieldResolver{"Metadata"}.type()};
     return ctor.instantiate_wrapper_for(addr);
 }
 } // namespace hotspot::oops

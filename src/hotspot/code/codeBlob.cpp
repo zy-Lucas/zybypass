@@ -38,7 +38,7 @@ void CodeBlob::initialize()
 
 void RuntimeBlob::initialize()
 {
-    // utils::FieldResolver r("RuntimeBlob");
+    // utils::FieldResolver r{"RuntimeBlob"};
 }
 
 void RuntimeStub::initialize()

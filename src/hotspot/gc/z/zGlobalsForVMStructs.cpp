@@ -54,17 +54,17 @@ int32_t ZGlobalsForVMStructs::z_object_alignment_small() const noexcept
 
 void ZGlobalsForVMStructs::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZGlobalsForVMStructs");
+    utils::FieldResolver r{"ZGlobalsForVMStructs"};
 
-    z_global_phase_offset_ = *type->field_offset("_ZGlobalPhase");
-    z_global_seq_num_offset_ = *type->field_offset("_ZGlobalSeqNum");
-    z_address_offset_mask_offset_ = *type->field_offset("_ZAddressOffsetMask");
-    z_address_metadata_mask_offset_ = *type->field_offset("_ZAddressMetadataMask");
-    z_address_metadata_finalizable_offset_ = *type->field_offset("_ZAddressMetadataFinalizable");
-    z_address_good_mask_offset_ = *type->field_offset("_ZAddressGoodMask");
-    z_address_bad_mask_offset_ = *type->field_offset("_ZAddressBadMask");
-    z_address_weak_bad_mask_offset_ = *type->field_offset("_ZAddressWeakBadMask");
-    z_object_alignment_small_shift_offset_ = *type->field_offset("_ZObjectAlignmentSmallShift");
-    z_object_alignment_small_offset_ = *type->field_offset("_ZObjectAlignmentSmall");
+    r.field_offset("_ZGlobalPhase", z_global_phase_offset_);
+    r.field_offset("_ZGlobalSeqNum", z_global_seq_num_offset_);
+    r.field_offset("_ZAddressOffsetMask", z_address_offset_mask_offset_);
+    r.field_offset("_ZAddressMetadataMask", z_address_metadata_mask_offset_);
+    r.field_offset("_ZAddressMetadataFinalizable", z_address_metadata_finalizable_offset_);
+    r.field_offset("_ZAddressGoodMask", z_address_good_mask_offset_);
+    r.field_offset("_ZAddressBadMask", z_address_bad_mask_offset_);
+    r.field_offset("_ZAddressWeakBadMask", z_address_weak_bad_mask_offset_);
+    r.field_offset("_ZObjectAlignmentSmallShift", z_object_alignment_small_shift_offset_);
+    r.field_offset("_ZObjectAlignmentSmall", z_object_alignment_small_offset_);
 }
 } // namespace hotspot::gc::z

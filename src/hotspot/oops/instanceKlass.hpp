@@ -8,6 +8,7 @@ namespace hotspot::oops
 {
 class Field;
 class Oop;
+class klassItable;
 
 struct ClassState
 {
@@ -67,7 +68,7 @@ class InstanceKlass : public Klass
     std::string source_debug_extension() const { return std::string{source_debug_extension_view()}; }
     int32_t nonstatic_field_size() const noexcept { return read_field<int32_t>(nonstatic_field_size_offset_); }
     int32_t nonstatic_oop_map_size() const noexcept { return read_field<int32_t>(nonstatic_oop_map_size_offset_); }
-    int32_t itable_len() const noexcept { return read_field<int32_t>(itable_len_offset_); }
+    int32_t itable_length() const noexcept { return read_field<int32_t>(itable_len_offset_); }
     uint16_t static_oop_field_count() const noexcept { return read_field<uint16_t>(static_oop_field_count_offset_); }
     uint16_t java_fields_count() const noexcept { return read_field<uint16_t>(java_fields_count_offset_); }
     uint16_t all_fields_count() const noexcept;
@@ -92,8 +93,15 @@ class InstanceKlass : public Klass
     utilities::MethodArray methods() const noexcept { return read_field<uint64_t>(methods_offset_); }
     utilities::MethodArray default_methods() const noexcept { return read_field<uint64_t>(default_methods_offset_); }
 
+    void adjust_default_methods(Method old_method, Method new_method) noexcept;
+
     utilities::KlassArray local_interfaces() const noexcept;
     utilities::KlassArray transitive_interfaces() const noexcept;
+
+    uint64_t start_of_itable() const noexcept { return start_of_vtable() + vtable_length() * 8; }
+    uint64_t end_of_itable() const noexcept { return start_of_itable() + itable_length() * 8; }
+
+    klassItable itable() const noexcept;
 
     int32_t size_helper() const noexcept { return layout_helper() / sizeof(void *); }
 

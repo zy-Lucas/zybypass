@@ -9,12 +9,12 @@ uint64_t InterpreterCodelet::code_begin() const noexcept
 
 void InterpreterCodelet::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("InterpreterCodelet");
+    utils::FieldResolver r{"InterpreterCodelet"};
 
-    description_offset_ = *type->field_offset("_description");
-    size_offset_ = *type->field_offset("_size");
-    bytecode_offset_ = *type->field_offset("_bytecode");
+    r.field_offset("_description", description_offset_);
+    r.field_offset("_size", size_offset_);
+    r.field_offset("_bytecode", bytecode_offset_);
 
-    instance_size_ = type->size();
+    r.type_size(instance_size_);
 }
 }

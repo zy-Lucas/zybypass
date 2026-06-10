@@ -10,9 +10,9 @@ ConstantPoolCacheEntry ConstantPoolCache::entry_at(uint32_t index) const noexcep
 void ConstantPoolCache::adjust_method_entries(Method old_method, Method new_method)
 {
     int32_t len = length();
-    for (uint32_t i = 0; i < len; i++)
+    for (uint32_t index = 0; index < len; index++)
     {
-        ConstantPoolCacheEntry entry{entry_at(i)};
+        ConstantPoolCacheEntry entry{entry_at(index)};
         if (Method m{entry.interesting_method_entry()}; m == old_method)
             entry.adjust_method_entry(old_method, new_method);
     }

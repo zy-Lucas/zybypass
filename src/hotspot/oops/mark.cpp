@@ -4,37 +4,37 @@ namespace hotspot::oops
 {
 void Mark::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("oopDesc");
+    utils::FieldResolver r{"oopDesc"};
 
-    mark_offset_ = *type->field_offset("_mark");
+    r.field_offset("_mark", mark_offset_);
 
-    age_bits_ = *runtime::Jvm::lookup_long_constant("markWord::age_bits");
-    lock_bits_ = *runtime::Jvm::lookup_long_constant("markWord::lock_bits");
-    biased_lock_bits_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_bits");
-    max_hash_bits_ = *runtime::Jvm::lookup_long_constant("markWord::max_hash_bits");
-    hash_bits_ = *runtime::Jvm::lookup_long_constant("markWord::hash_bits");
-    lock_shift_ = *runtime::Jvm::lookup_long_constant("markWord::lock_shift");
-    biased_lock_shift_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_shift");
-    age_shift_ = *runtime::Jvm::lookup_long_constant("markWord::age_shift");
-    hash_shift_ = *runtime::Jvm::lookup_long_constant("markWord::hash_shift");
-    lock_mask_ = *runtime::Jvm::lookup_long_constant("markWord::lock_mask");
-    lock_mask_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::lock_mask_in_place");
-    biased_lock_mask_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_mask");
-    biased_lock_mask_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_mask_in_place");
-    biased_lock_bit_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_bit_in_place");
-    age_mask_ = *runtime::Jvm::lookup_long_constant("markWord::age_mask");
-    age_mask_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::age_mask_in_place");
-    hash_mask_ = *runtime::Jvm::lookup_long_constant("markWord::hash_mask");
-    hash_mask_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::hash_mask_in_place");
-    biased_lock_alignment_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_alignment");
-    locked_value_ = *runtime::Jvm::lookup_long_constant("markWord::locked_value");
-    unlocked_value_ = *runtime::Jvm::lookup_long_constant("markWord::unlocked_value");
-    monitor_value_ = *runtime::Jvm::lookup_long_constant("markWord::monitor_value");
-    marked_value_ = *runtime::Jvm::lookup_long_constant("markWord::marked_value");
-    biased_lock_pattern_ = *runtime::Jvm::lookup_long_constant("markWord::biased_lock_pattern");
-    no_hash_ = *runtime::Jvm::lookup_long_constant("markWord::no_hash");
-    no_hash_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::no_hash_in_place");
-    no_lock_in_place_ = *runtime::Jvm::lookup_long_constant("markWord::no_lock_in_place");
-    max_age_ = *runtime::Jvm::lookup_long_constant("markWord::max_age");
+    utils::constants::long_const("markWord::age_bits", age_bits_);
+    utils::constants::long_const("markWord::lock_bits", lock_bits_);
+    utils::constants::long_const("markWord::biased_lock_bits", biased_lock_bits_);
+    utils::constants::long_const("markWord::max_hash_bits", max_hash_bits_);
+    utils::constants::long_const("markWord::hash_bits", hash_bits_);
+    utils::constants::long_const("markWord::lock_shift", lock_shift_);
+    utils::constants::long_const("markWord::biased_lock_shift", biased_lock_shift_);
+    utils::constants::long_const("markWord::age_shift", age_shift_);
+    utils::constants::long_const("markWord::hash_shift", hash_shift_);
+    utils::constants::long_const("markWord::lock_mask", lock_mask_);
+    utils::constants::long_const("markWord::lock_mask_in_place", lock_mask_in_place_);
+    utils::constants::long_const("markWord::biased_lock_mask", biased_lock_mask_);
+    utils::constants::long_const("markWord::biased_lock_mask_in_place", biased_lock_mask_in_place_);
+    utils::constants::long_const("markWord::biased_lock_bit_in_place", biased_lock_bit_in_place_);
+    utils::constants::long_const("markWord::age_mask", age_mask_);
+    utils::constants::long_const("markWord::age_mask_in_place", age_mask_in_place_);
+    utils::constants::long_const("markWord::hash_mask", hash_mask_);
+    utils::constants::long_const("markWord::hash_mask_in_place", hash_mask_in_place_);
+    utils::constants::long_const("markWord::biased_lock_alignment", biased_lock_alignment_);
+    utils::constants::long_const("markWord::locked_value", locked_value_);
+    utils::constants::long_const("markWord::unlocked_value", unlocked_value_);
+    utils::constants::long_const("markWord::monitor_value", monitor_value_);
+    utils::constants::long_const("markWord::marked_value", marked_value_);
+    utils::constants::long_const("markWord::biased_lock_pattern", biased_lock_pattern_);
+    utils::constants::long_const("markWord::no_hash", no_hash_);
+    utils::constants::long_const("markWord::no_hash_in_place", no_hash_in_place_);
+    utils::constants::long_const("markWord::no_lock_in_place", no_lock_in_place_);
+    utils::constants::long_const("markWord::max_age", max_age_);
 }
 } // namespace hotspot::oops

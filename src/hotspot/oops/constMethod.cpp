@@ -4,10 +4,7 @@
 
 namespace hotspot::oops
 {
-Method ConstMethod::method() const noexcept
-{
-    return constants().pool_holder().methods().at(method_idnum());
-}
+Method ConstMethod::method() const noexcept { return constants().pool_holder().methods().at(method_idnum()); }
 
 uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
 {
@@ -19,34 +16,35 @@ uint64_t ConstMethod::offset_of_last_u2_element() const noexcept
 
 void ConstMethod::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ConstMethod");
+    utils::FieldResolver r{"ConstMethod"};
 
-    constants_offset_ = *type->field_offset("_constants");
-    constMethod_size_offset_ = *type->field_offset("_constMethod_size");
-    flags_offset_ = *type->field_offset("_flags");
-    code_size_offset_ = *type->field_offset("_code_size");
-    name_index_offset_ = *type->field_offset("_name_index");
-    signature_index_offset_ = *type->field_offset("_signature_index");
-    method_idnum_offset_ = *type->field_offset("_method_idnum");
-    max_stack_offset_ = *type->field_offset("_max_stack");
-    max_locals_offset_ = *type->field_offset("_max_locals");
-    size_of_parameters_offset_ = *type->field_offset("_size_of_parameters");
+    r.field_offset("_constants", constants_offset_);
+    r.field_offset("_constMethod_size", constMethod_size_offset_);
+    r.field_offset("_flags", flags_offset_);
+    r.field_offset("_code_size", code_size_offset_);
+    r.field_offset("_name_index", name_index_offset_);
+    r.field_offset("_signature_index", signature_index_offset_);
+    r.field_offset("_method_idnum", method_idnum_offset_);
+    r.field_offset("_max_stack", max_stack_offset_);
+    r.field_offset("_max_locals", max_locals_offset_);
+    r.field_offset("_size_of_parameters", size_of_parameters_offset_);
 
-    bytecode_offset_ = type->size();
-    method_parameters_element_size_ = runtime::Jvm::lookup_type("MethodParametersElement")->size();
-    checked_exception_element_size_ = runtime::Jvm::lookup_type("CheckedExceptionElement")->size();
-    local_variable_table_element_size_ = runtime::Jvm::lookup_type("LocalVariableTableElement")->size();
-    exception_table_element_size_ = runtime::Jvm::lookup_type("ExceptionTableElement")->size();
+    r.type_size(bytecode_offset_);
 
-    has_line_number_table_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_linenumber_table");
-    has_checked_exceptions_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_checked_exceptions");
-    has_local_variable_table_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_localvariable_table");
-    has_exception_table_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_exception_table");
-    has_generic_signature_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_generic_signature");
-    has_method_parameters_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_method_parameters");
-    has_method_annotations_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_method_annotations");
-    has_parameter_annotations_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_parameter_annotations");
-    has_default_annotations_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_default_annotations");
-    has_type_annotations_ = *runtime::Jvm::lookup_int_constant("ConstMethod::_has_type_annotations");
+    utils::FieldResolver{"MethodParametersElement"}.type_size(method_parameters_element_size_);
+    utils::FieldResolver{"CheckedExceptionElement"}.type_size(checked_exception_element_size_);
+    utils::FieldResolver{"LocalVariableTableElement"}.type_size(local_variable_table_element_size_);
+    utils::FieldResolver{"ExceptionTableElement"}.type_size(exception_table_element_size_);
+
+    utils::constants::int_const("ConstMethod::_has_linenumber_table", has_line_number_table_);
+    utils::constants::int_const("ConstMethod::_has_checked_exceptions", has_checked_exceptions_);
+    utils::constants::int_const("ConstMethod::_has_localvariable_table", has_local_variable_table_);
+    utils::constants::int_const("ConstMethod::_has_exception_table", has_exception_table_);
+    utils::constants::int_const("ConstMethod::_has_generic_signature", has_generic_signature_);
+    utils::constants::int_const("ConstMethod::_has_method_parameters", has_method_parameters_);
+    utils::constants::int_const("ConstMethod::_has_method_annotations", has_method_annotations_);
+    utils::constants::int_const("ConstMethod::_has_parameter_annotations", has_parameter_annotations_);
+    utils::constants::int_const("ConstMethod::_has_default_annotations", has_default_annotations_);
+    utils::constants::int_const("ConstMethod::_has_type_annotations", has_type_annotations_);
 }
 } // namespace hotspot::oops

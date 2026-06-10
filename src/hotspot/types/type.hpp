@@ -1,9 +1,6 @@
 #pragma once
 
 #include "field.hpp"
-#include <iostream>
-#include <memory>
-#include <optional>
 #include <unordered_map>
 
 namespace hotspot::types

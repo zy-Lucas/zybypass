@@ -9,8 +9,8 @@ uint64_t ZGranuleMapForForwarding::forwarding_at(uint64_t index) const noexcept
 
 void ZGranuleMapForForwarding::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("ZGranuleMapForForwarding");
-
-    map_offset_ = *type->field_offset("_map");
+    utils::FieldResolver r{"ZGranuleMapForForwarding"};
+    
+    r.field_offset("_map", map_offset_);
 }
 } // namespace hotspot::gc::z

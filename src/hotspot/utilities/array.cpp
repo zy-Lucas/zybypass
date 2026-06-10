@@ -43,37 +43,40 @@ void GenericArray::set_address_at(uint32_t index, uint64_t addr) noexcept
 
 void GenericArray::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("Array<int>");
+    utils::FieldResolver r{"Array<int>"};
 
-    length_offset_ = *type->field_offset("_length");
+    r.field_offset("_length", length_offset_);
 }
 
 oops::Method MethodArray::at(uint32_t index) const noexcept { return address_at(index); }
 
 void MethodArray::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("Array<Method*>");
-    elem_type_ = runtime::Jvm::lookup_type("Method*");
+    utils::FieldResolver r{"Array<Method*>"};
 
-    data_offset_ = *type->field_offset("_data");
+    r.field_offset("_data", data_offset_);
+
+    elem_type_ = utils::FieldResolver{"Method*"}.type();
 }
 
 oops::Klass KlassArray::at(uint32_t index) const noexcept { return address_at(index); }
 
 void KlassArray::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type("Array<Klass*>");
-    elem_type_ = runtime::Jvm::lookup_type("Klass*");
+    utils::FieldResolver r{"Array<Klass*>"};
 
-    data_offset_ = *type->field_offset("_data");
+    r.field_offset("_data", data_offset_);
+
+    elem_type_ = utils::FieldResolver{"Klass*"}.type();
 }
 
 template <typename T> void IntegerArray<T>::initialize()
 {
-    types::Type *type = runtime::Jvm::lookup_type(ArrayTypeTraits<T>::array_name);
-    elem_type_ = runtime::Jvm::lookup_type(ArrayTypeTraits<T>::elem_name);
+    utils::FieldResolver r{ArrayTypeTraits<T>::array_name};
 
-    data_offset_ = *type->field_offset("_data");
+    r.field_offset("_data", data_offset_);
+
+    elem_type_ = utils::FieldResolver{ArrayTypeTraits<T>::elem_name}.type();
 }
 
 template class IntegerArray<uint8_t>;

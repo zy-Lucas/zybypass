@@ -30,10 +30,10 @@ class Oop
     bool is_obj_array() const noexcept { return kind_ == Kind::obj_array; }
 
     Mark mark() const noexcept { return handle().address(); }
-    void set_mark(uint64_t mark) noexcept { runtime::Jvm::write(handle().address() + mark_offset_, mark); };
+    void set_mark(Mark mark) noexcept { runtime::Jvm::write(handle().address() + mark_offset_, mark.address()); };
 
     Klass klass() const noexcept;
-    void set_klass(uint64_t klass) noexcept;
+    void set_klass(Klass klass) noexcept;
 
     bool operator==(const Oop &o) const noexcept { return handle_ == o.handle_; }
 
