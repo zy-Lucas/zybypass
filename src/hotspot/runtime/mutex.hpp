@@ -1,11 +1,7 @@
 #pragma once
 
+#include "os/os.hpp"
 #include "runtime/threads.hpp"
-
-#ifndef _WIN32
-#include "os/posix/os_posix.hpp"
-#else
-#endif
 
 namespace hotspot::runtime
 {

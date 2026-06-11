@@ -203,7 +203,7 @@ uint64_t Jvm::deref_symbol(const char *symbol_name)
     HMODULE libjvm = jvm_handle();
     if (!libjvm)
         return 0;
-    if (auto addr = (uint64_t)GetProcAddress(libjvm, symbol_name.c_str()); addr)
+    if (uint64_t addr = (uint64_t)GetProcAddress(libjvm, symbol_name); addr)
         return read<uint64_t>(addr);
     return 0;
 #else
@@ -540,7 +540,7 @@ HMODULE Jvm::jvm_handle() noexcept
 std::string Jvm::vtbl_symbol_for_type(types::Type *type)
 {
 #ifdef _WIN32
-    return std::format("??_7{}@@6B@", type->get_name());
+    return std::format("??_7{}@@6B@", type->name());
 #else
     std::string_view vt{"_ZTV"};
     if (debugger::aarch64::lookup_by_name("_vt_10JavaThread"))

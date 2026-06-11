@@ -1,3 +1,4 @@
+#if defined(__unix__) || defined(__unix) || defined(__APPLE__)
 #pragma once
 
 #include <pthread.h>
@@ -84,3 +85,4 @@ class PlatformMonitor : public PlatformMutex
 #endif // PLATFORM_MONITOR_IMPL_INDIRECT
 };
 } // namespace hotspot::os
+#endif
