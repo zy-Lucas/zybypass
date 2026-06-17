@@ -25,6 +25,7 @@
 #include "jni_md.h"
 #include "render/overlay.h"
 #include "tools/javaTools.hpp"
+#include <atomic>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -152,40 +153,18 @@ JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) { g_javaVM = nullptr; }
 
 jint ex() { return 12345678; }
 
-extern "C" jlong JNIEXPORT Java_net_endofcosmos_sword_natives_Native_a(JNIEnv *env, jclass, jstring klass_name,
-                                                                       jstring method_name, jstring method_sign)
+extern "C" jlong JNIEXPORT Java_net_zy_terminus_Terminus_putMethod(JNIEnv *env, jclass, jstring klass_name,
+                                                                   jstring method_name, jstring method_sign)
 {
     JavaTools::set_method_to_native(klass_name, method_name, method_sign, (uint64_t)ex);
-    // hotspot::oops::InstanceKlass ik{
-    //     hotspot::classfile::ClassLoaderDataGraph::find(JavaTools::to_std_string(klass_name)).address()};
-    // hotspot::oops::OopField field = ik.find_field("instance", "Lnet/endofcosmos/sword/Test;");
-    // hotspot::oops::InstanceKlass k{
-    //     hotspot::classfile::ClassLoaderDataGraph::find("net/endofcosmos/sword/Test").address()};
-    // hotspot::gc::shared::ObjAllocator allocate{k, uint64_t(k.layout_helper())};
-    // hotspot::oops::Instance ins{allocate.allocate()};
-    // field.set_value(ik.java_mirror(), ins);
-    // jclass sys = env->FindClass("java/lang/System");
-    // jmethodID gc = env->GetStaticMethodID(sys, "gc", "()V");
-    // env->CallStaticVoidMethod(sys, gc);
-    // env->DeleteLocalRef(sys);
-
-    // const char *kl_name = env->GetStringUTFChars(klass_name, nullptr);
-
-    // hotspot::oops::InstanceKlass ik{hotspot::classfile::ClassLoaderDataGraph::find(kl_name)};
-    // hotspot::oops::Method method{uint64_t(method_addr)};
-    // uint8_t *new_method = (uint8_t *)malloc(method.size() + 16);
-    // void *a = (void *)ex;
-    // memcpy(new_method, (void *)method_addr, method.size());
-    // memcpy(new_method + method.size(), &a, 8);
-    // hotspot::oops::Method{(uint64_t)new_method}.set_is_native(true);
-    // hotspot::oops::Method{(uint64_t)new_method}.set_from_interpreter_entry(
-    //     hotspot::interpreter::Interpreter::code()
-    //         .find_method_entry_point(hotspot::code::EntryPoint::native)
-    //         .code_begin());
-    // ik.methods().set_at(1, (uint64_t)new_method);
-
-    // env->ReleaseStringUTFChars(klass_name, kl_name);
+    // const auto& [method, index]{JavaTools::lookup_method(klass_name, method_name, method_sign)};
+    // env->CallStaticVoidMethod((jclass)method.constants().pool_holder().java_mirror().handle().address(), (jmethodID)&method);
     return 0;
+}
+
+extern "C" void JNIEXPORT Java_net_zy_terminus_Terminus_block(JNIEnv *env, jclass)
+{
+    JavaTools::deoptimization_method(JavaTools::addr);
 }
 
 extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv *env, jclass, jstring klass_name,
@@ -199,7 +178,7 @@ extern "C" void JNIEXPORT Java_net_endofcosmos_sword_natives_Native_test(JNIEnv 
     if (hotspot::code::nmethod nm(method.native_method()); nm)
     {
         nm.make_not_entrant();
-        //memset((void *)nm.verified_entry_point(), 0, 16);
+        // memset((void *)nm.verified_entry_point(), 0, 16);
     }
     pthread_jit_write_protect_np(1);
 

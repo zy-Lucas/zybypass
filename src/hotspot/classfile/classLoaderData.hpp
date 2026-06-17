@@ -1,8 +1,7 @@
 #pragma once
 
-#include "memory/classLoaderMetaspace.hpp"
+// #include "memory/classLoaderMetaspace.hpp"
 #include "oops/klass.hpp"
-
 
 namespace hotspot::classfile
 {
@@ -11,7 +10,8 @@ class ClassLoaderData : public runtime::JvmObject
   public:
     ClassLoaderData(uint64_t addr) noexcept : runtime::JvmObject(addr) {}
 
-    memory::ClassLoaderMetaspace metapace_or_null() const noexcept { return read_field<uint64_t>(metaspace_offset_); }
+    // memory::ClassLoaderMetaspace metapace_or_null() const noexcept { return read_field<uint64_t>(metaspace_offset_);
+    // }
 
     bool has_class_mirror_holder() const noexcept { return read_field<bool>(has_class_mirror_holder_offset_); }
 

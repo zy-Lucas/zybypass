@@ -32,11 +32,11 @@ class VirtualBaseConstructor : public InstanceConstructor
 
   private:
     static constexpr std::array arr_{std::pair{Types::type_name, +[](uint64_t addr) -> JvmObjectPtr {
-                                                  using ConcreteType = typename Types::type;
-                                                  return JvmObjectPtr{new ConcreteType(addr), +[](JvmObject *p) {
-                                                                          delete static_cast<ConcreteType *>(p);
-                                                                      }};
-                                              }}...};
+                                                   using ConcreteType = typename Types::type;
+                                                   return JvmObjectPtr{new ConcreteType(addr), +[](JvmObject *p) {
+                                                                           delete static_cast<ConcreteType *>(p);
+                                                                       }};
+                                               }}...};
     types::Type *base_type;
 };
 } // namespace hotspot::runtime

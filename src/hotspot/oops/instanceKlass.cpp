@@ -256,5 +256,7 @@ void InstanceKlass::initialize()
     utils::constants::int_const("InstanceKlass::_misc_is_shared_boot_class", misc_is_shared_boot_class_);
     utils::constants::int_const("InstanceKlass::_misc_is_shared_platform_class", misc_is_shared_platform_class_);
     utils::constants::int_const("InstanceKlass::_misc_is_shared_app_class", misc_is_shared_app_class_);
+
+    dep_context_offset_ = methods_jmethod_ids_offset_ + sizeof(void *);
 }
 } // namespace hotspot::oops

@@ -10,6 +10,19 @@ uint32_t nmethod::total_size() const noexcept
            dependencies_size() + handler_table_size() + nul_chk_table_size();
 }
 
+#ifdef _WIN32
+bool nmethod::is_unloading() {}
+#else
+__attribute__((naked)) bool nmethod::is_unloading()
+{
+    asm volatile("ldr x0, [x0]       \n\t"
+                 "br  %[func]        \n\t"
+                 :
+                 : [func] "r"(*(void **)(nmethod_vptr_ + 0x220))
+                 : "x0", "memory");
+}
+#endif
+
 uint64_t nmethod::metadata_at(uint32_t index) const noexcept
 {
     if (!index)
@@ -51,13 +64,38 @@ ScopeDesc nmethod::scope_desc_at(uint64_t pc) const noexcept
 
 bool nmethod::contains_method(oops::Method method_addr) const noexcept
 {
-    for (uint64_t p = scopes_pcs_begin(); p < scopes_pcs_end(); p += PcDesc::pc_desc_size_)
+    uint64_t pc_begin = scopes_pcs_begin();
+    uint64_t pc_end = scopes_pcs_end();
+
+    if (!pc_begin || !pc_end || pc_begin >= pc_end)
+        return false;
+    if (!PcDesc::pc_desc_size_)
+        return false;
+
+    uint64_t data_begin = scopes_data_begin();
+    uint32_t data_size = scopes_data_size();
+    if (!data_begin || !data_size)
+        return false;
+    if (data_begin & 0x7)
+        return false;
+    if (pc_begin % PcDesc::pc_desc_size_)
+        return false;
+
+    for (uint64_t p = pc_begin; p < pc_end; p += PcDesc::pc_desc_size_)
     {
         PcDesc pc_desc{p};
         if (pc_desc.scope_decode_offset() == DebugInformationRecorder::SERIALIZED_NULL)
             continue;
-        ScopeDesc scope{*this, (uint32_t)pc_desc.scope_decode_offset(), (uint32_t)pc_desc.obj_decode_offset(),
-                        pc_desc.reexecute()};
+
+        uint32_t scope_off = pc_desc.scope_decode_offset();
+        uint32_t obj_off = pc_desc.obj_decode_offset();
+
+        if (scope_off + 56 > data_size || obj_off >= data_size)
+            continue;
+
+        ScopeDesc scope{*this, scope_off, obj_off, pc_desc.reexecute()};
+        if (!scope)
+            continue;
         while (scope)
         {
             if (scope.method() == method_addr)

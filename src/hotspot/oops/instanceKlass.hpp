@@ -1,5 +1,6 @@
 #pragma once
 
+#include "code/nmethodBucket.hpp"
 #include "constantPool.hpp"
 #include "fieldType.hpp"
 #include "klass.hpp"
@@ -90,6 +91,8 @@ class InstanceKlass : public Klass
 
     uint64_t jmethod_id_or_null(Method method) const noexcept;
 
+    code::nmethodBucket dep_context() const noexcept { return read_field<uint64_t>(dep_context_offset_); }
+
     utilities::MethodArray methods() const noexcept { return read_field<uint64_t>(methods_offset_); }
     utilities::MethodArray default_methods() const noexcept { return read_field<uint64_t>(default_methods_offset_); }
 
@@ -144,6 +147,7 @@ class InstanceKlass : public Klass
     static inline uint64_t init_state_offset_;
     static inline uint64_t misc_flags_offset_;
     static inline uint64_t methods_jmethod_ids_offset_;
+    static inline uint64_t dep_context_offset_;
     static inline uint64_t methods_offset_;
     static inline uint64_t default_methods_offset_;
     static inline uint64_t local_interfaces_offset_;

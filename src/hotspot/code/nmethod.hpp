@@ -73,6 +73,8 @@ class nmethod : public CompiledMethod
     bool is_zombie() const noexcept { return state() == zombie; }
     bool is_unloaded() const noexcept { return state() == unloaded; }
 
+    bool is_unloading();
+
     uint32_t oops_length() const noexcept { return oops_size() / runtime::Jvm::oop_size(); }
     uint32_t metadata_length() const noexcept { return metadata_size() / runtime::Jvm::oop_size(); }
 
@@ -82,7 +84,7 @@ class nmethod : public CompiledMethod
     uint64_t metadata_at(uint32_t index) const noexcept;
     oops::Method get_method(uint32_t index) const noexcept;
 
-    nmethod get_osr_link() const noexcept { return read_field<uint64_t>(osr_link_offset_); }
+    nmethod osr_link() const noexcept { return read_field<uint64_t>(osr_link_offset_); }
 
     bool is_method_handle_return(uint64_t return_pc) const noexcept;
     bool is_locked_by_vm() const noexcept { return read_field<int32_t>(lock_count_offset_) > 0; }
@@ -90,7 +92,7 @@ class nmethod : public CompiledMethod
     bool is_deopt_entry(uint64_t pc) const noexcept { return pc == deopt_handler_begin(); }
     bool is_deopt_mh_entry(uint64_t pc) const noexcept { return pc == deopt_mh_handler_begin(); }
 
-    int8_t state() const noexcept { return read_field<int8_t>(state_offset_); }
+    int8_t state() const noexcept { return atomic_load_field<int8_t>(state_offset_); }
 
     PcDesc pc_desc_at(uint64_t pc) const noexcept;
     ScopeDesc scope_desc_at(uint64_t pc) const noexcept;
@@ -99,7 +101,7 @@ class nmethod : public CompiledMethod
 
     bool make_not_entrant();
 
-  //private:
+    // private:
     int32_t entry_bci() const noexcept { return read_field<int32_t>(entry_bci_offset_); }
     int32_t exception_offset() const noexcept { return read_field<int32_t>(exception_offset_offset_); }
     int32_t stub_offset() const noexcept { return read_field<int32_t>(stub_offset_offset_); }

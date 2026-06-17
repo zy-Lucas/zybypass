@@ -2,6 +2,7 @@
 
 #include "constMethod.hpp"
 #include "methodCounters.hpp"
+#include "oops/methodData.hpp"
 #include "runtime/accessFlag.hpp"
 
 namespace hotspot::code
@@ -20,7 +21,7 @@ class Method : public MetaData
 
     ConstMethod constMethod() const noexcept;
     ConstantPool constants() const noexcept { return constMethod().constants(); }
-    uint64_t method_data() const noexcept { return read_field<uint64_t>(method_data_offset_); }
+    MethodData method_data() const noexcept { return read_field<uint64_t>(method_data_offset_); }
     MethodCounter method_counters() const noexcept { return read_field<uint64_t>(method_counters_offset_); }
 
     uint16_t method_idnum() const noexcept { return constMethod().method_idnum(); }
