@@ -8,10 +8,10 @@ void JavaThread::initialize()
     utils::FieldResolver r{"JavaThread"};
 
     r.field_offset("_osthread", osthread_offset_);
-    r.field_offset("_stack_base", stack_base_offset_);
-    r.field_offset("_stack_size", stack_size_offset_);
     r.field_offset("_threadObj", thread_obj_offset_);
     r.field_offset("_anchor", anchor_offset_);
+    r.field_offset("_stack_base", stack_base_offset_);
+    r.field_offset("_stack_size", stack_size_offset_);
     r.field_offset("_current_pending_monitor", current_pending_monitor_offset_);
     r.field_offset("_current_waiting_monitor", current_waiting_monitor_offset_);
     r.field_offset("_suspend_flags", suspend_flags_offset_);
@@ -38,5 +38,7 @@ void JavaThread::initialize()
     utils::constants::int_const("JavaThread::_has_async_exception", has_async_exception_);
     utils::constants::int_const("JavaThread::_not_terminated", not_terminated_);
     utils::constants::int_const("JavaThread::_thread_exiting", thread_exiting_);
+
+    jni_environment_offset_ = anchor_offset_ + r_anchor.type_size() + sizeof(void *);
 }
 } // namespace hotspot::runtime

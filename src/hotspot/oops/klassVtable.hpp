@@ -49,7 +49,7 @@ class klassVtable
 
     void replace_method(Method old_method, Method new_method) noexcept;
 
-    void adjust_default_methods(Method old_method, Method new_method) noexcept;
+    void adjust_default_method(Method old_method, Method new_method) noexcept;
 
   private:
     Klass klass_;

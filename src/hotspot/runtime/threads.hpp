@@ -23,6 +23,9 @@ class ThreadsList : public JvmObject
 class Threads
 {
   public:
+    static ThreadsList list() noexcept { return Jvm::atomic_load<uint64_t>(thread_list_offset_); }
+
+    static JavaThread first() noexcept { return list().java_thread_address_at(0); }
     static JavaThread current() noexcept;
 
   private:

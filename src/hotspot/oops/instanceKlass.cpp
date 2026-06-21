@@ -103,6 +103,11 @@ uint16_t InstanceKlass::next_method_idnum() noexcept
     return method_idnum();
 }
 
+uint64_t *InstanceKlass::methods_jmethod_ids() const noexcept
+{
+    return atomic_load_field<uint64_t *>(methods_jmethod_ids_offset_);
+}
+
 uint64_t InstanceKlass::jmethod_id_or_null(Method method) const noexcept
 {
     uint16_t idnum = method.method_idnum();
@@ -114,7 +119,7 @@ uint64_t InstanceKlass::jmethod_id_or_null(Method method) const noexcept
     return id;
 }
 
-void InstanceKlass::adjust_default_methods(Method old_method, Method new_method) noexcept
+void InstanceKlass::adjust_default_method(Method old_method, Method new_method) noexcept
 {
     if (default_methods())
         for (uint32_t index = 0; index < default_methods().length(); ++index)

@@ -7,7 +7,7 @@ ConstantPool ConstantPoolCache::constants() const noexcept { return read_field<u
 
 ConstantPoolCacheEntry ConstantPoolCache::entry_at(uint32_t index) const noexcept { return {*this, index}; }
 
-void ConstantPoolCache::adjust_method_entries(Method old_method, Method new_method)
+void ConstantPoolCache::adjust_method_entry(Method old_method, Method new_method)
 {
     int32_t len = length();
     for (uint32_t index = 0; index < len; index++)

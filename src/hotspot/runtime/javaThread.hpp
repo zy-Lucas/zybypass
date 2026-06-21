@@ -1,6 +1,6 @@
 #pragma once
 
-#include "oops/oop.hpp"
+#include "jni.h"
 #include "oops/vmOopHandle.hpp"
 #include "osThread.hpp"
 #include "thread.hpp"
@@ -14,12 +14,14 @@ class JavaThread : public Thread
 
     OSThread osthread() const noexcept { return read_field<uint64_t>(osthread_offset_); }
 
+    oops::Instance thread_obj() const { return oops::VMOopHandle{address() + thread_obj_offset_}.resolve(); }
+
+    JNIEnv *jni_environment() const noexcept { return (JNIEnv *)(address() + jni_environment_offset_); }
+
     uint64_t stack_base() const noexcept { return read_field<uint64_t>(stack_base_offset_); }
     uint64_t stack_size() const noexcept { return read_field<uint64_t>(stack_size_offset_); }
 
     uint64_t stack_base_value() const noexcept { return Jvm::read<uint64_t>(stack_base()); }
-
-    oops::Instance thread_obj() const { return oops::VMOopHandle{address() + thread_obj_offset_}.resolve(); }
 
     uint32_t suspend_flags() const noexcept { return read_field<uint32_t>(suspend_flags_offset_); }
     bool has_async_exception() const noexcept { return suspend_flags() & has_async_exception_; }
@@ -33,10 +35,11 @@ class JavaThread : public Thread
     DECLARE_STATIC_INIT
 
     static inline uint64_t osthread_offset_;
-    static inline uint64_t stack_base_offset_;
-    static inline uint64_t stack_size_offset_;
     static inline uint64_t thread_obj_offset_;
     static inline uint64_t anchor_offset_;
+    static inline uint64_t jni_environment_offset_;
+    static inline uint64_t stack_base_offset_;
+    static inline uint64_t stack_size_offset_;
     static inline uint64_t current_pending_monitor_offset_;
     static inline uint64_t current_waiting_monitor_offset_;
     static inline uint64_t suspend_flags_offset_;

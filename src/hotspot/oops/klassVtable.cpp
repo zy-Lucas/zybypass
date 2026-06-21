@@ -19,7 +19,7 @@ void klassVtable::replace_method(Method old_method, Method new_method) noexcept
     vtable()[old_method.vtable_index()].set_method(new_method);
 }
 
-void klassVtable::adjust_default_methods(Method old_method, Method new_method) noexcept
+void klassVtable::adjust_default_method(Method old_method, Method new_method) noexcept
 {
     if (!old_method || !new_method)
         return;

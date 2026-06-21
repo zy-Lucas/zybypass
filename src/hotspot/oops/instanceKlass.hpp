@@ -87,7 +87,7 @@ class InstanceKlass : public Klass
     bool is_being_initialized() const noexcept { return init_state().is_being_initialized(); }
     bool is_in_error_state() const noexcept { return init_state().is_in_error_state(); }
 
-    uint64_t *methods_jmethod_ids() const noexcept { return read_field<uint64_t *>(methods_jmethod_ids_offset_); }
+    uint64_t *methods_jmethod_ids() const noexcept;
 
     uint64_t jmethod_id_or_null(Method method) const noexcept;
 
@@ -96,7 +96,7 @@ class InstanceKlass : public Klass
     utilities::MethodArray methods() const noexcept { return read_field<uint64_t>(methods_offset_); }
     utilities::MethodArray default_methods() const noexcept { return read_field<uint64_t>(default_methods_offset_); }
 
-    void adjust_default_methods(Method old_method, Method new_method) noexcept;
+    void adjust_default_method(Method old_method, Method new_method) noexcept;
 
     utilities::KlassArray local_interfaces() const noexcept;
     utilities::KlassArray transitive_interfaces() const noexcept;

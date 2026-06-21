@@ -25,10 +25,9 @@ void ThreadsList::initialize()
 
 JavaThread Threads::current() noexcept
 {
-    list_ = Jvm::read<uint64_t>(thread_list_offset_);
-    for (uint32_t index = 0; index < list_.length(); ++index)
+    for (uint32_t index = 0; index < list().length(); ++index)
     {
-        JavaThread thread{list_.java_thread_address_at(index)};
+        JavaThread thread{list().java_thread_address_at(index)};
         if (!thread)
             continue;
 #ifdef _WIN32

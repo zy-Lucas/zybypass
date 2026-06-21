@@ -20,7 +20,7 @@ class ConstantPoolCache : public MetaData
 
     ConstantPoolCacheEntry entry_at(uint32_t index) const noexcept;
 
-    void adjust_method_entries(Method old_method, Method new_method);
+    void adjust_method_entry(Method old_method, Method new_method);
 
     static uint64_t base_offset() noexcept { return base_offset_; }
 
