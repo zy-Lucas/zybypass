@@ -5,6 +5,14 @@
 #include <atomic>
 #include <bit>
 #include <vector>
+#include <string>
+#include <array>
+
+#ifndef _WIN32
+#include "debugger/aarch64/symbol_lookup.h"
+#else
+#include <windows.h>
+#endif
 
 namespace hotspot::runtime
 {

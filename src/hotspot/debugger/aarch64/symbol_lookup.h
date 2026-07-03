@@ -1,3 +1,4 @@
+#ifndef _WIN32
 #pragma once
 
 #include <stdint.h>
@@ -15,3 +16,4 @@ extern "C"
 }
 #endif
 } // namespace hotspot::debugger::aarch64
+#endif

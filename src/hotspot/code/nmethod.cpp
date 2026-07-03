@@ -11,7 +11,14 @@ uint32_t nmethod::total_size() const noexcept
 }
 
 #ifdef _WIN32
-bool nmethod::is_unloading() {}
+__attribute__((naked)) bool nmethod::is_unloading()
+{
+    asm volatile("movq (%%rcx), %%rcx \n\t"
+                 "jmp *%[func]        \n\t"
+                 :
+                 : [func] "r"(*(void **)(nmethod_vptr_ + 0x220))
+                 : "rcx", "memory");
+}
 #else
 __attribute__((naked)) bool nmethod::is_unloading()
 {
@@ -107,7 +114,14 @@ bool nmethod::contains_method(oops::Method method_addr) const noexcept
 }
 
 #ifdef _WIN32
-bool nmethod::make_not_entrant() {}
+__attribute__((naked)) bool nmethod::make_not_entrant()
+{
+    asm volatile("movq (%%rcx), %%rcx \n\t"
+                 "jmp *%[func]        \n\t"
+                 :
+                 : [func] "r"(*(void **)(nmethod_vptr_ + 0xf8))
+                 : "rcx", "memory");
+}
 #else
 __attribute__((naked)) bool nmethod::make_not_entrant()
 {

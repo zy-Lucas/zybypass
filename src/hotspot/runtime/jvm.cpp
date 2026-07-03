@@ -2,12 +2,6 @@
 #include "oops/compressedKlassPointers.hpp"
 #include "oops/compressedOops.hpp"
 
-#ifndef _WIN32
-#include "debugger/aarch64/symbol_lookup.h"
-#else
-#include <windows.h>
-#endif
-
 namespace hotspot::runtime
 {
 void Jvm::init()

@@ -1,3 +1,4 @@
+#ifndef _WIN32
 #pragma once
 
 #include "symtab.h"
@@ -18,3 +19,4 @@ typedef struct lib_info
     size_t memsz;
 } lib_info;
 } // namespace hotspot::debugger::aarch64
+#endif

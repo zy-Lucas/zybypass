@@ -2,6 +2,7 @@
 
 #include "field.hpp"
 #include <unordered_map>
+#include <optional>
 
 namespace hotspot::types
 {

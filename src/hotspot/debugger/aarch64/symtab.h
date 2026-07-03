@@ -1,3 +1,4 @@
+#ifndef _WIN32
 #pragma once
 
 #include <search.h>
@@ -20,3 +21,4 @@ typedef struct symtab_symbol
 
 uintptr_t search_symbol(DB *hash_table, uintptr_t base, const char *sym_name, int *sym_size);
 } // namespace hotspot::debugger::aarch64
+#endif

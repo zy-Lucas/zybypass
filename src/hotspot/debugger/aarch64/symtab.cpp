@@ -1,3 +1,4 @@
+#ifndef _WIN32
 #include "symtab.h"
 #include <string.h>
 
@@ -27,3 +28,4 @@ uintptr_t search_symbol(DB *hash_table, uintptr_t base, const char *sym_name, in
     return 0;
 }
 } // namespace hotspot::debugger::aarch64
+#endif
