@@ -10,13 +10,9 @@
         runtime::Jvm::register_post_init(initialize);                                                                  \
         return 0;                                                                                                      \
     }();
-namespace \u1145
-{
 
-}
 namespace hotspot::runtime
 {
-
 class JvmObject
 {
   public:

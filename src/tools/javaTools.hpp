@@ -25,7 +25,7 @@ class JavaTools
 
     static jclass find_class(JNIEnv *env, const std::string &slash_name);
 
-    static void adjust_method_handle_entry(JNIEnv *env, const std::string &klass_name, const std::string &method_name,
+    static void adjust_method_handle_entry(JNIEnv *env, jclass target_class, const std::string &method_name,
                                            const std::string &method_sign, hotspot::oops::Method new_method);
 
   private:
@@ -42,10 +42,5 @@ class JavaTools
         jmethodID resolve;
         jclass resolved_method_class;
         jfieldID method_field;
-        jclass class_class;      // java/lang/Class
-        jmethodID forName;       // Class.forName(String, boolean, ClassLoader)
-        jclass thread_class;     // java/lang/Thread
-        jmethodID currentThread; // Thread.currentThread()
-        jmethodID getContextClassLoader;
     } g_cache{};
 };

@@ -56,7 +56,7 @@ void JavaTools::set_method_to_native(const std::string &klass_name, const std::s
 
     deoptimization_method(method);
 
-    uint64_t new_method = (uint64_t)malloc(method.size() + 2 * sizeof(void *));
+    uint64_t new_method = (uint64_t)calloc(method.size() + 2 * sizeof(void *), 1);
     memcpy((void *)new_method, (void *)method.address(), method.size());
     memcpy((void *)(new_method + method.size()), &native_addr, sizeof(void *));
     hotspot::oops::Method new_met{new_method};
@@ -65,7 +65,10 @@ void JavaTools::set_method_to_native(const std::string &klass_name, const std::s
                                            .find_method_entry_point(hotspot::code::EntryPoint::native)
                                            .code_begin());
     if (env)
-        adjust_method_handle_entry(env, klass_name, method_name, method_sign, new_met);
+    {
+        hotspot::debugger::OopHandle oop = ik.java_mirror().handle(); // debugger::OopHandle实际上就是oopDesc*
+        adjust_method_handle_entry(env, (jclass)env->NewLocalRef((jclass)&oop), method_name, method_sign, new_met);
+    }
     replace_method(ik, method, index, new_met);
 }
 
@@ -73,13 +76,11 @@ void JavaTools::replace_method(hotspot::oops::InstanceKlass ik, hotspot::oops::M
                                hotspot::oops::Method new_method) noexcept
 {
     hotspot::oops::Method::change_method_associated_with_jmethod_id(old_method.find_jmethod_id_or_null(), new_method);
+    new_method.constants().set_pool_holder(old_method.constants().pool_holder().address());
+    new_method.set_vtable_index(old_method.vtable_index());
+    new_method.set_method_idnum(old_method.method_idnum());
 
     ik.methods().set_at(index, new_method.address());
-
-    old_method.set_is_obsolete(true);
-    if (uint16_t num = ik.next_method_idnum(); num != 0xFFFF)
-        old_method.set_method_idnum(num);
-    old_method.set_is_old(true);
 
     ik.vtable().replace_method(old_method, new_method);
     ik.itable().replace_method(old_method, new_method);
@@ -107,22 +108,27 @@ void JavaTools::replace_method(hotspot::oops::InstanceKlass ik, hotspot::oops::M
     };
     hotspot::classfile::ClassLoaderDataGraph::classes_do(f);
 
+    old_method.set_is_obsolete(true);
+    if (uint16_t num = ik.next_method_idnum(); num != 0xFFFF)
+        old_method.set_method_idnum(num);
+    old_method.set_is_old(true);
+
     deoptimization_method(old_method);
 }
 
 void JavaTools::deoptimization_method(hotspot::oops::Method method) noexcept
 {
-    pthread_jit_write_protect_np(0);
+    // pthread_jit_write_protect_np(0);
     if (hotspot::code::nmethod nm{method.native_method()}; nm)
         nm.make_not_entrant();
-    pthread_jit_write_protect_np(1);
+    // pthread_jit_write_protect_np(1);
 
     auto f = [method](hotspot::code::CodeBlob cb) {
-        pthread_jit_write_protect_np(0);
+        // pthread_jit_write_protect_np(0);
         if (hotspot::code::nmethod nm{cb.address()};
             nm.is_alive() && !nm.is_marked_for_deoptimization() && nm.contains_method(method))
             nm.make_not_entrant();
-        pthread_jit_write_protect_np(1);
+        // pthread_jit_write_protect_np(1);
     };
 
     hotspot::code::CodeCache::iterator_nmethods(f);
@@ -136,32 +142,6 @@ jstring toJString(JNIEnv *env, const std::string &str)
     if (env->ExceptionCheck())
         return nullptr;
     return jstr;
-}
-
-jclass JavaTools::find_class(JNIEnv *env, const std::string &slash_name)
-{
-    std::string class_name{slash_name};
-    std::replace(class_name.begin(), class_name.end(), '/', '.');
-
-    jobject thread = env->CallStaticObjectMethod(g_cache.thread_class, g_cache.currentThread);
-    jobject classLoader = env->CallObjectMethod(thread, g_cache.getContextClassLoader);
-
-    jstring str_name = toJString(env, class_name);
-    jclass target =
-        (jclass)env->CallStaticObjectMethod(g_cache.class_class, g_cache.forName, str_name, JNI_FALSE, classLoader);
-
-    if (env->ExceptionCheck())
-    {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        target = nullptr;
-    }
-
-    env->DeleteLocalRef(str_name);
-    env->DeleteLocalRef(classLoader);
-    env->DeleteLocalRef(thread);
-
-    return target;
 }
 
 static int32_t ref_kind_for_method(hotspot::oops::Method method)
@@ -183,17 +163,13 @@ static int32_t ref_kind_for_method(hotspot::oops::Method method)
     return 5;     // REF_invokeVirtual
 }
 
-void JavaTools::adjust_method_handle_entry(JNIEnv *env, const std::string &klass_name, const std::string &method_name,
+void JavaTools::adjust_method_handle_entry(JNIEnv *env, jclass target_class, const std::string &method_name,
                                            const std::string &method_sign, hotspot::oops::Method new_method)
 {
     init(env);
 
     jobject method_type =
         env->CallStaticObjectMethod(g_cache.mt_class, g_cache.from_desc, toJString(env, method_sign), nullptr);
-
-    jclass target_class = find_class(env, klass_name.c_str());
-    if (!target_class)
-        return;
 
     int32_t ref_kind = ref_kind_for_method(new_method);
 
@@ -207,17 +183,8 @@ void JavaTools::adjust_method_handle_entry(JNIEnv *env, const std::string &klass
 
     if (resolved_method_obj)
     {
-
-        jclass objCls = env->FindClass("java/lang/Object");
-        jmethodID toString = env->GetMethodID(objCls, "toString", "()Ljava/lang/String;");
-        jstring str = (jstring)env->CallObjectMethod(resolved_method_obj, toString);
-        const char *cstr = env->GetStringUTFChars(str, nullptr);
-        std::cout << "Resolved method: " << cstr << std::endl;
-        env->ReleaseStringUTFChars(str, cstr);
-        env->DeleteLocalRef(str);
-        env->DeleteLocalRef(objCls);
-
-        hotspot::oops::Instance resolved_obj{*(uint64_t *)resolved_method_obj};
+        hotspot::oops::Instance resolved_obj{
+            *(uint64_t *)resolved_method_obj}; // 同理，jobject也就是oopDesc**，所以我们需要解引用一层
         hotspot::oops::InstanceKlass resolved_klass(resolved_obj.klass());
 
         static uint32_t vmtarget_field_index = resolved_klass.find_field("vmtarget", "J").field_index();
@@ -263,15 +230,4 @@ void JavaTools::init(JNIEnv *env)
     local = env->FindClass("java/lang/invoke/ResolvedMethodName");
     g_cache.resolved_method_class = (jclass)env->NewGlobalRef(local);
     g_cache.method_field = env->GetFieldID(g_cache.mn_class, "method", "Ljava/lang/invoke/ResolvedMethodName;");
-
-    local = env->FindClass("java/lang/Class");
-    g_cache.class_class = (jclass)env->NewGlobalRef(local);
-    g_cache.forName = env->GetStaticMethodID(g_cache.class_class, "forName",
-                                             "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
-
-    local = env->FindClass("java/lang/Thread");
-    g_cache.thread_class = (jclass)env->NewGlobalRef(local);
-    g_cache.currentThread = env->GetStaticMethodID(g_cache.thread_class, "currentThread", "()Ljava/lang/Thread;");
-    g_cache.getContextClassLoader =
-        env->GetMethodID(g_cache.thread_class, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
 }

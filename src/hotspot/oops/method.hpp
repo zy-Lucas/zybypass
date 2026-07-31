@@ -33,7 +33,10 @@ class Method : public MetaData
     uint16_t name_index() const noexcept { return constMethod().name_index(); }
     uint16_t signature_index() const noexcept { return constMethod().signature_index(); }
     uint16_t code_size() const noexcept { return constMethod().code_size(); }
-    uint32_t vtable_index() const noexcept { return read_field<uint32_t>(vtable_index_offset_); }
+
+    int32_t vtable_index() const noexcept { return read_field<int32_t>(vtable_index_offset_); }
+    void set_vtable_index(int32_t index) noexcept { write_field(vtable_index_offset_, index); }
+
     uint32_t invocation_counter() const noexcept { return method_counters().invocation_counter(); }
     uint32_t backedge_counter() const noexcept { return method_counters().backedge_counter(); }
 

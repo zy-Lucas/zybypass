@@ -14,7 +14,7 @@ klassVtable::klassVtable(Klass klass, uint64_t base, int32_t length) noexcept
 
 void klassVtable::replace_method(Method old_method, Method new_method) noexcept
 {
-    if (!old_method || !new_method || old_method.vtable_index() >= length_)
+    if (!old_method || !new_method || old_method.vtable_index() >= length_ || old_method.vtable_index() < 0)
         return;
     vtable()[old_method.vtable_index()].set_method(new_method);
 }
